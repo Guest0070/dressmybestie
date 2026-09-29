@@ -1,0 +1,11 @@
+[package]
+name = "guest0070/style-my-bestie"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+
+# Server-only: ProfileStore must never replicate to clients.
+[server-dependencies]
+ProfileStore = "lm-loleris/profilestore@1.0.3"
