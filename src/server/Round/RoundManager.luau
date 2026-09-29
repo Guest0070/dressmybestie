@@ -706,8 +706,9 @@ local function voting(): { [number]: number }
 	end
 
 	Voting.begin(ids, function(voter: Player)
-		-- No hearts for your own look, or for a look you styled.
-		local excluded = { [voter.UserId] = true }
+		-- No hearts for a look you styled (self-promotion). Hearting the look you WORE is fine:
+		-- those hearts go to your stylist. (Blocking both made 2-player voting impossible.)
+		local excluded = {}
 		for _, p in participants do
 			if table.find(p.stylists, voter) then
 				excluded[p.userId] = true

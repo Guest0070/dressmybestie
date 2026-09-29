@@ -62,11 +62,11 @@ local function buildCards()
 		end
 	end
 	picks = {}
-	local me = State.player.UserId
 	local myTarget = State.myTarget()
 	local candidates: { number } = State.round.candidates or {}
 	for index, userId in candidates do
-		local isMine = userId == me or userId == myTarget
+		-- Only the look I styled is off-limits (the server also blocks earlier looks after a swap).
+		local isMine = userId == myTarget
 		local card = Kit.panel({ Size = UDim2.fromOffset(140, 176), LayoutOrder = index, Parent = cardList })
 		makePreview(card, userId)
 		Kit.label({
@@ -78,7 +78,7 @@ local function buildCards()
 		})
 		local heart: TextButton
 		heart = Kit.button({
-			Text = if isMine then "Yours" else heartText(false),
+			Text = if isMine then "You styled" else heartText(false),
 			Size = UDim2.new(1, -8, 0, 40),
 			Position = UDim2.fromOffset(4, 136),
 			BackgroundColor3 = if isMine then Kit.Colors.Grey else Kit.Colors.PanelLight,
@@ -86,7 +86,7 @@ local function buildCards()
 			Parent = card,
 		}, function()
 			if isMine then
-				VotingUI.onToast("You can't heart a look you wore or styled!")
+				VotingUI.onToast("You can't heart a look you styled!")
 				return
 			end
 			local index = table.find(picks, userId)
