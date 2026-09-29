@@ -4,6 +4,7 @@
 -- silently: the stylist just sees that item not appear.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Types = require(ReplicatedStorage.Shared.Types)
@@ -24,6 +25,13 @@ export type ValidatedLook = {
 }
 
 local LookValidator = {}
+
+-- In Studio, say why an item was dropped (live servers stay silent).
+local function reject(id: number, reason: string)
+	if RunService:IsStudio() then
+		warn(`[LookValidator] Dropped {id}: {reason}`)
+	end
+end
 
 local function isValidId(value: any): boolean
 	return type(value) == "number" and value == value and value > 0 and value < 2 ^ 53 and value % 1 == 0
@@ -61,6 +69,7 @@ function LookValidator.validate(raw: any, isVip: boolean): ValidatedLook
 		local typeName = AssetInfo.getAssetType(id)
 		local rule = if typeName then Config.AssetRules[typeName] else nil
 		if not rule then
+			reject(id, if typeName then `asset type {typeName} not allowed` else "couldn't read asset type")
 			continue
 		end
 
@@ -108,6 +117,8 @@ function LookValidator.validate(raw: any, isVip: boolean): ValidatedLook
 
 		if accepted then
 			table.insert(result.look.assetIds, id)
+		else
+			reject(id, `slot full ({typeName})`)
 		end
 	end
 

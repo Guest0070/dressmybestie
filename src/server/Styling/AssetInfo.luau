@@ -5,6 +5,9 @@
 
 local AssetService = game:GetService("AssetService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local RunService = game:GetService("RunService")
+
+local IS_STUDIO = RunService:IsStudio()
 
 local AssetInfo = {}
 
@@ -47,6 +50,9 @@ function AssetInfo.getAssetType(assetId: number): string?
 		pcall(MarketplaceService.GetProductInfoAsync, MarketplaceService, assetId, Enum.InfoType.Asset)
 	inFlight[key] = nil
 	if not ok then
+		if IS_STUDIO then
+			warn(`[AssetInfo] GetProductInfoAsync({assetId}) failed: {info}`)
+		end
 		-- Could be rate limiting or a bad ID. Only "not found"-style failures are worth caching,
 		-- but we can't tell them apart reliably, so just don't cache.
 		return nil
@@ -75,6 +81,9 @@ function AssetInfo.getBundleAssets(bundleId: number, expectedBundleType: string)
 	local ok, details = pcall(AssetService.GetBundleDetailsAsync, AssetService, bundleId)
 	inFlight[key] = nil
 	if not ok or type(details) ~= "table" then
+		if IS_STUDIO then
+			warn(`[AssetInfo] GetBundleDetailsAsync({bundleId}) failed: {details}`)
+		end
 		return nil
 	end
 

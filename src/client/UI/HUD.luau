@@ -4,6 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
@@ -140,7 +141,10 @@ local function applyLayout(styling: boolean)
 end
 
 local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPhase?)
-	applyLayout(round.phase == "Styling" and State.myTarget() ~= nil)
+	local styling = round.phase == "Styling" and State.myTarget() ~= nil
+	applyLayout(styling)
+	-- Roblox's player list sits over the catalog tabs on small screens; hide it while styling.
+	pcall(StarterGui.SetCoreGuiEnabled, StarterGui, Enum.CoreGuiType.PlayerList, not styling)
 	phaseLabel.Text = PHASE_TITLES[round.phase] or round.phase
 	local main, sub = bannerFor(round)
 	bannerLabel.Text = main or ""
