@@ -671,6 +671,12 @@ local function runway()
 		Remotes.Events.RunwayEffect:FireAllClients(p.userId, Passes.owns(player, "VIP"))
 
 		setMovement(player, Config.RunwayWalkSpeed)
+		-- A player's own computer normally controls their character, so a server MoveTo can be
+		-- ignored. The server takes physics control for the walk, then hands it back.
+		local root = if player.Character then player.Character:FindFirstChild("HumanoidRootPart") else nil
+		if root and root:IsA("BasePart") then
+			pcall(root.SetNetworkOwner, root, nil)
+		end
 		local walker = getHumanoid(player)
 		if walker then
 			walker:MoveTo(Map.runwayEnd().Position)
@@ -679,6 +685,9 @@ local function runway()
 			return participants[player] ~= p
 		end)
 		setMovement(player, 0)
+		if root and root:IsA("BasePart") and root.Parent and isHere(player) then
+			pcall(root.SetNetworkOwner, root, player)
+		end
 		p.walked = true
 	end
 end
@@ -737,8 +746,9 @@ local function results(hearts: { [number]: number })
 	local shopLooks: { Types.ShopLook } = {}
 	for index, p in ranked do
 		local count = hearts[p.userId] or 0
-		-- Only looks that got hearts make the podium; nobody is ever shown as "last".
-		local place = if index <= 3 and count > 0 then index else nil
+		-- Top 3 looks take the podium (ties broken randomly). Nobody is ever shown as "last":
+		-- the rest simply aren't ranked on screen.
+		local place = if index <= 3 then index else nil
 		if place then
 			local stylistNames = {}
 			for _, stylist in p.stylists do

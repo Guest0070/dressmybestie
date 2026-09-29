@@ -209,6 +209,9 @@ local function poseAtEnd()
 	if not finish or not humanoid or not root or not root:IsA("BasePart") then
 		return
 	end
+	-- Backup walk from this side too (the server normally drives the walk; this is harmless if so).
+	task.wait(0.3)
+	pcall(humanoid.MoveTo, humanoid, finish.Position)
 	local deadline = os.clock() + 9
 	while os.clock() < deadline and (root.Position - finish.Position).Magnitude > 5 do
 		task.wait(0.1)

@@ -47,7 +47,8 @@ function Rewards.grant(participants: { Player }, results: { LookResult })
 			s.heartsForYourStyling += result.hearts
 			s.coins += result.hearts * Config.Rewards.CoinsPerHeartReceived
 			s.xp += result.hearts * Config.Rewards.XpPerHeartReceived
-			if result.place then
+			-- Podium bonus only for looks that actually got hearts (no free coins for a 0-heart tie).
+			if result.place and result.hearts > 0 then
 				s.coins += Config.Rewards.PodiumCoins[result.place] or 0
 				s.xp += Config.Rewards.PodiumXp[result.place] or 0
 			end
