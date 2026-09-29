@@ -8,7 +8,9 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Signal = require(ReplicatedStorage.Shared.Signal)
 local Types = require(ReplicatedStorage.Shared.Types)
+local Passes = require(script.Parent.Parent.Monetization.Passes)
 
 -- ProfileStore ships without strict types we can rely on, so treat it as `any`.
 local ProfileStore = require(ServerScriptService.ServerPackages.ProfileStore) :: any
@@ -21,15 +23,20 @@ local TEMPLATE: PlayerData = {
 	styleXp = 0,
 	roundsPlayed = 0,
 	heartsReceived = 0,
-	ownedUnlocks = {},
+	ownedCosmetics = {},
+	equipped = {},
 	lastDailyRewardDay = 0,
 	processedPurchases = {},
+	funnelStep = 0,
 }
 
 local store = ProfileStore.New(Config.Data.StoreName, TEMPLATE)
 local profiles: { [Player]: any } = {}
 
 local PlayerData = {}
+
+-- Fires (player) once their profile is loaded and ready.
+PlayerData.Loaded = Signal.new() :: Signal.Signal<Player>
 
 local function currentDay(): number
 	return os.time() // 86400
@@ -45,23 +52,6 @@ function PlayerData.getRank(xp: number): number
 	return rank
 end
 
-local function toPublic(data: PlayerData): PublicData
-	return {
-		coins = data.coins,
-		styleXp = data.styleXp,
-		rank = PlayerData.getRank(data.styleXp),
-		ownedUnlocks = table.clone(data.ownedUnlocks),
-		canClaimDaily = data.lastDailyRewardDay < currentDay(),
-	}
-end
-
-local function pushToClient(player: Player)
-	local profile = profiles[player]
-	if profile then
-		Remotes.Events.DataChanged:FireClient(player, toPublic(profile.Data))
-	end
-end
-
 -- Returns the live data table, or nil if the profile isn't loaded (yet / anymore).
 -- Callers must handle nil: the player may have just left.
 function PlayerData.get(player: Player): PlayerData?
@@ -73,6 +63,59 @@ function PlayerData.isLoaded(player: Player): boolean
 	return profiles[player] ~= nil
 end
 
+-- Wait (up to timeout seconds) for a player's profile. Used by ProcessReceipt.
+function PlayerData.waitForProfile(player: Player, timeout: number): boolean
+	local deadline = os.clock() + timeout
+	while not profiles[player] and player.Parent == Players and os.clock() < deadline do
+		task.wait(0.25)
+	end
+	return profiles[player] ~= nil
+end
+
+-- True if the player may use this cosmetic: bought it, has the pass, or reached the rank.
+function PlayerData.ownsCosmetic(player: Player, cosmeticId: string): boolean
+	local cosmetic = Config.getCosmetic(cosmeticId)
+	local data = PlayerData.get(player)
+	if not cosmetic or not data then
+		return false
+	end
+	if data.ownedCosmetics[cosmeticId] then
+		return true
+	end
+	if cosmetic.pass and Passes.owns(player, cosmetic.pass) then
+		return true
+	end
+	if cosmetic.rank and PlayerData.getRank(data.styleXp) >= cosmetic.rank then
+		return true
+	end
+	return false
+end
+
+local function toPublic(player: Player, data: PlayerData): PublicData
+	local owned = {}
+	for _, cosmetic in Config.Cosmetics do
+		if PlayerData.ownsCosmetic(player, cosmetic.id) then
+			owned[cosmetic.id] = true
+		end
+	end
+	return {
+		coins = data.coins,
+		styleXp = data.styleXp,
+		rank = PlayerData.getRank(data.styleXp),
+		ownedCosmetics = owned,
+		equipped = table.clone(data.equipped),
+		ownedPasses = Passes.all(player),
+		canClaimDaily = data.lastDailyRewardDay < currentDay(),
+	}
+end
+
+function PlayerData.pushToClient(player: Player)
+	local profile = profiles[player]
+	if profile then
+		Remotes.Events.DataChanged:FireClient(player, toPublic(player, profile.Data))
+	end
+end
+
 -- Mutate a player's data through a callback, then sync their client.
 -- Returns false if the profile isn't loaded, so callers never silently lose rewards.
 function PlayerData.update(player: Player, mutator: (PlayerData) -> ()): boolean
@@ -81,30 +124,17 @@ function PlayerData.update(player: Player, mutator: (PlayerData) -> ()): boolean
 		return false
 	end
 	mutator(profile.Data)
-	pushToClient(player)
+	task.spawn(PlayerData.pushToClient, player) -- Passes.owns may yield; don't block the caller
 	return true
-end
-
-function PlayerData.addCoins(player: Player, amount: number): boolean
-	assert(amount >= 0, "use spendCoins to remove coins")
-	return PlayerData.update(player, function(data)
-		data.coins += amount
-	end)
 end
 
 function PlayerData.spendCoins(player: Player, amount: number): boolean
 	local data = PlayerData.get(player)
-	if not data or data.coins < amount then
+	if not data or amount < 0 or data.coins < amount then
 		return false
 	end
 	return PlayerData.update(player, function(d)
 		d.coins -= amount
-	end)
-end
-
-function PlayerData.addXp(player: Player, amount: number): boolean
-	return PlayerData.update(player, function(data)
-		data.styleXp += amount
 	end)
 end
 
@@ -113,7 +143,7 @@ function PlayerData.hasPurchase(player: Player, purchaseId: string): boolean
 	return data ~= nil and table.find(data.processedPurchases, purchaseId) ~= nil
 end
 
--- Used by ProcessReceipt (Day 8-9). Record the ID in the same change as the grant.
+-- Record a purchase ID in the same change as the grant, so a retry can never grant twice.
 function PlayerData.recordPurchase(data: PlayerData, purchaseId: string)
 	table.insert(data.processedPurchases, purchaseId)
 	while #data.processedPurchases > Config.Data.MaxRememberedPurchases do
@@ -121,9 +151,28 @@ function PlayerData.recordPurchase(data: PlayerData, purchaseId: string)
 	end
 end
 
--- Day 8-9: add saveAndWait() here for ProcessReceipt (Save + OnAfterSave with timeout).
+-- Ask ProfileStore to save now and wait until the save is confirmed.
+-- ProcessReceipt only returns PurchaseGranted after this succeeds.
+function PlayerData.saveAndWait(player: Player, timeout: number): boolean
+	local profile = profiles[player]
+	if not profile or not profile:IsActive() then
+		return false
+	end
+	local saved = false
+	local connection = profile.OnAfterSave:Connect(function()
+		saved = true
+	end)
+	profile:Save()
+	local deadline = os.clock() + timeout
+	while not saved and profile:IsActive() and os.clock() < deadline do
+		task.wait(0.1)
+	end
+	connection:Disconnect()
+	return saved
+end
 
 local function claimDaily(player: Player)
+	local granted = false
 	PlayerData.update(player, function(data)
 		local today = currentDay()
 		if data.lastDailyRewardDay >= today then
@@ -131,7 +180,11 @@ local function claimDaily(player: Player)
 		end
 		data.lastDailyRewardDay = today
 		data.coins += Config.Rewards.DailyRewardCoins
+		granted = true
 	end)
+	if granted then
+		Remotes.Events.Toast:FireClient(player, `Daily reward: +{Config.Rewards.DailyRewardCoins} coins!`)
+	end
 end
 
 local function onPlayerAdded(player: Player)
@@ -144,7 +197,9 @@ local function onPlayerAdded(player: Player)
 
 	if profile == nil then
 		-- Roblox servers or another session lock blocked us. Safer to kick than play without saving.
-		player:Kick("Couldn't load your data. Please rejoin!")
+		if player.Parent == Players then
+			player:Kick("Couldn't load your data. Please rejoin!")
+		end
 		return
 	end
 
@@ -164,15 +219,17 @@ local function onPlayerAdded(player: Player)
 	end
 
 	profiles[player] = profile
-	pushToClient(player)
+	PlayerData.pushToClient(player)
+	PlayerData.Loaded:Fire(player)
 end
 
 function PlayerData.start()
 	Remotes.Functions.GetMyData.OnServerInvoke = function(player: Player): PublicData?
 		local profile = profiles[player]
-		return if profile then toPublic(profile.Data) else nil
+		return if profile then toPublic(player, profile.Data) else nil
 	end
 	Remotes.Events.ClaimDailyReward.OnServerEvent:Connect(claimDaily)
+	Passes.Changed:Connect(PlayerData.pushToClient)
 
 	-- Players who joined before this ran (possible in Studio).
 	for _, player in Players:GetPlayers() do
