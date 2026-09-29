@@ -75,6 +75,45 @@ local builders: { [string]: (BasePart) -> () } = {
 		smoke.Parent = root
 		Debris:AddItem(smoke, 2)
 	end,
+	Stars = function(root)
+		local particles = emitter(root, {
+			Rate = 30,
+			Lifetime = NumberRange.new(1, 1.6),
+			Speed = NumberRange.new(10, 16),
+			SpreadAngle = Vector2.new(80, 80),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.6),
+				NumberSequenceKeypoint.new(1, 0),
+			}),
+			Color = ColorSequence.new(Color3.fromRGB(255, 240, 150), Color3.fromRGB(255, 255, 255)),
+			LightEmission = 1,
+			EmissionDirection = Enum.NormalId.Top,
+		})
+		Debris:AddItem(particles, DURATION)
+	end,
+	Petals = function(root)
+		local particles = emitter(root, {
+			Rate = 40,
+			Lifetime = NumberRange.new(2, 3),
+			Speed = NumberRange.new(3, 6),
+			SpreadAngle = Vector2.new(180, 180),
+			Acceleration = Vector3.new(0, -3, 0),
+			Size = NumberSequence.new(0.4),
+			Rotation = NumberRange.new(0, 360),
+			RotSpeed = NumberRange.new(-120, 120),
+			Color = ColorSequence.new(Color3.fromRGB(230, 40, 80), Color3.fromRGB(255, 130, 170)),
+		})
+		Debris:AddItem(particles, DURATION)
+	end,
+	Fire = function(root)
+		local fire = Instance.new("Fire")
+		fire.Heat = 6
+		fire.Size = 6
+		fire.Color = Color3.fromRGB(255, 120, 40)
+		fire.SecondaryColor = Color3.fromRGB(255, 220, 80)
+		fire.Parent = root
+		Debris:AddItem(fire, DURATION)
+	end,
 	Hearts = function(root)
 		local particles = emitter(root, {
 			Rate = 20,
@@ -96,6 +135,37 @@ function Effects.playEntrance(character: Model, cosmeticId: string?)
 	if builder and root and root:IsA("BasePart") then
 		builder(root)
 	end
+end
+
+-- One-off confetti burst at a spot (used when the podium is revealed).
+function Effects.burst(position: Vector3)
+	local anchor = Instance.new("Part")
+	anchor.Anchored = true
+	anchor.CanCollide = false
+	anchor.CanQuery = false
+	anchor.CanTouch = false
+	anchor.Transparency = 1
+	anchor.Size = Vector3.new(1, 1, 1)
+	anchor.Position = position
+	anchor.Parent = workspace
+	local particles = emitter(anchor, {
+		Rate = 0,
+		Lifetime = NumberRange.new(2, 3),
+		Speed = NumberRange.new(20, 35),
+		SpreadAngle = Vector2.new(50, 50),
+		Acceleration = Vector3.new(0, -25, 0),
+		Size = NumberSequence.new(0.4),
+		Rotation = NumberRange.new(0, 360),
+		RotSpeed = NumberRange.new(-300, 300),
+		Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 90, 160)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 220, 80)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(90, 200, 255)),
+		}),
+		EmissionDirection = Enum.NormalId.Top,
+	})
+	particles:Emit(250)
+	Debris:AddItem(anchor, 4)
 end
 
 return Effects

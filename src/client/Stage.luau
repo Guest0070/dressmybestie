@@ -247,6 +247,46 @@ function Stage.hideIfMine(model: Instance)
 	end
 end
 
+-- Paparazzi: quick camera flashes along both sides of the runway while someone walks.
+local function flashLoop()
+	while true do
+		task.wait(0.12 + math.random() * 0.25)
+		if State.round.phase ~= "Runway" or not State.round.runwayWearer then
+			continue
+		end
+		local startPart = mapPart({ "Runway", "Start" })
+		local endPart = mapPart({ "Runway", "End" })
+		if not startPart or not endPart then
+			continue
+		end
+		local along = startPart.Position:Lerp(endPart.Position, math.random())
+		local side = if math.random() < 0.5 then -1 else 1
+		local flash = Instance.new("Part")
+		flash.Anchored = true
+		flash.CanCollide = false
+		flash.CanQuery = false
+		flash.CanTouch = false
+		flash.Transparency = 1
+		flash.Size = Vector3.new(0.5, 0.5, 0.5)
+		flash.Position = Vector3.new(along.X + side * 14, along.Y + 2 + math.random() * 3, along.Z)
+		local light = Instance.new("PointLight")
+		light.Brightness = 6
+		light.Range = 16
+		light.Parent = flash
+		local sparkle = Instance.new("ParticleEmitter")
+		sparkle.Rate = 0
+		sparkle.Lifetime = NumberRange.new(0.08)
+		sparkle.Size = NumberSequence.new(2.5)
+		sparkle.LightEmission = 1
+		sparkle.Parent = flash
+		flash.Parent = Workspace
+		sparkle:Emit(1)
+		task.delay(0.08, function()
+			flash:Destroy()
+		end)
+	end
+end
+
 -- VIP walkers get a warm golden glow over the whole scene while they walk.
 local function vipGlow()
 	local effect = Instance.new("ColorCorrectionEffect")
@@ -302,6 +342,7 @@ function Stage.start()
 		end)
 	end)
 
+	task.spawn(flashLoop)
 	RunService:BindToRenderStep("StyleMyBestieCamera", Enum.RenderPriority.Camera.Value + 1, updateCamera)
 	State.RoundChanged:Connect(onRoundChanged)
 	Remotes.Events.RunwayEffect.OnClientEvent:Connect(function(userId: number, isVip: boolean)

@@ -114,7 +114,9 @@ local function buildRunway()
 	block(runway, "Stage", Vector3.new(60, 3, 20), CFrame.new(0, 2, 265), Color3.fromRGB(250, 240, 250))
 	marker(runway, "Start", CFrame.new(0, 6, 168))
 	marker(runway, "End", CFrame.new(0, 6, 250))
-	marker(runway, "Lineup", CFrame.new(0, 6, 260))
+	-- Lineup at the FRONT of the stage (nearest the camera), podium behind it, so the podium
+	-- never hides the players being voted on.
+	marker(runway, "Lineup", CFrame.new(0, 6, 271))
 	-- Camera sits beyond the end looking back down the catwalk.
 	marker(runway, "Camera", CFrame.lookAt(Vector3.new(0, 14, 285), Vector3.new(0, 6, 220)))
 	local audience = block(
@@ -128,13 +130,13 @@ local function buildRunway()
 
 	local podium = getOrCreate(root, "Podium", "Model")
 	if not podium:FindFirstChild("First") then
-		block(podium, "Step1", Vector3.new(8, 6, 8), CFrame.new(0, 6.5, 268), Color3.fromRGB(255, 215, 90))
-		block(podium, "Step2", Vector3.new(8, 4, 8), CFrame.new(-9, 5.5, 268), Color3.fromRGB(200, 200, 215))
-		block(podium, "Step3", Vector3.new(8, 2, 8), CFrame.new(9, 4.5, 268), Color3.fromRGB(215, 150, 90))
+		block(podium, "Step1", Vector3.new(8, 6, 8), CFrame.new(0, 6.5, 260), Color3.fromRGB(255, 215, 90))
+		block(podium, "Step2", Vector3.new(8, 4, 8), CFrame.new(-9, 5.5, 260), Color3.fromRGB(200, 200, 215))
+		block(podium, "Step3", Vector3.new(8, 2, 8), CFrame.new(9, 4.5, 260), Color3.fromRGB(215, 150, 90))
 		local face = CFrame.Angles(0, math.pi, 0) -- face the camera
-		marker(podium, "First", CFrame.new(0, 13, 268) * face)
-		marker(podium, "Second", CFrame.new(-9, 11, 268) * face)
-		marker(podium, "Third", CFrame.new(9, 9, 268) * face)
+		marker(podium, "First", CFrame.new(0, 13, 260) * face)
+		marker(podium, "Second", CFrame.new(-9, 11, 260) * face)
+		marker(podium, "Third", CFrame.new(9, 9, 260) * face)
 	end
 	MapDecor.buildRunway(runway)
 end

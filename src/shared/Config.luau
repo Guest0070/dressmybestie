@@ -319,22 +319,111 @@ Config.DevProducts = {
 -- poses: an emote). 0 = not picked yet, so it's hidden.
 export type Cosmetic = {
 	id: string,
-	slot: "Entrance" | "Walk" | "Pose",
+	slot: "Entrance" | "Walk" | "Pose" | "Trail" | "Title",
 	displayName: string,
 	coinPrice: number?,
 	productKey: string?,
 	pass: string?,
 	rank: number?,
 	animationId: number?,
+	color: Color3?, -- trails + titles
+	color2: Color3?, -- trails: end colour (gradient)
 }
 Config.Cosmetics = {
 	-- Entrance effects (built from particles/lights, no assets needed)
-	{ id = "Bubbles", slot = "Entrance", displayName = "Bubbles", coinPrice = 250 },
 	{ id = "Smoke", slot = "Entrance", displayName = "Smoke Puff", coinPrice = 150 },
+	{ id = "Bubbles", slot = "Entrance", displayName = "Bubbles", coinPrice = 250 },
+	{ id = "Stars", slot = "Entrance", displayName = "Shooting Stars", coinPrice = 400 },
+	{ id = "Petals", slot = "Entrance", displayName = "Rose Petals", coinPrice = 600 },
+	{ id = "Fire", slot = "Entrance", displayName = "Hot Stuff (Fire)", coinPrice = 1000 },
 	{ id = "Hearts", slot = "Entrance", displayName = "Hearts", rank = 3 },
 	{ id = "Sparkles", slot = "Entrance", displayName = "Sparkles", productKey = "EntranceSparkles" },
 	{ id = "Confetti", slot = "Entrance", displayName = "Confetti", productKey = "EntranceConfetti" },
 	{ id = "Spotlight", slot = "Entrance", displayName = "Spotlight", productKey = "EntranceSpotlight" },
+	-- Trails (follow you around the lobby and down the runway)
+	{
+		id = "TrailPink",
+		slot = "Trail",
+		displayName = "Bubblegum Trail",
+		coinPrice = 200,
+		color = Color3.fromRGB(255, 120, 190),
+		color2 = Color3.fromRGB(255, 200, 230),
+	},
+	{
+		id = "TrailOcean",
+		slot = "Trail",
+		displayName = "Ocean Trail",
+		coinPrice = 350,
+		color = Color3.fromRGB(60, 160, 255),
+		color2 = Color3.fromRGB(120, 255, 230),
+	},
+	{
+		id = "TrailSunset",
+		slot = "Trail",
+		displayName = "Sunset Trail",
+		coinPrice = 600,
+		color = Color3.fromRGB(255, 150, 60),
+		color2 = Color3.fromRGB(200, 60, 200),
+	},
+	{
+		id = "TrailMint",
+		slot = "Trail",
+		displayName = "Mint Trail",
+		rank = 4,
+		color = Color3.fromRGB(120, 240, 170),
+		color2 = Color3.fromRGB(230, 255, 240),
+	},
+	{
+		id = "TrailGold",
+		slot = "Trail",
+		displayName = "Golden Trail",
+		pass = "VIP",
+		color = Color3.fromRGB(255, 215, 80),
+		color2 = Color3.fromRGB(255, 250, 200),
+	},
+	-- Titles (shown over your head and on the runway)
+	{
+		id = "TitleCute",
+		slot = "Title",
+		displayName = "Certified Cutie",
+		coinPrice = 150,
+		color = Color3.fromRGB(255, 150, 200),
+	},
+	{
+		id = "TitleDrip",
+		slot = "Title",
+		displayName = "Drip Detected",
+		coinPrice = 300,
+		color = Color3.fromRGB(100, 200, 255),
+	},
+	{
+		id = "TitleChaos",
+		slot = "Title",
+		displayName = "Chaos Stylist",
+		coinPrice = 500,
+		color = Color3.fromRGB(255, 120, 80),
+	},
+	{
+		id = "TitleRoyal",
+		slot = "Title",
+		displayName = "Runway Royalty",
+		coinPrice = 1200,
+		color = Color3.fromRGB(255, 215, 80),
+	},
+	{
+		id = "TitleIcon",
+		slot = "Title",
+		displayName = "Style Icon",
+		rank = 6,
+		color = Color3.fromRGB(200, 140, 255),
+	},
+	{
+		id = "TitleVIP",
+		slot = "Title",
+		displayName = "VIP",
+		pass = "VIP",
+		color = Color3.fromRGB(255, 215, 80),
+	},
 	-- Runway walks
 	{ id = "Strut", slot = "Walk", displayName = "Strut", productKey = "WalkStrut", animationId = 0 },
 	{ id = "Glide", slot = "Walk", displayName = "Glide", productKey = "WalkGlide", animationId = 0 },
@@ -346,13 +435,13 @@ Config.Cosmetics = {
 
 -- Sound effect asset IDs from the Creator Store (Toolbox -> Audio). 0 = silent until picked.
 Config.Sounds = {
-	Click = 0,
+	Click = "rbxasset://sounds/electronicpingshort.wav", -- built into every Roblox client
 	PhaseChange = 0,
 	RunwayMusic = 0,
 	Heart = 0,
 	Podium = 0,
 	LobbyMoment = 0,
-} :: { [string]: number }
+} :: { [string]: number | string }
 
 -- Admins: the game owner is always an admin, and so is everyone in Studio playtests.
 -- Add friends' user IDs here (the number in their profile URL), e.g. { 12345678 }.

@@ -39,6 +39,8 @@ local PlayerData = {}
 
 -- Fires (player) once their profile is loaded and ready.
 PlayerData.Loaded = Signal.new() :: Signal.Signal<Player>
+-- Fires (player) after their data changes (coins, equipped items, ...).
+PlayerData.Changed = Signal.new() :: Signal.Signal<Player>
 
 local function currentDay(): number
 	return os.time() // 86400
@@ -117,6 +119,7 @@ function PlayerData.pushToClient(player: Player)
 	local profile = profiles[player]
 	if profile then
 		Remotes.Events.DataChanged:FireClient(player, toPublic(player, profile.Data))
+		PlayerData.Changed:Fire(player)
 	end
 end
 

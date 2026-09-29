@@ -644,7 +644,7 @@ local function runway()
 			local tag = Instance.new("BillboardGui")
 			tag.Name = "RunwayTag"
 			tag.Size = UDim2.fromOffset(260, 70)
-			tag.StudsOffset = Vector3.new(0, 3, 0)
+			tag.StudsOffset = Vector3.new(0, 5.5, 0) -- above the overhead name tag
 			tag.AlwaysOnTop = true
 			local label = Instance.new("TextLabel")
 			label.BackgroundTransparency = 1
@@ -778,6 +778,10 @@ local function results(hearts: { [number]: number })
 				table.insert(podiumSpots, { player = p.player, spot = spot, place = place })
 			end
 		end
+		if not place then
+			-- Off the podium: step back to the audience so the winners have the stage.
+			teleport(p.player, Map.audienceCFrame())
+		end
 		table.insert(lookResults, {
 			wearer = p.player,
 			wearerUserId = p.userId,
@@ -806,7 +810,7 @@ local function results(hearts: { [number]: number })
 			local tag = Instance.new("BillboardGui")
 			tag.Name = "PodiumTag"
 			tag.Size = UDim2.fromOffset(160, 70)
-			tag.StudsOffset = Vector3.new(0, 3.5, 0)
+			tag.StudsOffset = Vector3.new(0, 5.5, 0) -- above the overhead name tag
 			tag.AlwaysOnTop = true
 			local label = Instance.new("TextLabel")
 			label.BackgroundTransparency = 1
@@ -820,6 +824,10 @@ local function results(hearts: { [number]: number })
 			tag.Parent = head
 			Debris:AddItem(tag, Config.Timings.Results)
 		end
+	end
+	local firstSpot = Map.podiumCFrame(1)
+	if firstSpot and #podiumSpots > 0 then
+		Effects.burst(firstSpot.Position + Vector3.new(0, 2, 0))
 	end
 	task.delay(0.5, function()
 		for _, entry in podiumSpots do

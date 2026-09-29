@@ -12,7 +12,7 @@ local PlayerData = require(script.Parent.Parent.Data.PlayerData)
 
 local Shop = {}
 
-local VALID_SLOTS = { Entrance = true, Walk = true, Pose = true }
+local VALID_SLOTS = { Entrance = true, Walk = true, Pose = true, Trail = true, Title = true }
 local THROTTLE_SECONDS = 0.25
 
 local lastRequest: { [Player]: number } = {}

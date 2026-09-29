@@ -83,6 +83,150 @@ local function lamp(parent: Instance, position: Vector3)
 	light.Parent = bulb
 end
 
+-- A shop kiosk: counter, pillars, striped awning, glowing sign and a "press E / tap" prompt.
+-- The prompt's ShopTab attribute tells the client which shop tab to open.
+local function kiosk(parent: Instance, position: Vector3, name: string, tab: string, accent: Color3)
+	local model = Instance.new("Model")
+	model.Name = `Kiosk_{tab}`
+	local facing = CFrame.lookAt(position, Vector3.new(0, position.Y, 0)) -- face the plaza centre
+	local function at(offset: Vector3): CFrame
+		return facing * CFrame.new(offset)
+	end
+	local counter = part(model, "Counter", Vector3.new(12, 4, 4), at(Vector3.new(0, 2, 0)), WHITE)
+	part(model, "CounterStripe", Vector3.new(12.2, 0.6, 4.2), at(Vector3.new(0, 3.2, 0)), accent, true)
+	part(model, "PillarL", Vector3.new(1, 12, 1), at(Vector3.new(-5.5, 6, 2)), DARK)
+	part(model, "PillarR", Vector3.new(1, 12, 1), at(Vector3.new(5.5, 6, 2)), DARK)
+	for i = 0, 5 do
+		local color = if i % 2 == 0 then accent else WHITE
+		part(
+			model,
+			"Awning",
+			Vector3.new(2, 0.6, 7),
+			at(Vector3.new(-5 + i * 2, 12, -0.5)) * CFrame.Angles(math.rad(-15), 0, 0),
+			color
+		)
+	end
+	local board = part(model, "Sign", Vector3.new(12, 3.5, 0.6), at(Vector3.new(0, 14.4, 2)), DARK)
+	sign(board, Enum.NormalId.Front, { { text = name, color = accent, size = 0.8 } })
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ActionText = "Shop"
+	prompt.ObjectText = name
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = 14
+	prompt.RequiresLineOfSight = false
+	prompt:SetAttribute("ShopTab", tab)
+	prompt.Parent = counter
+	model.Parent = parent
+end
+
+local function palm(parent: Instance, position: Vector3)
+	local trunk = part(
+		parent,
+		"PalmTrunk",
+		Vector3.new(1.6, 16, 1.6),
+		CFrame.new(position + Vector3.new(0, 8, 0)),
+		Color3.fromRGB(140, 95, 60)
+	)
+	trunk.Material = Enum.Material.Wood
+	local top = position + Vector3.new(0, 16, 0)
+	for i = 0, 5 do
+		local angle = math.rad(i * 60)
+		local leaf = part(
+			parent,
+			"PalmLeaf",
+			Vector3.new(2.4, 0.4, 9),
+			CFrame.new(top)
+				* CFrame.Angles(0, angle, 0)
+				* CFrame.new(0, -1, -4)
+				* CFrame.Angles(math.rad(-25), 0, 0),
+			Color3.fromRGB(70, 190, 100)
+		)
+		leaf.Material = Enum.Material.Grass
+	end
+end
+
+local function fountain(parent: Instance, position: Vector3)
+	local rim = part(
+		parent,
+		"FountainRim",
+		Vector3.new(2, 16, 16),
+		CFrame.new(position + Vector3.new(0, 1, 0)) * CFrame.Angles(0, 0, math.pi / 2),
+		WHITE
+	)
+	rim.Shape = Enum.PartType.Cylinder
+	local water = part(
+		parent,
+		"FountainWater",
+		Vector3.new(0.4, 14, 14),
+		CFrame.new(position + Vector3.new(0, 2.1, 0)) * CFrame.Angles(0, 0, math.pi / 2),
+		Color3.fromRGB(110, 200, 255)
+	)
+	water.Shape = Enum.PartType.Cylinder
+	water.Material = Enum.Material.Glass
+	water.Transparency = 0.3
+	water.CanCollide = false
+	local pillar = part(
+		parent,
+		"FountainPillar",
+		Vector3.new(2, 7, 2),
+		CFrame.new(position + Vector3.new(0, 4.5, 0)),
+		PINK,
+		true
+	)
+	local spray = Instance.new("ParticleEmitter")
+	spray.Rate = 60
+	spray.Lifetime = NumberRange.new(1.2, 1.6)
+	spray.Speed = NumberRange.new(14, 18)
+	spray.SpreadAngle = Vector2.new(15, 15)
+	spray.Acceleration = Vector3.new(0, -30, 0)
+	spray.Size = NumberSequence.new(0.5, 0.1)
+	spray.Transparency = NumberSequence.new(0.2, 1)
+	spray.Color = ColorSequence.new(Color3.fromRGB(200, 240, 255))
+	spray.EmissionDirection = Enum.NormalId.Top
+	spray.Parent = pillar
+end
+
+-- Strings of coloured bulbs between two points.
+local function stringLights(parent: Instance, from: Vector3, to: Vector3)
+	local colors = { PINK, Color3.fromRGB(255, 220, 80), Color3.fromRGB(110, 200, 255), WHITE }
+	local count = math.floor((to - from).Magnitude / 4)
+	for i = 0, count do
+		local t = i / count
+		local sag = math.sin(t * math.pi) * 2
+		local bulb = part(
+			parent,
+			"Bulb",
+			Vector3.new(0.8, 0.8, 0.8),
+			CFrame.new(from:Lerp(to, t) - Vector3.new(0, sag, 0)),
+			colors[i % #colors + 1],
+			true
+		)
+		bulb.Shape = Enum.PartType.Ball
+		bulb.CanCollide = false
+	end
+end
+
+local function plaza(parent: Instance)
+	-- Pink/white checker tiles, 10x10 studs each, just above the ground.
+	for x = -4, 3 do
+		for z = -4, 3 do
+			local color = if (x + z) % 2 == 0 then Color3.fromRGB(255, 190, 220) else WHITE
+			local tile =
+				part(parent, "Tile", Vector3.new(10, 0.2, 10), CFrame.new(x * 10 + 5, 0.1, z * 10 + 5), color)
+			tile.CanCollide = false
+		end
+	end
+end
+
+local function arch(parent: Instance, position: Vector3, text: string)
+	part(parent, "ArchL", Vector3.new(2, 18, 2), CFrame.new(position + Vector3.new(-10, 9, 0)), PINK, true)
+	part(parent, "ArchR", Vector3.new(2, 18, 2), CFrame.new(position + Vector3.new(10, 9, 0)), PINK, true)
+	local top =
+		part(parent, "ArchTop", Vector3.new(22, 4, 2), CFrame.new(position + Vector3.new(0, 19, 0)), DARK)
+	sign(top, Enum.NormalId.Front, { { text = text, color = PINK, size = 0.8 } })
+	sign(top, Enum.NormalId.Back, { { text = text, color = PINK, size = 0.8 } })
+end
+
 function MapDecor.buildLobby(lobby: Instance, hasOwnFloor: boolean)
 	if lobby:FindFirstChild("Decor") then
 		return
@@ -113,6 +257,30 @@ function MapDecor.buildLobby(lobby: Instance, hasOwnFloor: boolean)
 	do
 		lamp(decor, corner)
 	end
+
+	-- The plaza: checker floor, fountain, shops, palms, lights and an arch.
+	plaza(decor)
+	fountain(decor, Vector3.new(0, 0, 22))
+	kiosk(decor, Vector3.new(-30, 0, 22), "BOUTIQUE", "Effects", PINK)
+	kiosk(decor, Vector3.new(30, 0, 22), "TRAIL BAR", "Trails", Color3.fromRGB(110, 200, 255))
+	kiosk(decor, Vector3.new(30, 0, -22), "TITLE STUDIO", "Titles", Color3.fromRGB(200, 140, 255))
+	kiosk(decor, Vector3.new(-30, 0, -22), "VIP LOUNGE", "Passes", Color3.fromRGB(255, 210, 80))
+	for _, spot in
+		{
+			Vector3.new(-50, 0, -50),
+			Vector3.new(50, 0, -50),
+			Vector3.new(-50, 0, 50),
+			Vector3.new(50, 0, 50),
+			Vector3.new(0, 0, -54),
+		}
+	do
+		palm(decor, spot)
+	end
+	stringLights(decor, Vector3.new(-36, 12.5, -36), Vector3.new(36, 12.5, -36))
+	stringLights(decor, Vector3.new(-36, 12.5, 36), Vector3.new(36, 12.5, 36))
+	stringLights(decor, Vector3.new(-36, 12.5, -36), Vector3.new(-36, 12.5, 36))
+	stringLights(decor, Vector3.new(36, 12.5, -36), Vector3.new(36, 12.5, 36))
+	arch(decor, Vector3.new(0, 0, 55), "TO THE RUNWAY")
 
 	if hasOwnFloor then
 		-- Neon border around the auto-built lobby floor.

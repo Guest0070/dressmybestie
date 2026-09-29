@@ -3,6 +3,7 @@
 
 local Admin = require(script.Admin)
 local Analytics = require(script.Analytics)
+local Cosmetics = require(script.Cosmetics)
 local LookApplier = require(script.Styling.LookApplier)
 local Map = require(script.Round.Map)
 local Passes = require(script.Monetization.Passes)
@@ -18,6 +19,7 @@ Analytics.start() -- before PlayerData so it sees every Loaded event
 PlayerData.start()
 LookApplier.start()
 Voting.start()
+Cosmetics.start()
 Shop.start()
 Receipts.start()
 RoundManager.start()

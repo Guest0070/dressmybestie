@@ -8,6 +8,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -111,7 +112,8 @@ function Kit.playSound(key: string)
 	if not id or id == 0 then
 		return
 	end
-	local sound = Kit.new("Sound", { SoundId = `rbxassetid://{id}`, Volume = 0.6, Parent = SoundService })
+	local soundId = if type(id) == "string" then id else `rbxassetid://{id}`
+	local sound = Kit.new("Sound", { SoundId = soundId, Volume = 0.6, Parent = SoundService })
 	sound.Ended:Once(function()
 		sound:Destroy()
 	end)
@@ -143,6 +145,29 @@ function Kit.button(props: Props, onClick: (() -> ())?): TextButton
 		"UITextSizeConstraint",
 		{ MaxTextSize = props.MaxTextSize or 28, MinTextSize = 10, Parent = button }
 	)
+	-- Soft top-to-bottom shine.
+	Kit.new("UIGradient", {
+		Rotation = 90,
+		Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(205, 205, 215)),
+		Parent = button,
+	})
+	-- Squish on press, grow a touch on hover: makes every button feel alive.
+	local scale = Kit.new("UIScale", { Parent = button })
+	local function tweenTo(value: number)
+		TweenService:Create(scale, TweenInfo.new(0.08, Enum.EasingStyle.Quad), { Scale = value }):Play()
+	end
+	button.MouseEnter:Connect(function()
+		tweenTo(1.04)
+	end)
+	button.MouseLeave:Connect(function()
+		tweenTo(1)
+	end)
+	button.MouseButton1Down:Connect(function()
+		tweenTo(0.93)
+	end)
+	button.MouseButton1Up:Connect(function()
+		tweenTo(1)
+	end)
 	if onClick then
 		button.Activated:Connect(function()
 			Kit.playSound("Click")
@@ -161,7 +186,14 @@ function Kit.panel(props: Props): Frame
 	for key, value in props do
 		merged[key] = value
 	end
-	return Kit.new("Frame", merged, { Kit.corner(16), Kit.stroke(Kit.Colors.Pink, 2) })
+	return Kit.new("Frame", merged, {
+		Kit.corner(16),
+		Kit.stroke(Kit.Colors.Pink, 2),
+		Kit.new("UIGradient", {
+			Rotation = 90,
+			Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(175, 165, 195)),
+		}),
+	})
 end
 
 -- A ScreenGui plus a scaled Root frame that always covers the whole screen.

@@ -371,7 +371,13 @@ function HUD.start()
 		end
 		accumulator = 0
 		local endsAt = State.round.endsAt
-		timerLabel.Text = if endsAt then Kit.formatTime(endsAt - Workspace:GetServerTimeNow()) else "--"
+		local remaining = if endsAt then endsAt - Workspace:GetServerTimeNow() else nil
+		timerLabel.Text = if remaining then Kit.formatTime(remaining) else "--"
+		-- Last 10 seconds: the timer flashes red/white so nobody misses the deadline.
+		local urgent = remaining ~= nil and remaining <= 10 and remaining > 0
+		timerLabel.TextColor3 = if urgent and math.floor((remaining :: number) * 2) % 2 == 0
+			then Color3.fromRGB(255, 90, 90)
+			else Kit.Colors.Text
 	end)
 
 	State.RoundChanged:Connect(refreshRound)
