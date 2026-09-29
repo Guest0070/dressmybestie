@@ -1,15 +1,30 @@
 --!strict
--- Client entry point. Day 1: just proves remotes + data load. Real UI arrives Day 2+.
+-- Client entry point. Starts each UI/system and wires them together.
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Catalog = require(script.UI.Catalog)
+local HUD = require(script.UI.HUD)
+local Moments = require(script.Moments)
+local ResultsUI = require(script.UI.ResultsUI)
+local ShopUI = require(script.UI.ShopUI)
+local Stage = require(script.Stage)
+local State = require(script.State)
+local VotingUI = require(script.UI.VotingUI)
 
-local Remotes = require(ReplicatedStorage.Shared.Remotes)
-local Types = require(ReplicatedStorage.Shared.Types)
+State.start()
+HUD.start()
+Catalog.start()
+VotingUI.start()
+ResultsUI.start()
+ShopUI.start()
+Moments.start()
+Stage.start()
 
-Remotes.Events.DataChanged.OnClientEvent:Connect(function(data: Types.PublicData)
-	print(
-		`[StyleMyBestie] Coins: {data.coins}  XP: {data.styleXp}  Rank: {data.rank}  Daily ready: {data.canClaimDaily}`
-	)
-end)
+HUD.onOpenShop = ShopUI.open
+HUD.onOpenLooks = ResultsUI.openLooks
+Catalog.onRotate = Stage.rotate
+VotingUI.onToast = HUD.toast
+Moments.onAnnounce = function(text)
+	HUD.toast(text, 6)
+end
 
 print("[StyleMyBestie] Client started")
