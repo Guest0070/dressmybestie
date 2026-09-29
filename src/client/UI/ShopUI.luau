@@ -16,6 +16,9 @@ local Kit = require(script.Parent.Kit)
 
 local ShopUI = {}
 
+-- Set by init.client: the Dressing Room kiosk opens the catalog instead of the shop.
+ShopUI.onDressingRoom = function() end
+
 type Tab = { id: string, label: string, slots: { string }? }
 local TABS: { Tab } = {
 	{ id = "Passes", label = "VIP & Passes" },
@@ -453,7 +456,10 @@ function ShopUI.start()
 	-- Walking up to a kiosk in the plaza and pressing E / tapping opens that shop tab.
 	ProximityPromptService.PromptTriggered:Connect(function(prompt)
 		local tab = prompt:GetAttribute("ShopTab")
-		if type(tab) == "string" then
+		if tab == "DressingRoom" then
+			Kit.playSound("Click")
+			ShopUI.onDressingRoom()
+		elseif type(tab) == "string" then
 			Kit.playSound("Click")
 			ShopUI.open(tab)
 		end

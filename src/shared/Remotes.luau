@@ -22,6 +22,8 @@ local EVENT_NAMES = {
 	"BuyWithCoins", -- (cosmeticId: string)
 	"EquipCosmetic", -- (slot: string, cosmeticId: string?)
 	"AdminCommand", -- (command: string, arg: any) admins only, checked on the server
+	"SetOwnLook", -- (look: Look) Dressing Room: dress your own avatar (lobby only)
+	"ResetOwnLook", -- () Dressing Room: back to your real avatar
 }
 
 local FUNCTION_NAMES = {

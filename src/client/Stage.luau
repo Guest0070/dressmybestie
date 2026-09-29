@@ -96,6 +96,25 @@ local function updateCamera()
 	local round = State.round
 	local target = State.myTarget()
 
+	-- Dressing Room: frame my own character like a mannequin in a booth.
+	local dressingRoot = if State.dressingRoom and State.player.Character
+		then State.player.Character:FindFirstChild("HumanoidRootPart")
+		else nil
+	if dressingRoot and dressingRoot:IsA("BasePart") then
+		camera.CameraType = Enum.CameraType.Scriptable
+		local pivot = dressingRoot.CFrame
+		local look = (CFrame.Angles(0, orbitAngle, 0) * pivot).LookVector
+		local dir = Vector3.new(look.X, 0, look.Z).Unit
+		local cameraPos = pivot.Position + dir * ORBIT_DISTANCE + Vector3.new(0, CAMERA_RAISE, 0)
+		local level = CFrame.lookAt(cameraPos, cameraPos - dir)
+		local viewport = camera.ViewportSize
+		local aspect = viewport.X / math.max(viewport.Y, 1)
+		local halfFov = math.rad(camera.FieldOfView) / 2
+		local yaw = math.atan(0.5 * math.tan(halfFov) * aspect)
+		camera.CFrame = camera.CFrame:Lerp(level * CFrame.Angles(0, -yaw, 0), CAMERA_LERP * 2)
+		return
+	end
+
 	if round.phase == "Styling" and target then
 		local mannequin = findMannequin(target)
 		if mannequin then
@@ -216,7 +235,7 @@ local function setPostEffectsSuspended(suspended: boolean)
 end
 
 local function onRoundChanged()
-	local locked = inRound() and State.round.phase ~= "Lobby"
+	local locked = (inRound() and State.round.phase ~= "Lobby") or State.dressingRoom
 	if controls then
 		if locked then
 			controls:Disable()
@@ -227,7 +246,7 @@ local function onRoundChanged()
 	setResetEnabled(not locked)
 	setCharacterHidden(shouldHideCharacter())
 	setPostEffectsSuspended(State.round.phase == "Styling")
-	if State.round.phase ~= "Styling" then
+	if State.round.phase ~= "Styling" and not State.dressingRoom then
 		orbitAngle = 0
 	end
 	-- Hide my own mannequin (unless I'm styling myself in a solo Studio test).
@@ -345,6 +364,7 @@ function Stage.start()
 	task.spawn(flashLoop)
 	RunService:BindToRenderStep("StyleMyBestieCamera", Enum.RenderPriority.Camera.Value + 1, updateCamera)
 	State.RoundChanged:Connect(onRoundChanged)
+	State.DressingRoomChanged:Connect(onRoundChanged)
 	Remotes.Events.RunwayEffect.OnClientEvent:Connect(function(userId: number, isVip: boolean)
 		if isVip then
 			vipGlow()

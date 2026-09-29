@@ -5,6 +5,7 @@ local AdminPanel = require(script.UI.AdminPanel)
 local Catalog = require(script.UI.Catalog)
 local HUD = require(script.UI.HUD)
 local HowToPlay = require(script.UI.HowToPlay)
+local Lobby = require(script.Lobby)
 local Moments = require(script.Moments)
 local ResultsUI = require(script.UI.ResultsUI)
 local ShopUI = require(script.UI.ShopUI)
@@ -22,12 +23,17 @@ HowToPlay.start()
 AdminPanel.start()
 Moments.start()
 Stage.start()
+Lobby.start()
 
 HUD.onOpenShop = ShopUI.open
 HUD.onOpenLooks = ResultsUI.openLooks
 HUD.onOpenHelp = HowToPlay.open
 HUD.onOpenAdmin = AdminPanel.toggle
 Catalog.onRotate = Stage.rotate
+Catalog.onBuyOutfit = function(look)
+	ResultsUI.openLooks({ { wearerUserId = State.player.UserId, wearerName = "Your outfit", look = look } })
+end
+ShopUI.onDressingRoom = Catalog.openDressingRoom
 VotingUI.onToast = HUD.toast
 Moments.onAnnounce = function(text)
 	HUD.toast(text, 6)

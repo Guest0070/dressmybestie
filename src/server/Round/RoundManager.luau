@@ -893,6 +893,11 @@ local function playRound()
 	results(hearts)
 end
 
+-- True while the player is part of a running round (their avatar belongs to the round).
+function RoundManager.isInRound(player: Player): boolean
+	return participants[player] ~= nil and state.phase ~= "Lobby"
+end
+
 -- Admin controls. Each returns a short message for the admin's screen.
 function RoundManager.adminStartNow(): string
 	if state.phase ~= "Lobby" then

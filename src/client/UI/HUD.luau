@@ -144,12 +144,15 @@ local function applyLayout(styling: boolean)
 end
 
 local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPhase?)
-	local styling = round.phase == "Styling" and State.myTarget() ~= nil
+	local styling = (round.phase == "Styling" and State.myTarget() ~= nil) or State.dressingRoom
 	applyLayout(styling)
 	-- Roblox's player list sits over the catalog tabs on small screens; hide it while styling.
 	pcall(StarterGui.SetCoreGuiEnabled, StarterGui, Enum.CoreGuiType.PlayerList, not styling)
 	phaseLabel.Text = PHASE_TITLES[round.phase] or round.phase
 	local main, sub = bannerFor(round)
+	if State.dressingRoom then
+		main, sub = "Dressing Room", "Try anything on! Tap Buy these to keep it."
+	end
 	bannerLabel.Text = main or ""
 	subLabel.Text = sub or ""
 	subLabel.Visible = sub ~= nil
@@ -381,6 +384,9 @@ function HUD.start()
 	end)
 
 	State.RoundChanged:Connect(refreshRound)
+	State.DressingRoomChanged:Connect(function()
+		refreshRound(State.round, nil)
+	end)
 	State.DataChanged:Connect(refreshData)
 	Remotes.Events.Toast.OnClientEvent:Connect(function(text: string)
 		HUD.toast(text)

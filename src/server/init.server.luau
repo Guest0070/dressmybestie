@@ -2,8 +2,10 @@
 -- Server entry point. Boots each system in order; systems never start themselves.
 
 local Admin = require(script.Admin)
+local Activities = require(script.Lobby.Activities)
 local Analytics = require(script.Analytics)
 local Cosmetics = require(script.Cosmetics)
+local DressingRoom = require(script.Lobby.DressingRoom)
 local LookApplier = require(script.Styling.LookApplier)
 local Map = require(script.Round.Map)
 local Passes = require(script.Monetization.Passes)
@@ -24,6 +26,8 @@ Shop.start()
 Receipts.start()
 RoundManager.start()
 Admin.start()
+DressingRoom.start()
+Activities.start()
 
 -- Layered clothing needs R15 avatars. Rig type is a Studio setting (File -> Avatar Settings),
 -- so we can only warn loudly if it's wrong.

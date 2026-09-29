@@ -85,7 +85,14 @@ end
 
 -- A shop kiosk: counter, pillars, striped awning, glowing sign and a "press E / tap" prompt.
 -- The prompt's ShopTab attribute tells the client which shop tab to open.
-local function kiosk(parent: Instance, position: Vector3, name: string, tab: string, accent: Color3)
+local function kiosk(
+	parent: Instance,
+	position: Vector3,
+	name: string,
+	tab: string,
+	accent: Color3,
+	actionText: string?
+)
 	local model = Instance.new("Model")
 	model.Name = `Kiosk_{tab}`
 	local facing = CFrame.lookAt(position, Vector3.new(0, position.Y, 0)) -- face the plaza centre
@@ -109,7 +116,7 @@ local function kiosk(parent: Instance, position: Vector3, name: string, tab: str
 	local board = part(model, "Sign", Vector3.new(12, 3.5, 0.6), at(Vector3.new(0, 14.4, 2)), DARK)
 	sign(board, Enum.NormalId.Front, { { text = name, color = accent, size = 0.8 } })
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.ActionText = "Shop"
+	prompt.ActionText = actionText or "Shop"
 	prompt.ObjectText = name
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = 14
@@ -265,6 +272,15 @@ function MapDecor.buildLobby(lobby: Instance, hasOwnFloor: boolean)
 	kiosk(decor, Vector3.new(30, 0, 22), "TRAIL BAR", "Trails", Color3.fromRGB(110, 200, 255))
 	kiosk(decor, Vector3.new(30, 0, -22), "TITLE STUDIO", "Titles", Color3.fromRGB(200, 140, 255))
 	kiosk(decor, Vector3.new(-30, 0, -22), "VIP LOUNGE", "Passes", Color3.fromRGB(255, 210, 80))
+	-- Dress your own avatar (client opens the catalog in "self" mode for this tab name).
+	kiosk(
+		decor,
+		Vector3.new(0, 0, -32),
+		"DRESSING ROOM",
+		"DressingRoom",
+		Color3.fromRGB(80, 220, 160),
+		"Dress up"
+	)
 	for _, spot in
 		{
 			Vector3.new(-50, 0, -50),

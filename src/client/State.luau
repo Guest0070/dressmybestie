@@ -20,6 +20,17 @@ State.lastShopLooks = {} :: { Types.ShopLook }
 State.RoundChanged = Signal.new() :: Signal.Signal<Types.RoundState, Types.RoundPhase?>
 State.DataChanged = Signal.new() :: Signal.Signal<Types.PublicData>
 
+-- True while the player is in the lobby Dressing Room (dressing their own avatar).
+State.dressingRoom = false
+State.DressingRoomChanged = Signal.new() :: Signal.Signal<boolean>
+
+function State.setDressingRoom(open: boolean)
+	if State.dressingRoom ~= open then
+		State.dressingRoom = open
+		State.DressingRoomChanged:Fire(open)
+	end
+end
+
 -- User ID of the player I'm styling right now, if any.
 function State.myTarget(): number?
 	local assignments = State.round.assignments

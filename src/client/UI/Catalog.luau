@@ -18,6 +18,8 @@ local Catalog = {}
 
 -- Set by init.client: rotates the booth camera around the mannequin.
 Catalog.onRotate = function(_direction: number) end
+-- Set by init.client: opens the "Buy these" panel for the Dressing Room outfit.
+Catalog.onBuyOutfit = function(_look: Types.Look) end
 
 type Look = Types.Look
 type CatalogItem = { Id: number, Name: string, ItemType: string }
@@ -37,6 +39,9 @@ local inFlight: { [string]: boolean } = {}
 
 local panel: Frame
 local rotateBar: Frame
+local selfBar: Frame
+-- Dressing Room: the catalog dresses your own avatar instead of a partner's mannequin.
+local selfMode = false
 local grid: ScrollingFrame
 local tabButtons: { [string]: TextButton } = {}
 local itemButtons: { [number]: ImageButton } = {}
@@ -71,11 +76,12 @@ end
 
 local function sendLook()
 	seq += 1
-	Remotes.Events.SetMannequinLook:FireServer({
-		assetIds = look.assetIds,
-		shoeBundleId = look.shoeBundleId,
-		seq = seq,
-	})
+	local payload = { assetIds = look.assetIds, shoeBundleId = look.shoeBundleId, seq = seq }
+	if selfMode then
+		Remotes.Events.SetOwnLook:FireServer(payload)
+	else
+		Remotes.Events.SetMannequinLook:FireServer(payload)
+	end
 	refreshSelection()
 end
 
@@ -266,10 +272,17 @@ local function selectCategory(category: Config.CatalogCategory)
 end
 
 local function refreshVisibility()
-	local target = State.myTarget()
-	local styling = State.round.phase == "Styling" and target ~= nil
-	panel.Visible = styling
-	rotateBar.Visible = styling
+	if selfMode and State.round.phase ~= "Lobby" then
+		selfMode = false -- a round started: the Dressing Room closes
+		State.setDressingRoom(false)
+	end
+	local stylingTarget = State.myTarget()
+	local styling = State.round.phase == "Styling" and stylingTarget ~= nil
+	local visible = styling or selfMode
+	panel.Visible = visible
+	rotateBar.Visible = visible
+	selfBar.Visible = selfMode
+	local target = if selfMode then State.player.UserId elseif styling then stylingTarget else nil
 	if target ~= currentTarget then
 		-- New round or a swap: start from an empty look (LookSync fills in a swapped look).
 		currentTarget = target
@@ -278,7 +291,7 @@ local function refreshVisibility()
 		seq = 0
 		refreshSelection()
 	end
-	if styling and not searchCache[cacheKey(currentCategory)] then
+	if visible and not searchCache[cacheKey(currentCategory)] then
 		selectCategory(currentCategory)
 	end
 end
@@ -300,6 +313,24 @@ local function onLookSync(targetUserId: number, synced: Look, syncSeq: number?)
 		end
 		refreshSelection()
 	end
+end
+
+function Catalog.openDressingRoom()
+	if State.round.phase ~= "Lobby" or selfMode then
+		return
+	end
+	selfMode = true
+	State.setDressingRoom(true)
+	refreshVisibility()
+end
+
+function Catalog.closeDressingRoom()
+	if not selfMode then
+		return
+	end
+	selfMode = false
+	State.setDressingRoom(false)
+	refreshVisibility()
 end
 
 function Catalog.start()
@@ -418,6 +449,44 @@ function Catalog.start()
 			Catalog.onRotate(1)
 		end
 	)
+
+	-- Dressing Room buttons (above the rotate buttons).
+	selfBar = Kit.new("Frame", {
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 8, 1, -16 - Kit.ButtonHeight),
+		Size = UDim2.fromOffset(3 * 120 + 16, Kit.ButtonHeight),
+		Visible = false,
+		Parent = root,
+	}, { Kit.list(Enum.FillDirection.Horizontal, 8) })
+	Kit.button({
+		Text = "Done",
+		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		BackgroundColor3 = Kit.Colors.Green,
+		LayoutOrder = 1,
+		Parent = selfBar,
+	}, Catalog.closeDressingRoom)
+	Kit.button({
+		Text = "Reset me",
+		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		BackgroundColor3 = Kit.Colors.Grey,
+		LayoutOrder = 2,
+		Parent = selfBar,
+	}, function()
+		pushUndo()
+		look = { assetIds = {} }
+		refreshSelection()
+		Remotes.Events.ResetOwnLook:FireServer()
+	end)
+	Kit.button({
+		Text = "Buy these",
+		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		BackgroundColor3 = Kit.Colors.Gold,
+		LayoutOrder = 3,
+		Parent = selfBar,
+	}, function()
+		Catalog.onBuyOutfit(copyLook(look))
+	end)
 
 	selectCategory(currentCategory)
 	State.RoundChanged:Connect(refreshVisibility)

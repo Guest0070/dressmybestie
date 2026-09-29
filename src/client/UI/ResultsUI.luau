@@ -93,8 +93,10 @@ local function showLook(shopLook: Types.ShopLook)
 	end
 end
 
-function ResultsUI.openLooks()
-	local looks = State.lastShopLooks
+-- Opens the "Buy this look" panel. Pass `custom` to show specific looks (e.g. a Dressing Room
+-- outfit); otherwise it shows the looks from the last round.
+function ResultsUI.openLooks(custom: { Types.ShopLook }?)
+	local looks = custom or State.lastShopLooks
 	if #looks == 0 then
 		return
 	end

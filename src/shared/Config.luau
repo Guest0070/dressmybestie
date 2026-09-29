@@ -443,6 +443,17 @@ Config.Sounds = {
 	LobbyMoment = 0,
 } :: { [string]: number | string }
 
+-- Lobby activities. Coin rewards are small and capped so the lobby is fun, not a coin farm.
+Config.Lobby = {
+	GemCoins = 2, -- per gem
+	GemRespawnSeconds = 45,
+	GemCoinCapPerVisit = 120, -- max gem coins per player per server visit
+	ObbyReward = 40,
+	ObbyCooldownSeconds = 600, -- one obby reward per 10 minutes
+	BounceVelocity = 110,
+	LeaderboardRefreshSeconds = 10,
+}
+
 -- Admins: the game owner is always an admin, and so is everyone in Studio playtests.
 -- Add friends' user IDs here (the number in their profile URL), e.g. { 12345678 }.
 Config.AdminUserIds = {} :: { number }
