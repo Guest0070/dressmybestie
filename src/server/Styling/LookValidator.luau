@@ -58,8 +58,9 @@ function LookValidator.validate(raw: any, isVip: boolean): ValidatedLook
 	local bonus = if isVip then Config.Limits.VipBonusAccessories else 0
 	local seen: { [number]: boolean } = {}
 
-	-- Numeric loop: only the array part counts, so extra junk keys are ignored.
-	for i = 1, #rawIds do
+	-- Walk from the newest pick (end of the list) to the oldest, so when a slot is full the
+	-- newest item wins and the oldest is dropped. Numeric loop: only the array part counts.
+	for i = #rawIds, 1, -1 do
 		local id = rawIds[i]
 		if not isValidId(id) or seen[id] then
 			continue
@@ -98,16 +99,11 @@ function LookValidator.validate(raw: any, isVip: boolean): ValidatedLook
 				accepted = true
 			end
 		elseif rule.kind == "Classic" and rule.property then
-			-- One per property; a later pick replaces the earlier one.
-			local previous = result.classic[rule.property]
-			if previous then
-				local index = table.find(result.look.assetIds, previous)
-				if index then
-					table.remove(result.look.assetIds, index)
-				end
+			-- One per property (shirt, pants, t-shirt, face); the newest one was seen first.
+			if result.classic[rule.property] == nil then
+				result.classic[rule.property] = id
+				accepted = true
 			end
-			result.classic[rule.property] = id
-			accepted = true
 		elseif rule.kind == "Emote" then
 			if result.emoteId == nil then
 				result.emoteId = id
@@ -118,9 +114,19 @@ function LookValidator.validate(raw: any, isVip: boolean): ValidatedLook
 		if accepted then
 			table.insert(result.look.assetIds, id)
 		else
-			reject(id, `slot full ({typeName})`)
+			reject(id, `replaced by a newer {typeName}`)
 		end
 	end
+
+	-- We collected newest-first; put things back in the order they were picked.
+	local function reverse<T>(list: { T })
+		local n = #list
+		for i = 1, n // 2 do
+			list[i], list[n - i + 1] = list[n - i + 1], list[i]
+		end
+	end
+	reverse(result.look.assetIds)
+	reverse(result.accessories)
 
 	-- Shoes arrive as one bundle containing a left and a right shoe.
 	local bundleId = raw.shoeBundleId
