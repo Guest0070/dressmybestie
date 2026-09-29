@@ -4,6 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local CaptureService = game:GetService("CaptureService")
 local SocialService = game:GetService("SocialService")
 local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
@@ -53,6 +54,7 @@ local dailyButton: TextButton
 local looksButton: TextButton
 local adminButton: TextButton
 local questsBadge: TextLabel
+local photoButton: TextButton
 local rightColumn: Frame
 local toastLabel: TextLabel
 local revealFrame: Frame
@@ -130,6 +132,9 @@ end
 local function applyLayout(styling: boolean)
 	-- Lobby buttons only in the lobby: during a round they'd cover the voting/results panels.
 	local lobby = State.round.phase == "Lobby"
+	-- Photo button for the best moments: the runway, the results and the Dressing Room.
+	local phase = State.round.phase
+	photoButton.Visible = phase == "Runway" or phase == "Results" or State.dressingRoom
 	statsPanel.Visible = not styling
 	buttonColumn.Visible = lobby and not styling
 	rightColumn.Visible = lobby and not styling
@@ -426,6 +431,31 @@ function HUD.start()
 		Parent = questsButton,
 	})
 	Kit.corner(13).Parent = questsBadge
+
+	-- Photo: screenshot + Roblox's own share / save prompt (great for TikTok clips).
+	photoButton = Kit.button({
+		Text = "Photo",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -8, 0, 96),
+		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		BackgroundColor3 = Kit.Colors.Blue,
+		Visible = false,
+		Parent = root,
+	}, function()
+		pcall(CaptureService.CaptureScreenshot, CaptureService, function(capture)
+			local shared = pcall(
+				CaptureService.PromptShareCapture,
+				CaptureService,
+				capture,
+				"",
+				function() end,
+				function() end
+			)
+			if not shared then
+				pcall(CaptureService.PromptSaveCapturesToGallery, CaptureService, { capture }, function() end)
+			end
+		end)
+	end)
 
 	-- Right column (bottom-right): how to play + invite friends.
 	rightColumn = Kit.new("Frame", {

@@ -22,6 +22,30 @@ A round-based Roblox fashion game. Players pair up, style each other's mannequin
 
 The server makes every decision. Clients only send requests, and the server checks each one.
 
+## Everything in the game
+
+**The round:** lobby → pairing (friends paired together, trio for odd numbers) → theme reveal → 4-minute
+styling in a private booth → runway (follow camera, camera flashes, name tags, entrance effects) → hearts-only
+voting → results (podium reveal 3rd→1st, confetti, 1st/2nd/3rd tags, "Buy this look"). Chaos rounds: Worst
+Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme. AFK players sit out.
+
+**Lobby (things to do between rounds):**
+- Dressing Room kiosk: dress your own avatar from the catalog, then "Buy these".
+- Shop kiosks: Boutique (entrances), Trail Bar, Title Studio, VIP Lounge.
+- Obby into the sky (+40 coins, once per 10 min), 13 collectible gems (+2 each, capped per visit).
+- Dance floor with disco ball, bounce pads, fountain, palms, string lights.
+- Top Stylists board, Hall of Fame statues of last round's top 3 (walk up → "Buy this look").
+
+**Progression:** coins + style XP, 10 ranks with free unlocks, daily login streak (50 → 200 coins),
+5 daily quests, 9 achievements, overhead name tag with title + rank, coins/rank in the player list,
+rank-up celebration.
+
+**Shop (all fixed items, nothing random):** 10 entrance effects, 9 trails, 11 titles, walks, poses,
+VIP pass, Pose Pack, lobby moments (confetti rain / disco mode with your name), Premium +10% coins.
+
+**Also:** How to Play card, Invite Friends, Photo button (share/save a screenshot), Admin panel,
+mobile-first UI.
+
 ## One-time setup (Windows)
 
 1. **Install Rokit:** follow https://github.com/rojo-rbx/rokit#installation, then reopen PowerShell.
