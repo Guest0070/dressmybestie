@@ -82,6 +82,19 @@ local function buildLobby()
 	if not lobby:FindFirstChild("Spawn") then
 		marker(lobby, "Spawn", CFrame.new(0, 4, 0))
 	end
+	-- An empty place (no Baseplate) has nothing to stand on: players fall and never count as
+	-- ready. Build a floor + spawn pad if the place has no SpawnLocation of its own.
+	if not Workspace:FindFirstChildWhichIsA("SpawnLocation", true) then
+		block(lobby, "Floor", Vector3.new(120, 2, 120), CFrame.new(0, -1, 0), Color3.fromRGB(250, 225, 240))
+		local spawnPad = Instance.new("SpawnLocation")
+		spawnPad.Name = "SpawnPad"
+		spawnPad.Anchored = true
+		spawnPad.Size = Vector3.new(12, 1, 12)
+		spawnPad.CFrame = CFrame.new(0, 0.5, 0)
+		spawnPad.Color = Color3.fromRGB(255, 110, 180)
+		spawnPad.Duration = 0 -- no forcefield bubble
+		spawnPad.Parent = lobby
+	end
 end
 
 local function buildRunway()
