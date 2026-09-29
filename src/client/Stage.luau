@@ -133,6 +133,19 @@ local function updateCamera()
 			return
 		end
 	end
+	if round.phase == "Results" then
+		-- Close shot of the podium (winners face +Z, towards this camera). Aim a little to the
+		-- right so the podium sits left of the results panel in the bottom-right corner.
+		local first = mapPart({ "Podium", "First" })
+		if first then
+			camera.CameraType = Enum.CameraType.Scriptable
+			local facing = first.CFrame.LookVector
+			local focus = first.Position + Vector3.new(0, -2, 0) + first.CFrame.RightVector * -4
+			local desired = CFrame.lookAt(first.Position + facing * 22 + Vector3.new(0, 2, 0), focus)
+			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP)
+			return
+		end
+	end
 	if round.phase == "Runway" or round.phase == "Voting" or round.phase == "Results" then
 		local cameraPart = mapPart({ "Runway", "Camera" })
 		local focus = stageFocus()

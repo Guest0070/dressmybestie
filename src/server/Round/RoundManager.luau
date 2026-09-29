@@ -753,6 +753,7 @@ local function results(hearts: { [number]: number })
 	end)
 
 	local podium: { Types.PodiumEntry } = {}
+	local podiumSpots: { { player: Player, spot: CFrame, place: number } } = {}
 	local lookResults: { Rewards.LookResult } = {}
 	local shopLooks: { Types.ShopLook } = {}
 	for index, p in ranked do
@@ -774,7 +775,7 @@ local function results(hearts: { [number]: number })
 			})
 			local spot = Map.podiumCFrame(place)
 			if spot then
-				teleport(p.player, spot)
+				table.insert(podiumSpots, { player = p.player, spot = spot, place = place })
 			end
 		end
 		table.insert(lookResults, {
@@ -792,6 +793,41 @@ local function results(hearts: { [number]: number })
 		table.insert(present, player)
 	end
 	Rewards.grant(present, lookResults)
+
+	-- Put the top 3 on the podium with a big place tag. Teleport twice, half a second apart, in
+	-- case a character was still settling from the lineup and the first move got overridden.
+	local PLACE_TEXT = { "1st", "2nd", "3rd" }
+	local PLACE_COLOR =
+		{ Color3.fromRGB(255, 210, 80), Color3.fromRGB(220, 220, 235), Color3.fromRGB(225, 150, 90) }
+	for _, entry in podiumSpots do
+		teleport(entry.player, entry.spot)
+		local head = if entry.player.Character then entry.player.Character:FindFirstChild("Head") else nil
+		if head and head:IsA("BasePart") then
+			local tag = Instance.new("BillboardGui")
+			tag.Name = "PodiumTag"
+			tag.Size = UDim2.fromOffset(160, 70)
+			tag.StudsOffset = Vector3.new(0, 3.5, 0)
+			tag.AlwaysOnTop = true
+			local label = Instance.new("TextLabel")
+			label.BackgroundTransparency = 1
+			label.Size = UDim2.fromScale(1, 1)
+			label.Font = Enum.Font.FredokaOne
+			label.TextScaled = true
+			label.TextColor3 = PLACE_COLOR[entry.place]
+			label.TextStrokeTransparency = 0
+			label.Text = PLACE_TEXT[entry.place]
+			label.Parent = tag
+			tag.Parent = head
+			Debris:AddItem(tag, Config.Timings.Results)
+		end
+	end
+	task.delay(0.5, function()
+		for _, entry in podiumSpots do
+			if participants[entry.player] then
+				teleport(entry.player, entry.spot)
+			end
+		end
+	end)
 
 	setPhase("Results", Config.Timings.Results, { podium = podium, shopLooks = shopLooks })
 	waitFor(Config.Timings.Results)

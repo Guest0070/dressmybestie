@@ -174,10 +174,11 @@ end
 function ResultsUI.start()
 	local _, root = Kit.screen("Results", 4)
 
+	-- Bottom-right corner so the 3D podium in the middle stays visible.
 	podiumPanel = Kit.panel({
-		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -8),
-		Size = UDim2.fromOffset(620, 240),
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -8, 1, -8),
+		Size = UDim2.fromOffset(440, 250),
 		Visible = false,
 		Parent = root,
 	})
