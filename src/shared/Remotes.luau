@@ -25,6 +25,7 @@ local EVENT_NAMES = {
 	"SetOwnLook", -- (look: Look) Dressing Room: dress your own avatar (lobby only)
 	"ResetOwnLook", -- () Dressing Room: back to your real avatar
 	"ClaimQuest", -- (kind: "daily" | "achievement", id: string)
+	"SetAfk", -- (afk: boolean) sit out of rounds / join again
 }
 
 local FUNCTION_NAMES = {

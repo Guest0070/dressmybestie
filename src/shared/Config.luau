@@ -18,6 +18,9 @@ Config.Timings = {
 }
 
 Config.MinPlayersToStart = 2
+-- A stylist who picks nothing for this many rounds in a row is marked AFK (sits out until they
+-- tap "Join rounds"), so nobody gets stuck styling with an absent partner.
+Config.AfkIdleRounds = 2
 -- In Studio you can test the whole loop alone: you style your own mannequin.
 Config.StudioMinPlayers = 1
 
@@ -198,6 +201,26 @@ Config.Themes = {
 	{ name = "Red Carpet Royalty", vip = true },
 	{ name = "Haunted Gala", vip = true },
 	{ name = "Billionaire on a Yacht", vip = true },
+	{ name = "Time Traveler From 1985" },
+	{ name = "Cowboy in the City" },
+	{ name = "Mermaid on Land" },
+	{ name = "Secret Agent at a Party" },
+	{ name = "Gym Class Hero" },
+	{ name = "Movie Night in Pajamas" },
+	{ name = "Knight Off Duty" },
+	{ name = "Alien Exchange Student" },
+	{ name = "Pastel Picnic" },
+	{ name = "Skater Park Legend" },
+	{ name = "Snow Day Chaos" },
+	{ name = "Candy Land Royalty" },
+	{ name = "Lost at the Airport" },
+	{ name = "Artist With Paint Everywhere" },
+	{ name = "Science Fair Winner" },
+	{ name = "Music Festival Mud" },
+	{ name = "Ninja Tries Fashion" },
+	{ name = "Garden Party Glam" },
+	{ name = "Zombie Prom", vip = true },
+	{ name = "Galaxy Queen", vip = true },
 } :: { Theme }
 -- Don't repeat any of the last N themes.
 Config.ThemeNoRepeat = 8

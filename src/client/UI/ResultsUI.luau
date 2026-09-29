@@ -4,6 +4,7 @@
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
@@ -157,8 +158,18 @@ local function refresh()
 			BackgroundColor3 = PLACE_COLORS[entry.place],
 			Size = UDim2.new(1, 0, 0, 44),
 			LayoutOrder = entry.place,
+			Visible = false,
 			Parent = podiumList,
 		}, { Kit.corner(10) })
+		-- Dramatic reveal: 3rd, then 2nd, then 1st.
+		local scale = Kit.new("UIScale", { Scale = 0.4, Parent = row })
+		task.delay(0.4 + (3 - entry.place) * 0.9, function()
+			if row.Parent then
+				row.Visible = true
+				TweenService:Create(scale, TweenInfo.new(0.45, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+				Kit.playSound("Podium")
+			end
+		end)
 		local stylists = if #entry.stylistNames > 0 then table.concat(entry.stylistNames, " & ") else "?"
 		Kit.label({
 			Text = `{PLACE_NAMES[entry.place]}  {entry.wearerName}  (styled by {stylists})  ♥ {entry.hearts}`,

@@ -128,9 +128,11 @@ end
 
 -- While styling, the catalog takes the right half of the screen, so the HUD moves to the left half.
 local function applyLayout(styling: boolean)
+	-- Lobby buttons only in the lobby: during a round they'd cover the voting/results panels.
+	local lobby = State.round.phase == "Lobby"
 	statsPanel.Visible = not styling
-	buttonColumn.Visible = not styling
-	rightColumn.Visible = not styling
+	buttonColumn.Visible = lobby and not styling
+	rightColumn.Visible = lobby and not styling
 	if styling then
 		topPanel.AnchorPoint = Vector2.new(0, 0)
 		topPanel.Position = UDim2.fromOffset(8, 8)
@@ -185,7 +187,35 @@ local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPha
 	end
 end
 
+local lastCoins: number? = nil
+
+-- A "+X" that floats up from the coin counter whenever coins go up.
+local function coinPop(amount: number)
+	local pop = Kit.label({
+		Text = `+{amount}`,
+		Position = UDim2.fromOffset(150, 20),
+		Size = UDim2.fromOffset(120, 36),
+		TextColor3 = Kit.Colors.Gold,
+		MaxTextSize = 32,
+		ZIndex = 20,
+		Parent = root,
+	})
+	local tween =
+		TweenService:Create(pop, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Position = UDim2.fromOffset(150, -20),
+			TextTransparency = 1,
+		})
+	tween:Play()
+	tween.Completed:Once(function()
+		pop:Destroy()
+	end)
+end
+
 local function refreshData(data: Types.PublicData)
+	if lastCoins and data.coins > lastCoins then
+		coinPop(data.coins - lastCoins)
+	end
+	lastCoins = data.coins
 	coinsLabel.Text = `{data.coins} coins`
 	local rankName = Config.RankNames[data.rank] or `Rank {data.rank}`
 	local nextXp = Config.RankXp[data.rank + 1]
@@ -198,7 +228,81 @@ local function refreshData(data: Types.PublicData)
 	adminButton.Visible = data.isAdmin
 end
 
+-- Big "RANK UP!" card with falling confetti and the items that just unlocked.
+local function celebrateRankUp(rank: number)
+	local unlocked = {}
+	for _, cosmetic in Config.Cosmetics do
+		if cosmetic.rank == rank then
+			table.insert(unlocked, cosmetic.displayName)
+		end
+	end
+	local card = Kit.panel({
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.45),
+		Size = UDim2.fromOffset(520, 200),
+		BackgroundColor3 = Kit.Colors.PinkDark,
+		ZIndex = 30,
+		Parent = root,
+	})
+	local scale = Kit.new("UIScale", { Scale = 0.3, Parent = card })
+	Kit.label({
+		Text = "RANK UP!",
+		Size = UDim2.new(1, -20, 0, 60),
+		Position = UDim2.fromOffset(10, 10),
+		TextColor3 = Kit.Colors.Gold,
+		MaxTextSize = 56,
+		ZIndex = 31,
+		Parent = card,
+	})
+	Kit.label({
+		Text = `You're now: {Config.RankNames[rank] or "a legend"} (Lv {rank})`,
+		Size = UDim2.new(1, -20, 0, 40),
+		Position = UDim2.fromOffset(10, 76),
+		ZIndex = 31,
+		Parent = card,
+	})
+	Kit.label({
+		Text = if #unlocked > 0
+			then `Unlocked: {table.concat(unlocked, ", ")}`
+			else "Keep styling to unlock more!",
+		Size = UDim2.new(1, -20, 0, 34),
+		Position = UDim2.fromOffset(10, 124),
+		Font = Kit.BodyFont,
+		ZIndex = 31,
+		Parent = card,
+	})
+	TweenService:Create(scale, TweenInfo.new(0.5, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+	local colors = { Kit.Colors.Pink, Kit.Colors.Gold, Kit.Colors.Blue, Kit.Colors.Green }
+	for i = 1, 40 do
+		local piece = Kit.new("Frame", {
+			BackgroundColor3 = colors[i % #colors + 1],
+			Size = UDim2.fromOffset(10, 16),
+			Position = UDim2.new(math.random(), 0, 0, -20),
+			Rotation = math.random(0, 360),
+			ZIndex = 29,
+			Parent = root,
+		})
+		TweenService:Create(
+			piece,
+			TweenInfo.new(1.5 + math.random() * 1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{
+				Position = UDim2.new(math.random(), 0, 1, 20),
+				Rotation = math.random(0, 720),
+			}
+		):Play()
+		task.delay(3.2, function()
+			piece:Destroy()
+		end)
+	end
+	task.delay(4.5, function()
+		card:Destroy()
+	end)
+end
+
 local function showRewards(summary: Types.RewardSummary)
+	if summary.rankUp then
+		celebrateRankUp(summary.rankUp)
+	end
 	local lines = { `+{summary.coins} coins   +{summary.xp} XP` }
 	if summary.heartsForYourStyling > 0 then
 		table.insert(lines, `Your styling got {summary.heartsForYourStyling} heart(s)!`)
@@ -328,7 +432,7 @@ function HUD.start()
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(1, 1),
 		Position = UDim2.new(1, -8, 1, -8),
-		Size = UDim2.fromOffset(170, 2 * (Kit.ButtonHeight + 8)),
+		Size = UDim2.fromOffset(170, 3 * (Kit.ButtonHeight + 8)),
 		Parent = root,
 	}, { Kit.list(Enum.FillDirection.Vertical, 8, Enum.HorizontalAlignment.Right) })
 	Kit.button({
@@ -347,6 +451,25 @@ function HUD.start()
 			HUD.toast("Invites aren't available right now.")
 		end
 	end)
+	-- AFK toggle: sit out of rounds (and auto-set by the server after idle rounds).
+	local afkButton: TextButton
+	afkButton = Kit.button({
+		Text = "Go AFK",
+		BackgroundColor3 = Kit.Colors.PanelLight,
+		Size = UDim2.fromOffset(170, Kit.ButtonHeight),
+		LayoutOrder = 3,
+		MaxTextSize = 22,
+		Parent = rightColumn,
+	}, function()
+		Remotes.Events.SetAfk:FireServer(State.player:GetAttribute("AFK") ~= true)
+	end)
+	local function refreshAfk()
+		local afk = State.player:GetAttribute("AFK") == true
+		afkButton.Text = if afk then "Join rounds" else "Go AFK"
+		afkButton.BackgroundColor3 = if afk then Kit.Colors.Gold else Kit.Colors.PanelLight
+	end
+	State.player:GetAttributeChangedSignal("AFK"):Connect(refreshAfk)
+	refreshAfk()
 	Kit.button({
 		Text = "How to play",
 		BackgroundColor3 = Kit.Colors.PanelLight,

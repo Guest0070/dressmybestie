@@ -56,6 +56,10 @@ local lookWorkers: { [Player]: boolean } = {}
 local friendCache: { [string]: boolean } = {}
 local mannequinFolder: Folder
 
+-- AFK tracking: stylists who picked something this round, and idle rounds in a row.
+local activeStylists: { [Player]: boolean } = {}
+local idleRounds: { [Player]: number } = {}
+
 -- Admin controls (see Admin.luau).
 local skipRequested = false -- ends the current timed wait early
 local forceStart = false -- start the next round now, even with 1 player
@@ -123,7 +127,7 @@ end
 local function eligiblePlayers(): { Player }
 	local list = {}
 	for _, player in Players:GetPlayers() do
-		if PlayerData.isLoaded(player) and getHumanoid(player) then
+		if PlayerData.isLoaded(player) and getHumanoid(player) and player:GetAttribute("AFK") ~= true then
 			table.insert(list, player)
 		end
 	end
@@ -381,6 +385,7 @@ local function onSetLook(stylist: Player, raw: any)
 	if not target or not participants[target] then
 		return
 	end
+	activeStylists[stylist] = true
 	pendingLooks[target] = { raw = raw, stylist = stylist }
 	if not lookWorkers[target] then
 		task.spawn(processLooks, target)
@@ -580,6 +585,20 @@ local function styling()
 		end
 		return noOneLeft()
 	end)
+
+	-- Anyone who didn't pick a single item N rounds in a row sits out until they come back.
+	for player in participants do
+		if activeStylists[player] then
+			idleRounds[player] = 0
+		elseif not RunService:IsStudio() then
+			idleRounds[player] = (idleRounds[player] or 0) + 1
+			if idleRounds[player] >= Config.AfkIdleRounds then
+				player:SetAttribute("AFK", true)
+				toast(player, "You've been marked AFK. Tap 'Join rounds' when you're back!")
+			end
+		end
+	end
+	activeStylists = {}
 end
 
 local function runway()
@@ -953,11 +972,19 @@ function RoundManager.start()
 	mannequinFolder.Parent = Workspace
 
 	Remotes.Events.SetMannequinLook.OnServerEvent:Connect(onSetLook)
+	Remotes.Events.SetAfk.OnServerEvent:Connect(function(player, afk)
+		if type(afk) == "boolean" then
+			player:SetAttribute("AFK", afk)
+			idleRounds[player] = 0
+		end
+	end)
 	Remotes.Functions.GetRoundState.OnServerInvoke = function()
 		return state
 	end
 	Players.PlayerRemoving:Connect(function(player)
 		onPlayerRemoving(player)
+		idleRounds[player] = nil
+		activeStylists[player] = nil
 		local id = tostring(player.UserId)
 		for key in friendCache do
 			local low, high = string.match(key, "^(%d+)_(%d+)$")
