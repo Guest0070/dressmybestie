@@ -668,24 +668,34 @@ local function runway()
 		if character and entrance and PlayerData.ownsCosmetic(player, entrance) then
 			Effects.playEntrance(character, entrance)
 		end
-		Remotes.Events.RunwayEffect:FireAllClients(p.userId, Passes.owns(player, "VIP"))
-
+		-- The walker's own client walks them down the runway (a player's computer controls its own
+		-- character, so that's the reliable way). If they haven't moved after 2 seconds, the server
+		-- takes physics control and walks them itself, then hands control back.
 		setMovement(player, Config.RunwayWalkSpeed)
-		-- A player's own computer normally controls their character, so a server MoveTo can be
-		-- ignored. The server takes physics control for the walk, then hands it back.
+		Remotes.Events.RunwayEffect:FireAllClients(p.userId, Passes.owns(player, "VIP"))
 		local root = if player.Character then player.Character:FindFirstChild("HumanoidRootPart") else nil
-		if root and root:IsA("BasePart") then
-			pcall(root.SetNetworkOwner, root, nil)
-		end
-		local walker = getHumanoid(player)
-		if walker then
-			walker:MoveTo(Map.runwayEnd().Position)
-		end
+		local startPos = if root and root:IsA("BasePart") then root.Position else nil
+		local tookOver = false
+		task.delay(2, function()
+			local walker = getHumanoid(player)
+			if
+				participants[player] == p
+				and walker
+				and root
+				and root:IsA("BasePart")
+				and startPos
+				and (root.Position - startPos).Magnitude < 3
+			then
+				tookOver = true
+				pcall(root.SetNetworkOwner, root, nil)
+				walker:MoveTo(Map.runwayEnd().Position)
+			end
+		end)
 		waitFor(Config.Timings.RunwayPerPlayer, function()
 			return participants[player] ~= p
 		end)
 		setMovement(player, 0)
-		if root and root:IsA("BasePart") and root.Parent and isHere(player) then
+		if tookOver and root and root:IsA("BasePart") and root.Parent and isHere(player) then
 			pcall(root.SetNetworkOwner, root, player)
 		end
 		p.walked = true

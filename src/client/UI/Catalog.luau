@@ -31,7 +31,9 @@ local seq = 0
 local currentTarget: number? = nil
 local currentCategory: Config.CatalogCategory = Config.CatalogCategories[1]
 local searchCache: { [string]: SearchCache } = {}
-local searching = false
+-- Searches in progress, per tab. Each tab loads on its own, so switching tabs mid-load can
+-- never leave one tab showing another tab's items.
+local inFlight: { [string]: boolean } = {}
 
 local panel: Frame
 local rotateBar: Frame
@@ -191,16 +193,14 @@ end
 local function search(category: Config.CatalogCategory)
 	local key = cacheKey(category)
 	local existing = searchCache[key]
-	if existing and not existing.failed then
-		renderCategory()
-		return
+	if (existing and not existing.failed) or inFlight[key] then
+		return -- already loaded, or loading (it renders itself when done)
 	end
-	if searching then
-		return
-	end
-	searching = true
+	inFlight[key] = true
 	searchCache[key] = nil
-	renderCategory()
+	if category == currentCategory then
+		renderCategory() -- shows "Loading..."
+	end
 
 	local params = CatalogSearchParams.new()
 	if category.assetTypes then
@@ -232,24 +232,25 @@ local function search(category: Config.CatalogCategory)
 		cache.failed = true
 	end
 	searchCache[key] = cache
-	searching = false
+	inFlight[key] = nil
 	if category == currentCategory then
 		renderCategory()
 	end
 end
 
 local function loadMore()
-	local cache = searchCache[cacheKey(currentCategory)]
+	local key = cacheKey(currentCategory)
+	local cache = searchCache[key]
 	local pages = if cache then cache.pages else nil
-	if not cache or not pages or pages.IsFinished or searching then
+	if not cache or not pages or pages.IsFinished or inFlight[key] then
 		return
 	end
-	searching = true
+	inFlight[key] = true
 	local ok = pcall(pages.AdvanceToNextPageAsync, pages)
 	if ok then
 		addPage(cache, pages:GetCurrentPage())
 	end
-	searching = false
+	inFlight[key] = nil
 	renderCategory()
 end
 
@@ -259,6 +260,8 @@ local function selectCategory(category: Config.CatalogCategory)
 		button.BackgroundColor3 = if id == category.id then Kit.Colors.Pink else Kit.Colors.PanelLight
 	end
 	grid.CanvasPosition = Vector2.zero
+	-- Always redraw right away: this tab's items if loaded, otherwise "Loading...".
+	renderCategory()
 	task.spawn(search, category)
 end
 

@@ -118,7 +118,22 @@ local function updateCamera()
 			setCharacterHidden(true)
 			return
 		end
-	elseif round.phase == "Runway" or round.phase == "Voting" or round.phase == "Results" then
+	elseif round.phase == "Runway" and round.runwayWearer then
+		-- Follow the walker from the front, like a fashion-show camera.
+		local root = rootOf(round.runwayWearer)
+		local startPart = mapPart({ "Runway", "Start" })
+		local endPart = mapPart({ "Runway", "End" })
+		if root and startPart and endPart then
+			camera.CameraType = Enum.CameraType.Scriptable
+			local along = endPart.Position - startPart.Position
+			local dir = Vector3.new(along.X, 0, along.Z).Unit
+			local focus = root.Position + Vector3.new(0, 1, 0)
+			local desired = CFrame.lookAt(root.Position + dir * 14 + Vector3.new(0, 4, 0), focus)
+			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP)
+			return
+		end
+	end
+	if round.phase == "Runway" or round.phase == "Voting" or round.phase == "Results" then
 		local cameraPart = mapPart({ "Runway", "Camera" })
 		local focus = stageFocus()
 		if cameraPart and focus then
