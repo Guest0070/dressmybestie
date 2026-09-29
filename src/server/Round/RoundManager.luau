@@ -339,10 +339,14 @@ local function processLooks(target: Player)
 end
 
 local function onSetLook(stylist: Player, raw: any)
+	local target = assignments[stylist]
+	if RunService:IsStudio() then
+		local count = if type(raw) == "table" and type(raw.assetIds) == "table" then #raw.assetIds else -1
+		print(`[Round] {stylist.Name} sent a look with {count} item(s); phase={state.phase}, target={target}`)
+	end
 	if state.phase ~= "Styling" then
 		return
 	end
-	local target = assignments[stylist]
 	if not target or not participants[target] then
 		return
 	end

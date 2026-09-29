@@ -4,6 +4,9 @@
 
 local AvatarEditorService = game:GetService("AvatarEditorService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local DEBUG = RunService:IsStudio()
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -82,6 +85,9 @@ local function pushUndo()
 end
 
 local function toggleItem(item: CatalogItem)
+	if DEBUG then
+		print(`[Catalog] Tapped {item.ItemType} {item.Id} ({item.Name})`)
+	end
 	pushUndo()
 	if item.ItemType == "Bundle" then
 		look.shoeBundleId = if look.shoeBundleId == item.Id then nil else item.Id
@@ -275,6 +281,9 @@ local function refreshVisibility()
 end
 
 local function onLookSync(targetUserId: number, synced: Look, syncSeq: number?)
+	if DEBUG and type(synced) == "table" and type(synced.assetIds) == "table" then
+		print(`[Catalog] Server accepted {#synced.assetIds} item(s) (seq {syncSeq}, mine {seq})`)
+	end
 	if type(synced) ~= "table" or type(synced.assetIds) ~= "table" then
 		return
 	end
