@@ -7,6 +7,7 @@ local HUD = require(script.UI.HUD)
 local HowToPlay = require(script.UI.HowToPlay)
 local Lobby = require(script.Lobby)
 local Moments = require(script.Moments)
+local QuestsUI = require(script.UI.QuestsUI)
 local ResultsUI = require(script.UI.ResultsUI)
 local ShopUI = require(script.UI.ShopUI)
 local Stage = require(script.Stage)
@@ -21,6 +22,7 @@ ResultsUI.start()
 ShopUI.start()
 HowToPlay.start()
 AdminPanel.start()
+QuestsUI.start()
 Moments.start()
 Stage.start()
 Lobby.start()
@@ -29,6 +31,17 @@ HUD.onOpenShop = ShopUI.open
 HUD.onOpenLooks = ResultsUI.openLooks
 HUD.onOpenHelp = HowToPlay.open
 HUD.onOpenAdmin = AdminPanel.toggle
+HUD.onOpenQuests = QuestsUI.open
+HUD.hasClaimableQuest = QuestsUI.hasClaimable
+Lobby.onHallOfFame = function(userId)
+	for _, shopLook in State.lastShopLooks do
+		if shopLook.wearerUserId == userId then
+			ResultsUI.openLooks({ shopLook })
+			return
+		end
+	end
+	HUD.toast("That look is from before you joined. Play a round to see new ones!")
+end
 Catalog.onRotate = Stage.rotate
 Catalog.onBuyOutfit = function(look)
 	ResultsUI.openLooks({ { wearerUserId = State.player.UserId, wearerName = "Your outfit", look = look } })

@@ -73,6 +73,22 @@ export type PlayerData = {
 	-- Purchase IDs already granted, newest last. Bounded by Config.Data.MaxRememberedPurchases.
 	processedPurchases: { string },
 	funnelStep: number, -- highest onboarding funnel step logged (analytics)
+	dailyStreak: number, -- days in a row the daily reward was claimed (1..7)
+	questDay: number, -- day the daily quest progress belongs to
+	questProgress: { [string]: number }, -- stat -> amount today
+	questClaimed: { [string]: boolean }, -- daily quest id -> claimed today
+	achievementsClaimed: { [string]: boolean },
+	lifetime: { [string]: number }, -- lifetime counters not stored elsewhere (gems, obby, heartsGiven, podiums)
+}
+
+export type QuestView = {
+	kind: "daily" | "achievement",
+	id: string,
+	text: string,
+	progress: number,
+	target: number,
+	reward: number,
+	claimed: boolean,
 }
 
 -- Subset of PlayerData safe to send to that player's own client.
@@ -86,6 +102,9 @@ export type PublicData = {
 	canClaimDaily: boolean,
 	roundsPlayed: number, -- 0 = brand new player (shows How to Play)
 	isAdmin: boolean, -- shows the Admin button (the server re-checks every command)
+	nextDailyReward: number, -- coins the daily button gives right now (grows with the streak)
+	dailyStreak: number,
+	quests: { QuestView },
 }
 
 export type RewardSummary = {

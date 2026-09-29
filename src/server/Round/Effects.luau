@@ -114,6 +114,19 @@ local builders: { [string]: (BasePart) -> () } = {
 		fire.Parent = root
 		Debris:AddItem(fire, DURATION)
 	end,
+	Snow = function(root)
+		local particles = emitter(root, {
+			Rate = 50,
+			Lifetime = NumberRange.new(2.5, 3.5),
+			Speed = NumberRange.new(1, 3),
+			SpreadAngle = Vector2.new(180, 180),
+			Acceleration = Vector3.new(0, -2, 0),
+			Size = NumberSequence.new(0.3),
+			Color = ColorSequence.new(Color3.fromRGB(255, 255, 255)),
+			LightEmission = 0.4,
+		})
+		Debris:AddItem(particles, DURATION)
+	end,
 	Hearts = function(root)
 		local particles = emitter(root, {
 			Rate = 20,

@@ -14,6 +14,8 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Analytics = require(script.Parent.Parent.Analytics)
 local PlayerData = require(script.Parent.Parent.Data.PlayerData)
 local Map = require(script.Parent.Parent.Round.Map)
+local Quests = require(script.Parent.Parent.Quests)
+local HallOfFame = require(script.Parent.HallOfFame)
 
 local Activities = {}
 
@@ -134,6 +136,7 @@ local function makeGem(parent: Instance, position: Vector3)
 			data.coins += Config.Lobby.GemCoins
 		end)
 		Analytics.coins(player, Config.Lobby.GemCoins, true, "Gem")
+		Quests.bump(player, "gems", 1)
 		if gemCoinsThisVisit[player] >= Config.Lobby.GemCoinCapPerVisit then
 			toast(player, "Gem bag full for this visit! Play rounds for more coins.")
 		end
@@ -206,6 +209,7 @@ local function buildObby(parent: Instance)
 		if not player or debounced(player, 2) then
 			return
 		end
+		Quests.bump(player, "obby", 1)
 		local now = os.time()
 		local waitLeft = (lastObbyReward[player] or 0) + Config.Lobby.ObbyCooldownSeconds - now
 		if waitLeft <= 0 then
@@ -341,6 +345,7 @@ function Activities.start()
 	buildDanceFloor(folder)
 	buildBouncePads(folder)
 	buildLeaderboard(folder)
+	HallOfFame.build(folder)
 	for _, position in
 		{
 			Vector3.new(-15, 3, 40),

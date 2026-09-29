@@ -3,6 +3,7 @@
 -- bounce pads (a player's own computer moves their character, so launching happens here).
 
 local CollectionService = game:GetService("CollectionService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -10,6 +11,9 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local State = require(script.Parent.State)
 
 local Lobby = {}
+
+-- Set by init.client: open "Buy this look" for a Hall of Fame statue (the wearer's user ID).
+Lobby.onHallOfFame = function(_userId: number) end
 
 local DANCE_COLORS = {
 	Color3.fromRGB(255, 110, 180),
@@ -70,6 +74,12 @@ function Lobby.start()
 		end
 	end)
 	task.spawn(danceLoop)
+	ProximityPromptService.PromptTriggered:Connect(function(prompt)
+		local userId = prompt:GetAttribute("HallOfFameUserId")
+		if type(userId) == "number" then
+			Lobby.onHallOfFame(userId)
+		end
+	end)
 end
 
 return Lobby

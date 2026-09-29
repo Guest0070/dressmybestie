@@ -30,6 +30,12 @@ local TEMPLATE: PlayerData = {
 	lastDailyRewardDay = 0,
 	processedPurchases = {},
 	funnelStep = 0,
+	dailyStreak = 0,
+	questDay = 0,
+	questProgress = {},
+	questClaimed = {},
+	achievementsClaimed = {},
+	lifetime = {},
 }
 
 local store = ProfileStore.New(Config.Data.StoreName, TEMPLATE)
@@ -95,6 +101,52 @@ function PlayerData.ownsCosmetic(player: Player, cosmeticId: string): boolean
 	return false
 end
 
+-- Streak day the next daily claim would be (1..#DailyStreak).
+local function nextStreakDay(data: PlayerData): number
+	local today = currentDay()
+	local streak = if data.lastDailyRewardDay == today - 1 then data.dailyStreak + 1 else 1
+	return if streak > #Config.Rewards.DailyStreak then 1 else streak
+end
+
+-- Lifetime value of a quest stat (some live in older fields).
+function PlayerData.lifetimeStat(data: PlayerData, stat: string): number
+	if stat == "rounds" then
+		return data.roundsPlayed
+	elseif stat == "heartsReceived" then
+		return data.heartsReceived
+	end
+	return data.lifetime[stat] or 0
+end
+
+local function questViews(data: PlayerData): { Types.QuestView }
+	local views: { Types.QuestView } = {}
+	local isToday = data.questDay == currentDay()
+	for _, quest in Config.DailyQuests do
+		local progress = if isToday then data.questProgress[quest.stat] or 0 else 0
+		table.insert(views, {
+			kind = "daily",
+			id = quest.id,
+			text = quest.text,
+			progress = math.min(progress, quest.target),
+			target = quest.target,
+			reward = quest.reward,
+			claimed = isToday and data.questClaimed[quest.id] == true,
+		})
+	end
+	for _, quest in Config.Achievements do
+		table.insert(views, {
+			kind = "achievement",
+			id = quest.id,
+			text = quest.text,
+			progress = math.min(PlayerData.lifetimeStat(data, quest.stat), quest.target),
+			target = quest.target,
+			reward = quest.reward,
+			claimed = data.achievementsClaimed[quest.id] == true,
+		})
+	end
+	return views
+end
+
 local function toPublic(player: Player, data: PlayerData): PublicData
 	local owned = {}
 	for _, cosmetic in Config.Cosmetics do
@@ -112,6 +164,9 @@ local function toPublic(player: Player, data: PlayerData): PublicData
 		canClaimDaily = data.lastDailyRewardDay < currentDay(),
 		roundsPlayed = data.roundsPlayed,
 		isAdmin = Permissions.isAdmin(player),
+		nextDailyReward = Config.Rewards.DailyStreak[nextStreakDay(data)],
+		dailyStreak = data.dailyStreak,
+		quests = questViews(data),
 	}
 end
 
@@ -201,18 +256,23 @@ function PlayerData.resetToTemplate(player: Player): boolean
 end
 
 local function claimDaily(player: Player)
-	local granted = false
+	local reward, streak = 0, 0
 	PlayerData.update(player, function(data)
 		local today = currentDay()
 		if data.lastDailyRewardDay >= today then
 			return -- already claimed; silently ignore spam
 		end
+		streak = nextStreakDay(data)
+		reward = Config.Rewards.DailyStreak[streak]
+		data.dailyStreak = streak
 		data.lastDailyRewardDay = today
-		data.coins += Config.Rewards.DailyRewardCoins
-		granted = true
+		data.coins += reward
 	end)
-	if granted then
-		Remotes.Events.Toast:FireClient(player, `Daily reward: +{Config.Rewards.DailyRewardCoins} coins!`)
+	if reward > 0 then
+		Remotes.Events.Toast:FireClient(
+			player,
+			`Day {streak} streak! +{reward} coins. Come back tomorrow for more!`
+		)
 	end
 end
 

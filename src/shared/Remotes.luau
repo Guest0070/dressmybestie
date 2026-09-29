@@ -24,6 +24,7 @@ local EVENT_NAMES = {
 	"AdminCommand", -- (command: string, arg: any) admins only, checked on the server
 	"SetOwnLook", -- (look: Look) Dressing Room: dress your own avatar (lobby only)
 	"ResetOwnLook", -- () Dressing Room: back to your real avatar
+	"ClaimQuest", -- (kind: "daily" | "achievement", id: string)
 }
 
 local FUNCTION_NAMES = {

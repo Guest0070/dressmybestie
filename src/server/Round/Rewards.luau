@@ -9,6 +9,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local PlayerData = require(script.Parent.Parent.Data.PlayerData)
 local Analytics = require(script.Parent.Parent.Analytics)
+local Quests = require(script.Parent.Parent.Quests)
 
 local Rewards = {}
 
@@ -23,6 +24,7 @@ export type LookResult = {
 -- participants: everyone who played this round (still in the server).
 function Rewards.grant(participants: { Player }, results: { LookResult })
 	local summaries: { [Player]: Types.RewardSummary } = {}
+	local podiums: { [Player]: number } = {}
 	local function summary(player: Player): Types.RewardSummary
 		local s = summaries[player]
 		if not s then
@@ -51,6 +53,7 @@ function Rewards.grant(participants: { Player }, results: { LookResult })
 			if result.place and result.hearts > 0 then
 				s.coins += Config.Rewards.PodiumCoins[result.place] or 0
 				s.xp += Config.Rewards.PodiumXp[result.place] or 0
+				podiums[stylist] = (podiums[stylist] or 0) + 1
 			end
 		end
 	end
@@ -59,6 +62,10 @@ function Rewards.grant(participants: { Player }, results: { LookResult })
 		local data = PlayerData.get(player)
 		if not data then
 			continue
+		end
+		-- Roblox Premium perk: a fixed, disclosed bonus on round coins.
+		if player.MembershipType == Enum.MembershipType.Premium then
+			s.coins += math.floor(s.coins * Config.Rewards.PremiumCoinBonus)
 		end
 		local rankBefore = PlayerData.getRank(data.styleXp)
 		local ok = PlayerData.update(player, function(d)
@@ -74,6 +81,9 @@ function Rewards.grant(participants: { Player }, results: { LookResult })
 		if rankAfter > rankBefore then
 			s.rankUp = rankAfter
 		end
+		Quests.bump(player, "rounds", 1)
+		Quests.bump(player, "heartsReceived", s.heartsForYourStyling)
+		Quests.bump(player, "podiums", podiums[player] or 0)
 		Analytics.coins(player, s.coins, true, "RoundReward")
 		Analytics.roundFinished(player)
 		Remotes.Events.RewardSummary:FireClient(player, s)

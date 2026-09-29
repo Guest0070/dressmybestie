@@ -23,6 +23,8 @@ local Effects = require(script.Parent.Effects)
 local Map = require(script.Parent.Map)
 local Pairing = require(script.Parent.Pairing)
 local Rewards = require(script.Parent.Rewards)
+local Quests = require(script.Parent.Parent.Quests)
+local HallOfFame = require(script.Parent.Parent.Lobby.HallOfFame)
 
 type ValidatedLook = LookValidator.ValidatedLook
 type Phase = Types.RoundPhase
@@ -731,7 +733,13 @@ local function voting(): { [number]: number }
 	local duration = if #candidates >= 2 then Config.Timings.Voting else 5
 	setPhase("Voting", duration, { candidates = ids })
 	waitFor(duration, noOneLeft)
-	return Voting.finish()
+	local totals, given = Voting.finish()
+	for voter, count in given do
+		if voter.Parent == Players then
+			Quests.bump(voter, "heartsGiven", count)
+		end
+	end
+	return totals
 end
 
 local function results(hearts: { [number]: number })
@@ -836,6 +844,23 @@ local function results(hearts: { [number]: number })
 			end
 		end
 	end)
+
+	-- Winners' looks become statues in the lobby Hall of Fame until the next round.
+	local fame: { HallOfFame.Entry } = {}
+	for _, entry in podium do
+		local wearer = Players:GetPlayerByUserId(entry.wearerUserId)
+		local p = if wearer then participants[wearer] else nil
+		if p then
+			table.insert(fame, {
+				place = entry.place,
+				userId = entry.wearerUserId,
+				name = entry.wearerName,
+				stylistNames = entry.stylistNames,
+				description = LookApplier.build(p.original, p.look),
+			})
+		end
+	end
+	HallOfFame.show(fame)
 
 	setPhase("Results", Config.Timings.Results, { podium = podium, shopLooks = shopLooks })
 	waitFor(Config.Timings.Results)

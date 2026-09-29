@@ -62,6 +62,10 @@ Config.Rewards = {
 	XpPerHeartReceived = 5,
 	PodiumXp = { 40, 25, 15 },
 	DailyRewardCoins = 50,
+	-- Login streak: day 1..7 in a row, then it starts again. Missing a day resets to day 1.
+	DailyStreak = { 50, 60, 75, 90, 110, 130, 200 },
+	-- Roblox Premium members get this much extra on round coins (fixed, disclosed).
+	PremiumCoinBonus = 0.1,
 }
 
 -- Style rank thresholds: total XP needed to reach rank N is RankXp[N]. Rank 1 is the start.
@@ -336,6 +340,7 @@ Config.Cosmetics = {
 	{ id = "Stars", slot = "Entrance", displayName = "Shooting Stars", coinPrice = 400 },
 	{ id = "Petals", slot = "Entrance", displayName = "Rose Petals", coinPrice = 600 },
 	{ id = "Fire", slot = "Entrance", displayName = "Hot Stuff (Fire)", coinPrice = 1000 },
+	{ id = "Snow", slot = "Entrance", displayName = "Snowfall", coinPrice = 700 },
 	{ id = "Hearts", slot = "Entrance", displayName = "Hearts", rank = 3 },
 	{ id = "Sparkles", slot = "Entrance", displayName = "Sparkles", productKey = "EntranceSparkles" },
 	{ id = "Confetti", slot = "Entrance", displayName = "Confetti", productKey = "EntranceConfetti" },
@@ -364,6 +369,30 @@ Config.Cosmetics = {
 		coinPrice = 600,
 		color = Color3.fromRGB(255, 150, 60),
 		color2 = Color3.fromRGB(200, 60, 200),
+	},
+	{
+		id = "TrailCandy",
+		slot = "Trail",
+		displayName = "Candy Trail",
+		coinPrice = 450,
+		color = Color3.fromRGB(255, 130, 200),
+		color2 = Color3.fromRGB(255, 240, 120),
+	},
+	{
+		id = "TrailGalaxy",
+		slot = "Trail",
+		displayName = "Galaxy Trail",
+		coinPrice = 900,
+		color = Color3.fromRGB(120, 60, 220),
+		color2 = Color3.fromRGB(60, 180, 255),
+	},
+	{
+		id = "TrailFrost",
+		slot = "Trail",
+		displayName = "Frost Trail",
+		rank = 7,
+		color = Color3.fromRGB(200, 240, 255),
+		color2 = Color3.fromRGB(255, 255, 255),
 	},
 	{
 		id = "TrailMint",
@@ -411,6 +440,34 @@ Config.Cosmetics = {
 		color = Color3.fromRGB(255, 215, 80),
 	},
 	{
+		id = "TitleMenace",
+		slot = "Title",
+		displayName = "Runway Menace",
+		coinPrice = 250,
+		color = Color3.fromRGB(255, 90, 90),
+	},
+	{
+		id = "TitleMain",
+		slot = "Title",
+		displayName = "Main Character",
+		coinPrice = 400,
+		color = Color3.fromRGB(255, 180, 60),
+	},
+	{
+		id = "TitleTrend",
+		slot = "Title",
+		displayName = "Trendsetter",
+		coinPrice = 700,
+		color = Color3.fromRGB(120, 240, 170),
+	},
+	{
+		id = "TitleLegend",
+		slot = "Title",
+		displayName = "Living Legend",
+		rank = 9,
+		color = Color3.fromRGB(255, 240, 150),
+	},
+	{
 		id = "TitleIcon",
 		slot = "Title",
 		displayName = "Style Icon",
@@ -442,6 +499,47 @@ Config.Sounds = {
 	Podium = 0,
 	LobbyMoment = 0,
 } :: { [string]: number | string }
+
+-- Quests. stat names: rounds, heartsGiven, gems, obby, heartsReceived, podiums.
+export type Quest = { id: string, text: string, stat: string, target: number, reward: number }
+-- Daily quests reset every day (UTC).
+Config.DailyQuests = {
+	{ id = "PlayRounds", text = "Play 3 rounds", stat = "rounds", target = 3, reward = 60 },
+	{ id = "GiveHearts", text = "Give 5 hearts", stat = "heartsGiven", target = 5, reward = 40 },
+	{ id = "CollectGems", text = "Collect 15 gems", stat = "gems", target = 15, reward = 40 },
+	{ id = "FinishObby", text = "Finish the obby", stat = "obby", target = 1, reward = 50 },
+	{
+		id = "GetHearts",
+		text = "Get 3 hearts for your styling",
+		stat = "heartsReceived",
+		target = 3,
+		reward = 60,
+	},
+} :: { Quest }
+-- Achievements count forever and pay out once.
+Config.Achievements = {
+	{ id = "FirstRound", text = "Play your first round", stat = "rounds", target = 1, reward = 50 },
+	{ id = "Rounds10", text = "Play 10 rounds", stat = "rounds", target = 10, reward = 200 },
+	{ id = "Rounds50", text = "Play 50 rounds", stat = "rounds", target = 50, reward = 800 },
+	{
+		id = "Hearts25",
+		text = "Get 25 hearts for your styling",
+		stat = "heartsReceived",
+		target = 25,
+		reward = 300,
+	},
+	{
+		id = "Hearts100",
+		text = "Get 100 hearts for your styling",
+		stat = "heartsReceived",
+		target = 100,
+		reward = 1000,
+	},
+	{ id = "Podium1", text = "Style a podium look", stat = "podiums", target = 1, reward = 100 },
+	{ id = "Podium10", text = "Style 10 podium looks", stat = "podiums", target = 10, reward = 500 },
+	{ id = "Gems100", text = "Collect 100 gems", stat = "gems", target = 100, reward = 150 },
+	{ id = "Obby10", text = "Finish the obby 10 times", stat = "obby", target = 10, reward = 250 },
+} :: { Quest }
 
 -- Lobby activities. Coin rewards are small and capped so the lobby is fun, not a coin farm.
 Config.Lobby = {

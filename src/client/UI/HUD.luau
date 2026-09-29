@@ -4,6 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local SocialService = game:GetService("SocialService")
 local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
@@ -31,6 +32,11 @@ HUD.onOpenShop = function() end
 HUD.onOpenLooks = function() end
 HUD.onOpenHelp = function() end
 HUD.onOpenAdmin = function() end
+HUD.onOpenQuests = function() end
+-- Returns true when a quest can be claimed (shows the "!" badge). Set by init.client.
+HUD.hasClaimableQuest = function(_data: Types.PublicData): boolean
+	return false
+end
 
 local root: Frame
 local topPanel: Frame
@@ -46,6 +52,8 @@ local rankLabel: TextLabel
 local dailyButton: TextButton
 local looksButton: TextButton
 local adminButton: TextButton
+local questsBadge: TextLabel
+local rightColumn: Frame
 local toastLabel: TextLabel
 local revealFrame: Frame
 local revealTheme: TextLabel
@@ -122,6 +130,7 @@ end
 local function applyLayout(styling: boolean)
 	statsPanel.Visible = not styling
 	buttonColumn.Visible = not styling
+	rightColumn.Visible = not styling
 	if styling then
 		topPanel.AnchorPoint = Vector2.new(0, 0)
 		topPanel.Position = UDim2.fromOffset(8, 8)
@@ -184,6 +193,8 @@ local function refreshData(data: Types.PublicData)
 		then `{rankName}  {data.styleXp}/{nextXp} XP`
 		else `{rankName}  {data.styleXp} XP`
 	dailyButton.Visible = data.canClaimDaily
+	dailyButton.Text = `Daily +{data.nextDailyReward}`
+	questsBadge.Visible = HUD.hasClaimableQuest(data)
 	adminButton.Visible = data.isAdmin
 end
 
@@ -284,19 +295,65 @@ function HUD.start()
 		Text = `Daily +{Config.Rewards.DailyRewardCoins}`,
 		BackgroundColor3 = Kit.Colors.Green,
 		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
-		LayoutOrder = 2,
+		LayoutOrder = 3,
 		Visible = false,
 		Parent = column,
 	}, function()
 		Remotes.Events.ClaimDailyReward:FireServer()
 	end)
+	local questsButton = Kit.button({
+		Text = "Quests",
+		BackgroundColor3 = Kit.Colors.Blue,
+		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
+		LayoutOrder = 2,
+		Parent = column,
+	}, function()
+		HUD.onOpenQuests()
+	end)
+	questsBadge = Kit.label({
+		Text = "!",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, 6, 0, -6),
+		Size = UDim2.fromOffset(26, 26),
+		BackgroundTransparency = 0,
+		BackgroundColor3 = Color3.fromRGB(235, 60, 60),
+		Visible = false,
+		ZIndex = 5,
+		Parent = questsButton,
+	})
+	Kit.corner(13).Parent = questsBadge
+
+	-- Right column (bottom-right): how to play + invite friends.
+	rightColumn = Kit.new("Frame", {
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -8, 1, -8),
+		Size = UDim2.fromOffset(170, 2 * (Kit.ButtonHeight + 8)),
+		Parent = root,
+	}, { Kit.list(Enum.FillDirection.Vertical, 8, Enum.HorizontalAlignment.Right) })
+	Kit.button({
+		Text = "Invite friends",
+		BackgroundColor3 = Kit.Colors.Green,
+		Size = UDim2.fromOffset(170, Kit.ButtonHeight),
+		LayoutOrder = 1,
+		MaxTextSize = 22,
+		Parent = rightColumn,
+	}, function()
+		local player = State.player
+		local ok, canInvite = pcall(SocialService.CanSendGameInviteAsync, SocialService, player)
+		if ok and canInvite then
+			pcall(SocialService.PromptGameInvite, SocialService, player)
+		else
+			HUD.toast("Invites aren't available right now.")
+		end
+	end)
 	Kit.button({
 		Text = "How to play",
 		BackgroundColor3 = Kit.Colors.PanelLight,
-		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
-		LayoutOrder = 4,
+		Size = UDim2.fromOffset(170, Kit.ButtonHeight),
+		LayoutOrder = 2,
 		MaxTextSize = 22,
-		Parent = column,
+		Parent = rightColumn,
 	}, function()
 		HUD.onOpenHelp()
 	end)
@@ -312,9 +369,9 @@ function HUD.start()
 	end)
 	looksButton = Kit.button({
 		Text = "Buy looks",
-		BackgroundColor3 = Kit.Colors.Blue,
+		BackgroundColor3 = Kit.Colors.PinkDark,
 		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
-		LayoutOrder = 3,
+		LayoutOrder = 4,
 		Visible = false,
 		Parent = column,
 	}, function()

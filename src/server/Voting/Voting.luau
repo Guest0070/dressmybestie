@@ -43,9 +43,13 @@ local function cast(voter: Player, raw: any)
 	picks[voter] = clean
 end
 
--- Closes voting and returns userId -> hearts.
-function Voting.finish(): { [number]: number }
+-- Closes voting and returns userId -> hearts, plus how many hearts each voter gave.
+function Voting.finish(): ({ [number]: number }, { [Player]: number })
 	open = false
+	local given: { [Player]: number } = {}
+	for voter, list in picks do
+		given[voter] = #list
+	end
 	local totals: { [number]: number } = {}
 	for id in candidates do
 		totals[id] = 0
@@ -58,7 +62,7 @@ function Voting.finish(): { [number]: number }
 		end
 	end
 	picks = {}
-	return totals
+	return totals, given
 end
 
 -- A candidate left: their look can't win anymore.
