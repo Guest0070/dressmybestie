@@ -54,6 +54,11 @@ local lookWorkers: { [Player]: boolean } = {}
 local friendCache: { [string]: boolean } = {}
 local mannequinFolder: Folder
 
+-- Admin controls (see Admin.luau).
+local skipRequested = false -- ends the current timed wait early
+local forceStart = false -- start the next round now, even with 1 player
+local forcedChaosId: string? = nil -- chaos modifier for the next round
+
 ---------------------------------------------------------------------------------------------------
 -- Helpers
 ---------------------------------------------------------------------------------------------------
@@ -106,6 +111,9 @@ local function countParticipants(): number
 end
 
 local function minPlayers(): number
+	if forceStart then
+		return 1
+	end
 	return if RunService:IsStudio() then Config.StudioMinPlayers else Config.MinPlayersToStart
 end
 
@@ -145,6 +153,10 @@ end
 local function waitFor(seconds: number, shouldStop: (() -> boolean)?): boolean
 	local deadline = os.clock() + seconds
 	while os.clock() < deadline do
+		if skipRequested then
+			skipRequested = false
+			return true -- admin skip: behave as if the time ran out
+		end
 		if shouldStop and shouldStop() then
 			return false
 		end
@@ -229,9 +241,9 @@ local function pickTheme(anyVip: boolean): string
 	return name
 end
 
-local function pickChaos(roundNumber: number, playerCount: number): (ChaosModifier?, Types.ChaosInfo?)
+local function randomChaos(roundNumber: number, playerCount: number): ChaosModifier?
 	if roundNumber % Config.ChaosEveryRounds ~= 0 or math.random() > Config.ChaosChance then
-		return nil, nil
+		return nil
 	end
 	local options = {}
 	for _, modifier in Config.ChaosModifiers do
@@ -239,10 +251,26 @@ local function pickChaos(roundNumber: number, playerCount: number): (ChaosModifi
 			table.insert(options, modifier)
 		end
 	end
-	if #options == 0 then
+	return if #options > 0 then options[math.random(1, #options)] else nil
+end
+
+local function pickChaos(roundNumber: number, playerCount: number): (ChaosModifier?, Types.ChaosInfo?)
+	local modifier: ChaosModifier? = nil
+	local forced = forcedChaosId
+	forcedChaosId = nil
+	if forced then
+		for _, candidate in Config.ChaosModifiers do
+			if candidate.id == forced and playerCount >= candidate.minPlayers then
+				modifier = candidate
+			end
+		end
+	end
+	if not modifier then
+		modifier = randomChaos(roundNumber, playerCount)
+	end
+	if not modifier then
 		return nil, nil
 	end
-	local modifier = options[math.random(1, #options)]
 	local info: Types.ChaosInfo = {
 		id = modifier.id,
 		displayName = modifier.displayName,
@@ -434,7 +462,7 @@ local function lobby()
 	while true do
 		local need = minPlayers()
 		local lastCount = -1
-		while #eligiblePlayers() < need do
+		while #eligiblePlayers() < need and not forceStart do
 			local count = #eligiblePlayers()
 			if count ~= lastCount then
 				lastCount = count
@@ -442,11 +470,14 @@ local function lobby()
 			end
 			task.wait(1)
 		end
+		if forceStart then
+			return -- admin "Start now": skip the countdown
+		end
 		setPhase("Lobby", Config.Timings.Lobby, { message = "Next round starting soon!" })
 		local finished = waitFor(Config.Timings.Lobby, function()
-			return #eligiblePlayers() < need
+			return #eligiblePlayers() < need and not forceStart
 		end)
-		if finished then
+		if finished or forceStart then
 			return
 		end
 	end
@@ -773,7 +804,9 @@ end
 
 local function playRound()
 	lobby()
-	if not setupRound() then
+	local ready = setupRound()
+	forceStart = false
+	if not ready then
 		return
 	end
 
@@ -793,6 +826,30 @@ local function playRound()
 	end
 	local hearts = voting()
 	results(hearts)
+end
+
+-- Admin controls. Each returns a short message for the admin's screen.
+function RoundManager.adminStartNow(): string
+	if state.phase ~= "Lobby" then
+		return "A round is already running. Use Skip instead."
+	end
+	forceStart = true
+	return "Starting a round now."
+end
+
+function RoundManager.adminSkip(): string
+	skipRequested = true
+	return `Skipping {state.phase}.`
+end
+
+function RoundManager.adminForceChaos(id: string): string
+	for _, modifier in Config.ChaosModifiers do
+		if modifier.id == id then
+			forcedChaosId = id
+			return `Next round: {modifier.displayName} (needs {modifier.minPlayers}+ players).`
+		end
+	end
+	return "Unknown chaos mode."
 end
 
 function RoundManager.start()

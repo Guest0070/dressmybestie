@@ -21,6 +21,7 @@ local EVENT_NAMES = {
 	"ClaimDailyReward", -- ()
 	"BuyWithCoins", -- (cosmeticId: string)
 	"EquipCosmetic", -- (slot: string, cosmeticId: string?)
+	"AdminCommand", -- (command: string, arg: any) admins only, checked on the server
 }
 
 local FUNCTION_NAMES = {

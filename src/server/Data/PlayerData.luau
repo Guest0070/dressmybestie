@@ -4,6 +4,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -11,6 +12,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Passes = require(script.Parent.Parent.Monetization.Passes)
+local Permissions = require(script.Parent.Permissions)
 
 -- ProfileStore ships without strict types we can rely on, so treat it as `any`.
 local ProfileStore = require(ServerScriptService.ServerPackages.ProfileStore) :: any
@@ -107,6 +109,7 @@ local function toPublic(player: Player, data: PlayerData): PublicData
 		ownedPasses = Passes.all(player),
 		canClaimDaily = data.lastDailyRewardDay < currentDay(),
 		roundsPlayed = data.roundsPlayed,
+		isAdmin = Permissions.isAdmin(player),
 	}
 end
 
@@ -172,6 +175,28 @@ function PlayerData.saveAndWait(player: Player, timeout: number): boolean
 	return saved
 end
 
+local function deepCopy(value: any): any
+	if type(value) ~= "table" then
+		return value
+	end
+	local copy = {}
+	for key, inner in value do
+		copy[key] = deepCopy(inner)
+	end
+	return copy
+end
+
+-- Admin tool: back to a brand-new player. Purchase history is kept so receipts are never re-granted.
+function PlayerData.resetToTemplate(player: Player): boolean
+	return PlayerData.update(player, function(data)
+		local purchases = data.processedPurchases
+		for key in TEMPLATE do
+			(data :: any)[key] = deepCopy((TEMPLATE :: any)[key])
+		end
+		data.processedPurchases = purchases
+	end)
+end
+
 local function claimDaily(player: Player)
 	local granted = false
 	PlayerData.update(player, function(data)
@@ -190,6 +215,9 @@ end
 
 local function onPlayerAdded(player: Player)
 	local profile = store:StartSessionAsync(`Player_{player.UserId}`, {
+		-- In Studio, take over a lock left behind by a previous playtest instead of waiting for it
+		-- to expire. Live servers never steal: that is what protects data between servers.
+		Steal = RunService:IsStudio(),
 		-- Stop waiting for a session lock if the player already left.
 		Cancel = function()
 			return player.Parent ~= Players

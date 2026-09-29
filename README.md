@@ -68,6 +68,13 @@ The server makes every decision. Clients only send requests, and the server chec
 
 **Unit test (optional):** `luau tests/Pairing.spec.luau` (needs the standalone Luau CLI).
 
+## Admin panel
+
+A gold **Admin** button in the lobby opens fixed buttons: start round now, skip phase, force a chaos
+mode for the next round, +coins, +XP, daily reward again, reset my data.
+Who can see it: everyone in Studio, the game owner, and user IDs in `Config.AdminUserIds`.
+The server re-checks every command, so a hacked client can't use it.
+
 ## Before launch: things only you can do
 
 1. **Game passes + products** (Creator Dashboard → your game → Monetization):

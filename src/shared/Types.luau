@@ -85,6 +85,7 @@ export type PublicData = {
 	ownedPasses: { [string]: boolean },
 	canClaimDaily: boolean,
 	roundsPlayed: number, -- 0 = brand new player (shows How to Play)
+	isAdmin: boolean, -- shows the Admin button (the server re-checks every command)
 }
 
 export type RewardSummary = {

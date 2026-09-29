@@ -1,6 +1,7 @@
 --!strict
 -- Client entry point. Starts each UI/system and wires them together.
 
+local AdminPanel = require(script.UI.AdminPanel)
 local Catalog = require(script.UI.Catalog)
 local HUD = require(script.UI.HUD)
 local HowToPlay = require(script.UI.HowToPlay)
@@ -18,12 +19,14 @@ VotingUI.start()
 ResultsUI.start()
 ShopUI.start()
 HowToPlay.start()
+AdminPanel.start()
 Moments.start()
 Stage.start()
 
 HUD.onOpenShop = ShopUI.open
 HUD.onOpenLooks = ResultsUI.openLooks
 HUD.onOpenHelp = HowToPlay.open
+HUD.onOpenAdmin = AdminPanel.toggle
 Catalog.onRotate = Stage.rotate
 VotingUI.onToast = HUD.toast
 Moments.onAnnounce = function(text)

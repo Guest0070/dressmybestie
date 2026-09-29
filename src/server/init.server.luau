@@ -1,6 +1,7 @@
 --!strict
 -- Server entry point. Boots each system in order; systems never start themselves.
 
+local Admin = require(script.Admin)
 local Analytics = require(script.Analytics)
 local LookApplier = require(script.Styling.LookApplier)
 local Map = require(script.Round.Map)
@@ -20,6 +21,7 @@ Voting.start()
 Shop.start()
 Receipts.start()
 RoundManager.start()
+Admin.start()
 
 -- Layered clothing needs R15 avatars. Rig type is a Studio setting (File -> Avatar Settings),
 -- so we can only warn loudly if it's wrong.

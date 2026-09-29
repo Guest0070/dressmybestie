@@ -354,6 +354,14 @@ Config.Sounds = {
 	LobbyMoment = 0,
 } :: { [string]: number }
 
+-- Admins: the game owner is always an admin, and so is everyone in Studio playtests.
+-- Add friends' user IDs here (the number in their profile URL), e.g. { 12345678 }.
+Config.AdminUserIds = {} :: { number }
+Config.Admin = {
+	CoinsGrant = 1000,
+	XpGrant = 500,
+}
+
 -- ProfileStore settings. Bump the store name only for a deliberate data wipe.
 Config.Data = {
 	StoreName = "PlayerData_v1",

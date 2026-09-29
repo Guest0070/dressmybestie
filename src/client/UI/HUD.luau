@@ -30,6 +30,7 @@ local PHASE_TITLES: { [string]: string } = {
 HUD.onOpenShop = function() end
 HUD.onOpenLooks = function() end
 HUD.onOpenHelp = function() end
+HUD.onOpenAdmin = function() end
 
 local root: Frame
 local topPanel: Frame
@@ -44,6 +45,7 @@ local coinsLabel: TextLabel
 local rankLabel: TextLabel
 local dailyButton: TextButton
 local looksButton: TextButton
+local adminButton: TextButton
 local toastLabel: TextLabel
 local revealFrame: Frame
 local revealTheme: TextLabel
@@ -179,6 +181,7 @@ local function refreshData(data: Types.PublicData)
 		then `{rankName}  {data.styleXp}/{nextXp} XP`
 		else `{rankName}  {data.styleXp} XP`
 	dailyButton.Visible = data.canClaimDaily
+	adminButton.Visible = data.isAdmin
 end
 
 local function showRewards(summary: Types.RewardSummary)
@@ -264,7 +267,7 @@ function HUD.start()
 	buttonColumn = Kit.new("Frame", {
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(8, 80),
-		Size = UDim2.fromOffset(150, 4 * (Kit.ButtonHeight + 8)),
+		Size = UDim2.fromOffset(150, 5 * (Kit.ButtonHeight + 8)),
 		Parent = root,
 	}, { Kit.list(Enum.FillDirection.Vertical, 8) })
 	local column = buttonColumn
@@ -293,6 +296,16 @@ function HUD.start()
 		Parent = column,
 	}, function()
 		HUD.onOpenHelp()
+	end)
+	adminButton = Kit.button({
+		Text = "Admin",
+		BackgroundColor3 = Kit.Colors.Gold,
+		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
+		LayoutOrder = 5,
+		Visible = false,
+		Parent = column,
+	}, function()
+		HUD.onOpenAdmin()
 	end)
 	looksButton = Kit.button({
 		Text = "Buy looks",
