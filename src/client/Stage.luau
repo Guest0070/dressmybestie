@@ -172,6 +172,36 @@ local function setResetEnabled(enabled: boolean)
 	end)
 end
 
+-- Screen effects in Lighting (Bloom, ColorGrading, ...) are switched off while styling and put
+-- back afterwards. They can wash a bright scene out to white; the booth needs true colours.
+local POST_EFFECT_CLASSES = {
+	"BloomEffect",
+	"ColorGradingEffect",
+	"ColorCorrectionEffect",
+	"SunRaysEffect",
+	"DepthOfFieldEffect",
+	"BlurEffect",
+}
+local disabledEffects: { Instance } = {}
+
+local function setPostEffectsSuspended(suspended: boolean)
+	if suspended then
+		for _, effect in Lighting:GetChildren() do
+			if table.find(POST_EFFECT_CLASSES, effect.ClassName) and (effect :: any).Enabled then
+				(effect :: any).Enabled = false
+				table.insert(disabledEffects, effect)
+			end
+		end
+	else
+		for _, effect in disabledEffects do
+			if effect.Parent then
+				(effect :: any).Enabled = true
+			end
+		end
+		disabledEffects = {}
+	end
+end
+
 local function onRoundChanged()
 	local locked = inRound() and State.round.phase ~= "Lobby"
 	if controls then
@@ -183,6 +213,7 @@ local function onRoundChanged()
 	end
 	setResetEnabled(not locked)
 	setCharacterHidden(shouldHideCharacter())
+	setPostEffectsSuspended(State.round.phase == "Styling")
 	if State.round.phase ~= "Styling" then
 		orbitAngle = 0
 	end

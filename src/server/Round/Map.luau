@@ -145,14 +145,14 @@ local function buildBooth(index: number): Model
 	booth.Name = `Booth_{index}`
 	local center = BOOTH_ORIGIN + Vector3.new(0, 0, (index - 1) * BOOTH_SPACING)
 	local size = BOOTH_SIZE
-	local wallColor = Color3.fromRGB(235, 190, 215)
+	local wallColor = Color3.fromRGB(45, 38, 62) -- dark, so nothing bright can wash the view out
 
 	block(
 		booth,
 		"Floor",
 		Vector3.new(size.X, 1, size.Z),
 		CFrame.new(center + Vector3.new(0, 0.5, 0)),
-		Color3.fromRGB(240, 200, 220)
+		Color3.fromRGB(60, 50, 80)
 	)
 	-- No roof: an enclosed dark room looked washed out with the place's Bloom/ColorGrading.
 	-- The walls alone keep booths private (booths are far apart and stylists are frozen).
@@ -185,6 +185,21 @@ local function buildBooth(index: number): Model
 		CFrame.new(center + Vector3.new(-half.X, half.Y, 0)),
 		wallColor
 	)
+	-- Pink neon trim along the top of the walls.
+	for _, spec in
+		{
+			{ Vector3.new(size.X, 0.4, 0.4), Vector3.new(0, size.Y, half.Z - 0.6) },
+			{ Vector3.new(size.X, 0.4, 0.4), Vector3.new(0, size.Y, -half.Z + 0.6) },
+			{ Vector3.new(0.4, 0.4, size.Z), Vector3.new(half.X - 0.6, size.Y, 0) },
+			{ Vector3.new(0.4, 0.4, size.Z), Vector3.new(-half.X + 0.6, size.Y, 0) },
+		}
+	do
+		block(booth, "Trim", spec[1], CFrame.new(center + spec[2]), Color3.fromRGB(255, 110, 180), {
+			Material = Enum.Material.Neon,
+			CanCollide = false,
+		})
+	end
+
 	local pedestal = block(
 		booth,
 		"Pedestal",
