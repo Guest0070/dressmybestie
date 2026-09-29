@@ -1,5 +1,5 @@
 --!strict
--- All remotes live here by name so a typo is a Luau error, not a silent nil at runtime.
+-- All remotes live here by name so a typo is a loud error, not a silent nil at runtime.
 -- The server creates them on boot; clients wait for them. Clients only send *intents*;
 -- the server validates every payload.
 
@@ -8,16 +8,24 @@ local RunService = game:GetService("RunService")
 
 local EVENT_NAMES = {
 	-- Server -> client
-	"RoundState", -- (phase: string, data: table) broadcast on every phase change
-	"DataChanged", -- (snapshot: PublicData) the player's own coins/xp/rank
+	"RoundState", -- (state: RoundState) on every phase/round change
+	"DataChanged", -- (data: PublicData) the player's own coins/xp/unlocks
+	"Toast", -- (text: string) short message at the top of the screen
+	"RewardSummary", -- (summary: RewardSummary) after results
+	"LobbyMoment", -- (moment: string, buyerName: string) confetti/disco for everyone
+	"RunwayEffect", -- (userId: number, isVip: boolean) at the start of each runway walk
+	"LookSync", -- (targetUserId: number, look: Look, seq: number?) accepted look, sent to its stylist
 	-- Client -> server
-	"SetMannequinLook", -- (look: LookRequest) stylist edits partner mannequin
-	"CastHearts", -- ({ userId }) up to MaxHeartsPerVoter
+	"SetMannequinLook", -- (look: Look) stylist edits their target's mannequin
+	"CastHearts", -- ({ number }) user IDs, up to MaxHeartsPerVoter
 	"ClaimDailyReward", -- ()
+	"BuyWithCoins", -- (cosmeticId: string)
+	"EquipCosmetic", -- (slot: string, cosmeticId: string?)
 }
 
 local FUNCTION_NAMES = {
-	"GetMyData", -- () -> PublicData
+	"GetMyData", -- () -> PublicData?
+	"GetRoundState", -- () -> RoundState  (for players who join mid-round)
 }
 
 local FOLDER_NAME = "Remotes"
