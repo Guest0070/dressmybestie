@@ -145,7 +145,7 @@ local function buildBooth(index: number): Model
 	booth.Name = `Booth_{index}`
 	local center = BOOTH_ORIGIN + Vector3.new(0, 0, (index - 1) * BOOTH_SPACING)
 	local size = BOOTH_SIZE
-	local wallColor = Color3.fromRGB(255, 225, 240)
+	local wallColor = Color3.fromRGB(235, 190, 215)
 
 	block(
 		booth,
@@ -154,13 +154,8 @@ local function buildBooth(index: number): Model
 		CFrame.new(center + Vector3.new(0, 0.5, 0)),
 		Color3.fromRGB(240, 200, 220)
 	)
-	block(
-		booth,
-		"Roof",
-		Vector3.new(size.X, 1, size.Z),
-		CFrame.new(center + Vector3.new(0, size.Y, 0)),
-		wallColor
-	)
+	-- No roof: an enclosed dark room looked washed out with the place's Bloom/ColorGrading.
+	-- The walls alone keep booths private (booths are far apart and stylists are frozen).
 	local half = size / 2
 	block(
 		booth,
@@ -193,17 +188,12 @@ local function buildBooth(index: number): Model
 	local pedestal = block(
 		booth,
 		"Pedestal",
-		Vector3.new(6, 1, 6),
+		Vector3.new(1, 6, 6), -- cylinders run along X: 1 tall once rotated, 6 wide
 		CFrame.new(center + Vector3.new(0, 1.5, 0)),
 		Color3.fromRGB(255, 120, 190)
 	)
 	pedestal.Shape = Enum.PartType.Cylinder
 	pedestal.CFrame = CFrame.new(center + Vector3.new(0, 1.5, 0)) * CFrame.Angles(0, 0, math.pi / 2)
-
-	local light = Instance.new("PointLight")
-	light.Range = 30
-	light.Brightness = 2
-	light.Parent = booth:FindFirstChild("Roof")
 
 	-- Mannequin in the middle so the orbiting camera (radius 9) never leaves the room;
 	-- the stylist stands in a corner, behind the camera, so they never block the view.
