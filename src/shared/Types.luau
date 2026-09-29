@@ -84,6 +84,7 @@ export type PublicData = {
 	equipped: { [string]: string },
 	ownedPasses: { [string]: boolean },
 	canClaimDaily: boolean,
+	roundsPlayed: number, -- 0 = brand new player (shows How to Play)
 }
 
 export type RewardSummary = {

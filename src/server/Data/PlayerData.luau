@@ -106,6 +106,7 @@ local function toPublic(player: Player, data: PlayerData): PublicData
 		equipped = table.clone(data.equipped),
 		ownedPasses = Passes.all(player),
 		canClaimDaily = data.lastDailyRewardDay < currentDay(),
+		roundsPlayed = data.roundsPlayed,
 	}
 end
 

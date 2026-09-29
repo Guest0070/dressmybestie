@@ -4,6 +4,7 @@
 -- Chaos rounds are just flags on the round (see Config.ChaosModifiers), not separate code paths.
 -- Players can leave at ANY point: every step re-checks who is still here.
 
+local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -511,6 +512,7 @@ local function setupRound(): boolean
 	local chaosInfo
 	chaos, chaosInfo = pickChaos(state.roundNumber, #present)
 	state.theme = pickTheme(anyVip)
+	Map.setBackdropText(`Theme: {state.theme}`)
 	state.chaos = chaosInfo
 	state.names = names
 	return true
@@ -605,6 +607,26 @@ local function runway()
 			table.insert(stylistNames, stylist.DisplayName)
 		end
 		teleport(player, Map.runwayStart())
+		local head = if player.Character then player.Character:FindFirstChild("Head") else nil
+		if head and head:IsA("BasePart") then
+			-- Floating name tag for the walk. Names are Roblox display names (already moderated).
+			local tag = Instance.new("BillboardGui")
+			tag.Name = "RunwayTag"
+			tag.Size = UDim2.fromOffset(260, 70)
+			tag.StudsOffset = Vector3.new(0, 3, 0)
+			tag.AlwaysOnTop = true
+			local label = Instance.new("TextLabel")
+			label.BackgroundTransparency = 1
+			label.Size = UDim2.fromScale(1, 1)
+			label.Font = Enum.Font.FredokaOne
+			label.TextScaled = true
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.TextStrokeTransparency = 0.2
+			label.Text = `{p.name}\nstyled by {table.concat(stylistNames, " & ")}`
+			label.Parent = tag
+			tag.Parent = head
+			Debris:AddItem(tag, Config.Timings.RunwayPerPlayer)
+		end
 		setPhase("Runway", Config.Timings.RunwayPerPlayer, {
 			runwayWearer = p.userId,
 			runwayStylists = stylistNames,
@@ -743,6 +765,7 @@ local function cleanup()
 	pendingLooks = {}
 	chaos = nil
 	state.theme = nil
+	Map.setBackdropText("")
 	state.chaos = nil
 	state.names = nil
 	Voting.finish()

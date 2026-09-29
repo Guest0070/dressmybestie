@@ -3,6 +3,7 @@
 
 local Catalog = require(script.UI.Catalog)
 local HUD = require(script.UI.HUD)
+local HowToPlay = require(script.UI.HowToPlay)
 local Moments = require(script.Moments)
 local ResultsUI = require(script.UI.ResultsUI)
 local ShopUI = require(script.UI.ShopUI)
@@ -16,11 +17,13 @@ Catalog.start()
 VotingUI.start()
 ResultsUI.start()
 ShopUI.start()
+HowToPlay.start()
 Moments.start()
 Stage.start()
 
 HUD.onOpenShop = ShopUI.open
 HUD.onOpenLooks = ResultsUI.openLooks
+HUD.onOpenHelp = HowToPlay.open
 Catalog.onRotate = Stage.rotate
 VotingUI.onToast = HUD.toast
 Moments.onAnnounce = function(text)

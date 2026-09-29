@@ -29,6 +29,7 @@ local PHASE_TITLES: { [string]: string } = {
 -- Callbacks other modules plug in (set by init.client).
 HUD.onOpenShop = function() end
 HUD.onOpenLooks = function() end
+HUD.onOpenHelp = function() end
 
 local root: Frame
 local topPanel: Frame
@@ -263,7 +264,7 @@ function HUD.start()
 	buttonColumn = Kit.new("Frame", {
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(8, 80),
-		Size = UDim2.fromOffset(150, 3 * (Kit.ButtonHeight + 8)),
+		Size = UDim2.fromOffset(150, 4 * (Kit.ButtonHeight + 8)),
 		Parent = root,
 	}, { Kit.list(Enum.FillDirection.Vertical, 8) })
 	local column = buttonColumn
@@ -282,6 +283,16 @@ function HUD.start()
 		Parent = column,
 	}, function()
 		Remotes.Events.ClaimDailyReward:FireServer()
+	end)
+	Kit.button({
+		Text = "How to play",
+		BackgroundColor3 = Kit.Colors.PanelLight,
+		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
+		LayoutOrder = 4,
+		MaxTextSize = 22,
+		Parent = column,
+	}, function()
+		HUD.onOpenHelp()
 	end)
 	looksButton = Kit.button({
 		Text = "Buy looks",

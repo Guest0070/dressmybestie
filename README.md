@@ -87,7 +87,9 @@ The server makes every decision. Clients only send requests, and the server chec
      Podium.First / Second / Third        results spots
      Booths.Booth_1.. .Stand / .Mannequin (optional: booths are auto-built far away if missing)
    ```
-   Anything you don't build is created as a plain placeholder automatically.
+   Anything you don't build is created automatically: a decorated placeholder (neon catwalk,
+   spotlights, a backdrop showing the theme, bleachers, lobby title sign). Its decorations sit in
+   `Decor` models, so you can delete them when you build your own.
 5. Maturity & Compliance questionnaire, icon, thumbnails, description, then publish.
 
 ## Places where Roblox differs from the brief (please read)

@@ -14,6 +14,8 @@
 
 local Workspace = game:GetService("Workspace")
 
+local MapDecor = require(script.Parent.MapDecor)
+
 local Map = {}
 
 local BOOTH_ORIGIN = Vector3.new(600, 0, 0)
@@ -84,7 +86,9 @@ local function buildLobby()
 	end
 	-- An empty place (no Baseplate) has nothing to stand on: players fall and never count as
 	-- ready. Build a floor + spawn pad if the place has no SpawnLocation of its own.
+	local builtFloor = false
 	if not Workspace:FindFirstChildWhichIsA("SpawnLocation", true) then
+		builtFloor = true
 		block(lobby, "Floor", Vector3.new(120, 2, 120), CFrame.new(0, -1, 0), Color3.fromRGB(250, 225, 240))
 		local spawnPad = Instance.new("SpawnLocation")
 		spawnPad.Name = "SpawnPad"
@@ -95,6 +99,7 @@ local function buildLobby()
 		spawnPad.Duration = 0 -- no forcefield bubble
 		spawnPad.Parent = lobby
 	end
+	MapDecor.buildLobby(lobby, builtFloor)
 end
 
 local function buildRunway()
@@ -131,6 +136,7 @@ local function buildRunway()
 		marker(podium, "Second", CFrame.new(-9, 11, 268) * face)
 		marker(podium, "Third", CFrame.new(9, 9, 268) * face)
 	end
+	MapDecor.buildRunway(runway)
 end
 
 local function buildBooth(index: number): Model
@@ -269,6 +275,11 @@ function Map.lineupCFrame(index: number, count: number): CFrame
 	local position = center.Position + center.RightVector * offset
 	local cameraPos = Map.runwayCamera().Position
 	return CFrame.lookAt(position, Vector3.new(cameraPos.X, position.Y, cameraPos.Z))
+end
+
+-- Show text (the theme) on the runway backdrop, if the map has one.
+function Map.setBackdropText(text: string)
+	MapDecor.setBackdropText(root:FindFirstChild("Runway"), text)
 end
 
 function Map.podiumCFrame(place: number): CFrame?
