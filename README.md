@@ -40,7 +40,7 @@ Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme
 5 daily quests, 9 achievements, overhead name tag with title + rank, coins/rank in the player list,
 rank-up celebration.
 
-**Shop (all fixed items, nothing random):** 10 entrance effects, 9 trails, 11 titles, walks, poses,
+**Shop (all fixed items, nothing random):** 10 entrance effects, 8 trails, 10 titles, walks, poses,
 VIP pass, Pose Pack, lobby moments (confetti rain / disco mode with your name), Premium +10% coins.
 
 **Also:** How to Play card, Invite Friends, Photo button (share/save a screenshot), Admin panel,
