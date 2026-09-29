@@ -14,7 +14,9 @@ local State = require(script.Parent.State)
 
 local Stage = {}
 
-local ORBIT_DISTANCE = 9
+local ORBIT_DISTANCE = 10
+-- Raise the camera (studs) so the mannequin sits low on screen, below the timer/banner panels.
+local CAMERA_RAISE = 3
 local CAMERA_LERP = 0.15
 
 local orbitAngle = 0
@@ -73,6 +75,19 @@ local function stageFocus(): Vector3?
 	return nil
 end
 
+-- Hide my own character locally while styling so it never blocks the mannequin.
+local function setCharacterHidden(hidden: boolean)
+	local character = State.player.Character
+	if not character then
+		return
+	end
+	for _, descendant in character:GetDescendants() do
+		if descendant:IsA("BasePart") or descendant:IsA("Decal") then
+			(descendant :: any).LocalTransparencyModifier = if hidden then 1 else 0
+		end
+	end
+end
+
 local function updateCamera()
 	local camera = Workspace.CurrentCamera
 	if not camera then
@@ -86,12 +101,21 @@ local function updateCamera()
 		if mannequin then
 			camera.CameraType = Enum.CameraType.Scriptable
 			local pivot = mannequin:GetPivot()
-			local center = pivot.Position + Vector3.new(0, 0.5, 0)
-			local offset = (CFrame.Angles(0, orbitAngle, 0) * pivot).LookVector * ORBIT_DISTANCE
-			local desired = CFrame.lookAt(center + offset + Vector3.new(0, 1.5, 0), center)
-			-- Shift sideways so the mannequin sits in the left half; the catalog covers the right.
-			desired *= CFrame.new(2.6, 0, 0)
+			local look = (CFrame.Angles(0, orbitAngle, 0) * pivot).LookVector
+			local dir = Vector3.new(look.X, 0, look.Z).Unit -- from mannequin toward camera, level
+			local cameraPos = pivot.Position + dir * ORBIT_DISTANCE + Vector3.new(0, CAMERA_RAISE, 0)
+			-- Look level (not down) so the raise pushes the mannequin lower on screen.
+			local level = CFrame.lookAt(cameraPos, cameraPos - dir)
+			-- Turn the camera right so the mannequin appears centred in the LEFT half of the screen
+			-- (the catalog covers the right half). Turning instead of sliding keeps it inside the booth.
+			local viewport = camera.ViewportSize
+			local aspect = viewport.X / math.max(viewport.Y, 1)
+			local halfFov = math.rad(camera.FieldOfView) / 2
+			local yaw = math.atan(0.5 * math.tan(halfFov) * aspect)
+			local desired = level * CFrame.Angles(0, -yaw, 0)
 			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP * 2)
+			-- Roblox's camera scripts reset character transparency every frame, so re-apply it.
+			setCharacterHidden(true)
 			return
 		end
 	elseif round.phase == "Runway" or round.phase == "Voting" or round.phase == "Results" then
@@ -113,6 +137,12 @@ local function updateCamera()
 			camera.CameraSubject = humanoid
 		end
 	end
+end
+
+local function shouldHideCharacter(): boolean
+	local target = State.myTarget()
+	-- Solo Studio test: I'm styling myself, so my mannequin is visible and my body just blocks it.
+	return State.round.phase == "Styling" and target ~= nil
 end
 
 local function setResetEnabled(enabled: boolean)
@@ -137,6 +167,7 @@ local function onRoundChanged()
 		end
 	end
 	setResetEnabled(not locked)
+	setCharacterHidden(shouldHideCharacter())
 	if State.round.phase ~= "Styling" then
 		orbitAngle = 0
 	end
