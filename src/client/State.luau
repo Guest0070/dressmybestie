@@ -31,6 +31,25 @@ function State.setDressingRoom(open: boolean)
 	end
 end
 
+-- True if I'm playing in the current round (not a spectator / late joiner).
+function State.isParticipant(): boolean
+	local names = State.round.names
+	return names ~= nil and names[tostring(State.player.UserId)] ~= nil
+end
+
+-- Lobby things (shop, quests, booths, dressing room) are open in the lobby, and for spectators
+-- while the round is still in the styling part (they're moved to the audience for the show).
+function State.canUseLobby(): boolean
+	local phase = State.round.phase
+	if phase == "Lobby" then
+		return true
+	end
+	if State.isParticipant() then
+		return false
+	end
+	return phase == "Pairing" or phase == "ThemeReveal" or phase == "Styling"
+end
+
 -- User ID of the player I'm styling right now, if any.
 function State.myTarget(): number?
 	local assignments = State.round.assignments

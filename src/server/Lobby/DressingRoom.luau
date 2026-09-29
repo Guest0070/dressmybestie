@@ -12,6 +12,8 @@ local Passes = require(script.Parent.Parent.Monetization.Passes)
 local LookApplier = require(script.Parent.Parent.Styling.LookApplier)
 local LookValidator = require(script.Parent.Parent.Styling.LookValidator)
 local RoundManager = require(script.Parent.Parent.Round.RoundManager)
+local PlayerData = require(script.Parent.Parent.Data.PlayerData)
+local Appearance = require(script.Parent.Appearance)
 
 local DressingRoom = {}
 
@@ -26,7 +28,7 @@ local function getHumanoid(player: Player): Humanoid?
 end
 
 -- The player's real avatar (from their Roblox profile), fetched once per visit.
-local function getBase(player: Player): HumanoidDescription?
+local function getRealAvatar(player: Player): HumanoidDescription?
 	local cached = baseDescriptions[player]
 	if cached then
 		return cached
@@ -45,6 +47,16 @@ local function getBase(player: Player): HumanoidDescription?
 		end
 	end
 	return nil
+end
+
+-- Real avatar + the skin tone / body type chosen in the lobby booths.
+local function getBase(player: Player): HumanoidDescription?
+	local real = getRealAvatar(player)
+	local data = PlayerData.get(player)
+	if not real or not data then
+		return real
+	end
+	return Appearance.applyTo(player, real:Clone(), data)
 end
 
 local function process(player: Player)

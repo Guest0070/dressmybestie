@@ -27,7 +27,8 @@ export type PodiumEntry = {
 	wearerUserId: number,
 	wearerName: string,
 	stylistNames: { string },
-	hearts: number,
+	hearts: number, -- hearts, or total stars in Stars mode
+	average: number?, -- Stars mode: average rating
 }
 
 -- Items shown in the "Buy this look" panel, grouped per wearer.
@@ -52,6 +53,8 @@ export type RoundState = {
 	-- Runway: who is walking now, and who styled them
 	runwayWearer: number?,
 	runwayStylists: { string }?,
+	-- Stars mode: true while the audience can rate the current runway walker
+	rating: boolean?,
 	-- Voting: user IDs whose looks can receive hearts
 	candidates: { number }?,
 	-- Results
@@ -79,6 +82,8 @@ export type PlayerData = {
 	questClaimed: { [string]: boolean }, -- daily quest id -> claimed today
 	achievementsClaimed: { [string]: boolean },
 	lifetime: { [string]: number }, -- lifetime counters not stored elsewhere (gems, obby, heartsGiven, podiums)
+	skinTone: number, -- index into Config.SkinTones, 0 = the player's own skin
+	bodyType: string, -- id in Config.BodyTypes, "" = the player's own body
 }
 
 export type QuestView = {
@@ -105,6 +110,8 @@ export type PublicData = {
 	nextDailyReward: number, -- coins the daily button gives right now (grows with the streak)
 	dailyStreak: number,
 	quests: { QuestView },
+	skinTone: number,
+	bodyType: string,
 }
 
 export type RewardSummary = {

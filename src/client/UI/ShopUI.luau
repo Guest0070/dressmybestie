@@ -8,6 +8,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Auras = require(ReplicatedStorage.Shared.Auras)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
@@ -26,6 +27,7 @@ local TABS: { Tab } = {
 	{ id = "Trails", label = "Trails", slots = { "Trail" } },
 	{ id = "Titles", label = "Titles", slots = { "Title" } },
 	{ id = "Walks", label = "Walks & Poses", slots = { "Walk", "Pose" } },
+	{ id = "Auras", label = "Auras", slots = { "Aura" } },
 }
 
 local PASS_DESCRIPTIONS: { [string]: string } = {
@@ -76,6 +78,7 @@ type CardSpec = {
 	onClick: (() -> ())?,
 	preview: (Frame) -> (),
 	highlight: boolean?,
+	try: (() -> ())?, -- optional "Try" button over the preview (auras)
 }
 
 local order = 0
@@ -96,21 +99,33 @@ local function card(spec: CardSpec): TextButton
 	local preview = Kit.new("Frame", {
 		BackgroundColor3 = Kit.Colors.Panel,
 		Position = UDim2.fromOffset(8, 8),
-		Size = UDim2.new(1, -16, 0, 70),
+		Size = UDim2.new(1, -16, 0, 96),
 		ClipsDescendants = true,
 		Parent = frame,
 	}, { Kit.corner(10) })
 	spec.preview(preview)
+	if spec.try then
+		Kit.button({
+			Text = "Try",
+			AnchorPoint = Vector2.new(1, 0),
+			Position = UDim2.new(1, -4, 0, 4),
+			Size = UDim2.fromOffset(64, 32),
+			BackgroundColor3 = Kit.Colors.Blue,
+			MaxTextSize = 16,
+			ZIndex = 3,
+			Parent = preview,
+		}, spec.try)
+	end
 	Kit.label({
 		Text = spec.name,
-		Position = UDim2.fromOffset(8, 82),
+		Position = UDim2.fromOffset(8, 108),
 		Size = UDim2.new(1, -16, 0, 24),
 		MaxTextSize = 22,
 		Parent = frame,
 	})
 	Kit.label({
 		Text = spec.description,
-		Position = UDim2.fromOffset(8, 106),
+		Position = UDim2.fromOffset(8, 132),
 		Size = UDim2.new(1, -16, 0, 18),
 		Font = Kit.BodyFont,
 		TextColor3 = Kit.Colors.TextDim,
@@ -156,7 +171,72 @@ local function gradientPreview(a: Color3, b: Color3): (Frame) -> ()
 	end
 end
 
+-- Live preview: a copy of your own character in a little 3D window, playing the animation.
+local function animatedPreview(animationId: number): (Frame) -> ()
+	return function(frame)
+		local character = State.player.Character
+		if not character or animationId <= 0 then
+			return
+		end
+		local viewport = Kit.new("ViewportFrame", {
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 1),
+			Ambient = Color3.fromRGB(200, 200, 210),
+			LightColor = Color3.new(1, 1, 1),
+			Parent = frame,
+		})
+		local world = Instance.new("WorldModel") -- animations only play inside a WorldModel
+		world.Parent = viewport
+		character.Archivable = true
+		local clone = character:Clone()
+		for _, descendant in clone:GetDescendants() do
+			if descendant:IsA("BaseScript") or descendant:IsA("Sound") or descendant:IsA("BillboardGui") then
+				descendant:Destroy()
+			elseif descendant:GetAttribute("AuraFx") or descendant:GetAttribute("AuraPreview") then
+				descendant:Destroy()
+			end
+		end
+		local root = clone:FindFirstChild("HumanoidRootPart")
+		if root and root:IsA("BasePart") then
+			root.Anchored = true
+		end
+		clone:PivotTo(CFrame.new(0, 0, 0))
+		clone.Parent = world
+		local camera = Instance.new("Camera")
+		camera.FieldOfView = 40
+		camera.CFrame = CFrame.lookAt(Vector3.new(4, 1, -8), Vector3.new(0, 0, 0))
+		camera.Parent = viewport
+		viewport.CurrentCamera = camera
+		local humanoid = clone:FindFirstChildOfClass("Humanoid")
+		if not humanoid then
+			return
+		end
+		local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator")
+		animator.Parent = humanoid
+		local animation = Instance.new("Animation")
+		animation.AnimationId = `rbxassetid://{animationId}`
+		local ok, track = pcall((animator :: Animator).LoadAnimation, animator :: Animator, animation)
+		if ok and track then
+			track.Looped = true
+			track:Play()
+		end
+	end
+end
+
 local function previewFor(cosmetic: Config.Cosmetic): (Frame) -> ()
+	if
+		(cosmetic.slot == "Walk" or cosmetic.slot == "Pose")
+		and cosmetic.animationId
+		and cosmetic.animationId > 0
+	then
+		return animatedPreview(cosmetic.animationId)
+	elseif cosmetic.slot == "Aura" then
+		return textPreview(
+			cosmetic.displayName,
+			cosmetic.color or Kit.Colors.Gold,
+			Color3.fromRGB(40, 30, 60)
+		)
+	end
 	if cosmetic.slot == "Trail" and cosmetic.color then
 		return gradientPreview(cosmetic.color, cosmetic.color2 or cosmetic.color)
 	elseif cosmetic.slot == "Title" then
@@ -171,6 +251,15 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 	local owned = data.ownedCosmetics[cosmetic.id] == true
 	local equipped = data.equipped[cosmetic.slot] == cosmetic.id
 	local preview = previewFor(cosmetic)
+	-- Auras: "Try" shows it on your own character for a few seconds (only you see it).
+	local try = if cosmetic.slot == "Aura"
+		then function()
+			local character = State.player.Character
+			if character then
+				Auras.preview(character, cosmetic.id, 6)
+			end
+		end
+		else nil
 	if cosmetic.animationId ~= nil and cosmetic.animationId == 0 then
 		card({
 			name = cosmetic.displayName,
@@ -178,6 +267,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 			buttonText = "Soon",
 			buttonColor = Kit.Colors.Grey,
 			preview = preview,
+			try = try,
 		})
 	elseif owned then
 		card({
@@ -187,6 +277,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 			buttonColor = if equipped then Kit.Colors.Grey else Kit.Colors.Blue,
 			highlight = equipped,
 			preview = preview,
+			try = try,
 			onClick = function()
 				Remotes.Events.EquipCosmetic:FireServer(cosmetic.slot, if equipped then nil else cosmetic.id)
 			end,
@@ -200,6 +291,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 			buttonText = `{price} coins`,
 			buttonColor = if affordable then Kit.Colors.Gold else Kit.Colors.Grey,
 			preview = preview,
+			try = try,
 			onClick = function()
 				Remotes.Events.BuyWithCoins:FireServer(cosmetic.id)
 			end,
@@ -213,6 +305,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 				buttonText = "Soon",
 				buttonColor = Kit.Colors.Grey,
 				preview = preview,
+				try = try,
 			})
 			return
 		end
@@ -222,6 +315,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 			buttonText = `R$ {product.price}`,
 			buttonColor = Kit.Colors.Green,
 			preview = preview,
+			try = try,
 			onClick = function()
 				MarketplaceService:PromptProductPurchase(State.player, product.id)
 			end,
@@ -237,6 +331,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 			buttonText = if pass.id == 0 then "Soon" else `Get {pass.displayName}`,
 			buttonColor = if pass.id == 0 then Kit.Colors.Grey else Kit.Colors.Green,
 			preview = preview,
+			try = try,
 			onClick = if pass.id == 0
 				then nil
 				else function()
@@ -250,6 +345,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 			buttonText = `Reach Lv {cosmetic.rank}`,
 			buttonColor = Kit.Colors.Grey,
 			preview = preview,
+			try = try,
 		})
 	end
 end
@@ -355,8 +451,8 @@ local function rebuild()
 end
 
 function ShopUI.open(tab: string?)
-	if State.round.phase ~= "Lobby" then
-		return -- never cover the game during a round
+	if not State.canUseLobby() then
+		return -- never cover the game during your round
 	end
 	if tab then
 		currentTab = tab
@@ -436,7 +532,7 @@ function ShopUI.start()
 		Parent = panel,
 	}, {
 		Kit.new("UIGridLayout", {
-			CellSize = UDim2.fromOffset(190, 180),
+			CellSize = UDim2.fromOffset(190, 206),
 			CellPadding = UDim2.fromOffset(10, 10),
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
@@ -449,7 +545,7 @@ function ShopUI.start()
 	end)
 	-- Close the shop when a round starts so it never covers the booth.
 	State.RoundChanged:Connect(function(round)
-		if round.phase ~= "Lobby" then
+		if not State.canUseLobby() then
 			panel.Visible = false
 		end
 	end)

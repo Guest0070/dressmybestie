@@ -172,7 +172,9 @@ local function refresh()
 		end)
 		local stylists = if #entry.stylistNames > 0 then table.concat(entry.stylistNames, " & ") else "?"
 		Kit.label({
-			Text = `{PLACE_NAMES[entry.place]}  {entry.wearerName}  (styled by {stylists})  ♥ {entry.hearts}`,
+			Text = `{PLACE_NAMES[entry.place]}  {entry.wearerName}  (styled by {stylists})  {if entry.average
+				then `★ {entry.average}`
+				else `♥ {entry.hearts}`}`,
 			Size = UDim2.new(1, -16, 1, -8),
 			Position = UDim2.fromOffset(8, 4),
 			TextColor3 = Kit.Colors.Panel,

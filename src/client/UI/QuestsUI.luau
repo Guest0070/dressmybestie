@@ -124,7 +124,7 @@ local function rebuild()
 end
 
 function QuestsUI.open()
-	if State.round.phase ~= "Lobby" then
+	if not State.canUseLobby() then
 		return
 	end
 	rebuild()
@@ -195,7 +195,7 @@ function QuestsUI.start()
 		end
 	end)
 	State.RoundChanged:Connect(function(round)
-		if round.phase ~= "Lobby" then
+		if not State.canUseLobby() then
 			panel.Visible = false
 		end
 	end)

@@ -116,7 +116,11 @@ local function bannerFor(round: Types.RoundState): (string?, string?)
 		elseif wearer == me then
 			return "IT'S YOU! Strut!", `Styled by {stylistsText(round.runwayStylists)}`
 		end
-		return `{State.nameOf(wearer)}`, `Styled by {stylistsText(round.runwayStylists)}`
+		local sub = `Styled by {stylistsText(round.runwayStylists)}`
+		if round.rating then
+			sub ..= "  ·  Rate it with the stars!"
+		end
+		return `{State.nameOf(wearer)}`, sub
 	elseif round.phase == "Voting" then
 		if round.chaos and round.chaos.reverseVoting then
 			return "Hearts for the most gloriously TERRIBLE look!", "Tap up to 3"
@@ -131,7 +135,7 @@ end
 -- While styling, the catalog takes the right half of the screen, so the HUD moves to the left half.
 local function applyLayout(styling: boolean)
 	-- Lobby buttons only in the lobby: during a round they'd cover the voting/results panels.
-	local lobby = State.round.phase == "Lobby"
+	local lobby = State.canUseLobby()
 	-- Photo button for the best moments: the runway, the results and the Dressing Room.
 	local phase = State.round.phase
 	photoButton.Visible = phase == "Runway" or phase == "Results" or State.dressingRoom
@@ -481,24 +485,25 @@ function HUD.start()
 			HUD.toast("Invites aren't available right now.")
 		end
 	end)
-	-- AFK toggle: sit out of rounds (and auto-set by the server after idle rounds).
+	-- Spectator toggle: sit out of rounds and just watch + vote (the server also switches idle
+	-- players to spectating).
 	local afkButton: TextButton
 	afkButton = Kit.button({
-		Text = "Go AFK",
+		Text = "Spectate",
 		BackgroundColor3 = Kit.Colors.PanelLight,
 		Size = UDim2.fromOffset(170, Kit.ButtonHeight),
 		LayoutOrder = 3,
 		MaxTextSize = 22,
 		Parent = rightColumn,
 	}, function()
-		Remotes.Events.SetAfk:FireServer(State.player:GetAttribute("AFK") ~= true)
+		Remotes.Events.SetSpectating:FireServer(State.player:GetAttribute("Spectating") ~= true)
 	end)
 	local function refreshAfk()
-		local afk = State.player:GetAttribute("AFK") == true
-		afkButton.Text = if afk then "Join rounds" else "Go AFK"
+		local afk = State.player:GetAttribute("Spectating") == true
+		afkButton.Text = if afk then "Play next round" else "Spectate"
 		afkButton.BackgroundColor3 = if afk then Kit.Colors.Gold else Kit.Colors.PanelLight
 	end
-	State.player:GetAttributeChangedSignal("AFK"):Connect(refreshAfk)
+	State.player:GetAttributeChangedSignal("Spectating"):Connect(refreshAfk)
 	refreshAfk()
 	Kit.button({
 		Text = "How to play",

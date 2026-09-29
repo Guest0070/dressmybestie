@@ -25,7 +25,10 @@ local EVENT_NAMES = {
 	"SetOwnLook", -- (look: Look) Dressing Room: dress your own avatar (lobby only)
 	"ResetOwnLook", -- () Dressing Room: back to your real avatar
 	"ClaimQuest", -- (kind: "daily" | "achievement", id: string)
-	"SetAfk", -- (afk: boolean) sit out of rounds / join again
+	"SetSpectating", -- (spectating: boolean) watch & vote only / play again
+	"RateLook", -- (wearerUserId: number, stars: number) Stars mode, 1-5
+	"SetSkinTone", -- (index: number) Skin Tone booth, 0 = my own skin
+	"SetBodyType", -- (id: string) Body Type booth, "" = my own body
 }
 
 local FUNCTION_NAMES = {

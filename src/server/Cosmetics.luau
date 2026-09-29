@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Auras = require(ReplicatedStorage.Shared.Auras)
 local Config = require(ReplicatedStorage.Shared.Config)
 local PlayerData = require(script.Parent.Data.PlayerData)
 
@@ -99,11 +100,15 @@ local function applyTrail(player: Player, character: Model)
 	if not root or not root:IsA("BasePart") or not data then
 		return
 	end
+	local trailId = data.equipped.Trail
 	local old = root:FindFirstChild("CosmeticTrail")
+	if old and root:GetAttribute("TrailId") == (trailId or "") then
+		return -- unchanged
+	end
+	root:SetAttribute("TrailId", trailId or "")
 	if old then
 		old:Destroy()
 	end
-	local trailId = data.equipped.Trail
 	local cosmetic = if trailId and PlayerData.ownsCosmetic(player, trailId)
 		then Config.getCosmetic(trailId)
 		else nil
@@ -143,10 +148,22 @@ function Cosmetics.refresh(player: Player)
 	if character then
 		applyNametag(player, character)
 		applyTrail(player, character)
+		-- Aura: remove the old effect and clone the equipped one (stays on for the runway too).
+		local equippedAura = if data then data.equipped.Aura else nil
+		local auraId = if equippedAura and PlayerData.ownsCosmetic(player, equippedAura)
+			then equippedAura
+			else nil
+		local root = character:FindFirstChild("HumanoidRootPart")
+		-- Only swap when it changes, so particles don't restart every time coins update.
+		if root and root:GetAttribute("AuraId") ~= (auraId or "") then
+			root:SetAttribute("AuraId", auraId or "")
+			Auras.attach(character, auraId)
+		end
 	end
 end
 
 function Cosmetics.start()
+	Auras.buildTemplates()
 	local function watch(player: Player)
 		player.CharacterAdded:Connect(function(character)
 			character:WaitForChild("Head", 10)

@@ -16,6 +16,7 @@ local PlayerData = require(script.Parent.Parent.Data.PlayerData)
 local Map = require(script.Parent.Parent.Round.Map)
 local Quests = require(script.Parent.Parent.Quests)
 local HallOfFame = require(script.Parent.HallOfFame)
+local Appearance = require(script.Parent.Appearance)
 
 local Activities = {}
 
@@ -346,6 +347,7 @@ function Activities.start()
 	buildBouncePads(folder)
 	buildLeaderboard(folder)
 	HallOfFame.build(folder)
+	Appearance.build(folder)
 	for _, position in
 		{
 			Vector3.new(-15, 3, 40),

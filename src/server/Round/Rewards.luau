@@ -47,8 +47,14 @@ function Rewards.grant(participants: { Player }, results: { LookResult })
 			end
 			local s = summary(stylist)
 			s.heartsForYourStyling += result.hearts
-			s.coins += result.hearts * Config.Rewards.CoinsPerHeartReceived
-			s.xp += result.hearts * Config.Rewards.XpPerHeartReceived
+			-- result.hearts = hearts (Hearts mode) or total stars (Stars mode).
+			local stars = Config.VotingMode == "Stars"
+			s.coins += result.hearts * (if stars
+				then Config.Rewards.CoinsPerStar
+				else Config.Rewards.CoinsPerHeartReceived)
+			s.xp += result.hearts * (if stars
+				then Config.Rewards.XpPerStar
+				else Config.Rewards.XpPerHeartReceived)
 			-- Podium bonus only for looks that actually got hearts (no free coins for a 0-heart tie).
 			if result.place and result.hearts > 0 then
 				s.coins += Config.Rewards.PodiumCoins[result.place] or 0

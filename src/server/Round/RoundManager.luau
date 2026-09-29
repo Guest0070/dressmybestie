@@ -127,7 +127,11 @@ end
 local function eligiblePlayers(): { Player }
 	local list = {}
 	for _, player in Players:GetPlayers() do
-		if PlayerData.isLoaded(player) and getHumanoid(player) and player:GetAttribute("AFK") ~= true then
+		if
+			PlayerData.isLoaded(player)
+			and getHumanoid(player)
+			and player:GetAttribute("Spectating") ~= true
+		then
 			table.insert(list, player)
 		end
 	end
@@ -593,13 +597,63 @@ local function styling()
 		elseif not RunService:IsStudio() then
 			idleRounds[player] = (idleRounds[player] or 0) + 1
 			if idleRounds[player] >= Config.AfkIdleRounds then
-				player:SetAttribute("AFK", true)
-				toast(player, "You've been marked AFK. Tap 'Join rounds' when you're back!")
+				player:SetAttribute("Spectating", true)
+				toast(
+					player,
+					"You're spectating now (you didn't style for a while). Tap 'Play' to join again!"
+				)
 			end
 		end
 	end
 	activeStylists = {}
 end
+
+-- The equipped cosmetic in a slot, if the player still owns it and it has an animation.
+local function ownedEquipped(player: Player, equipped: { [string]: string }, slot: string): Config.Cosmetic?
+	local id = equipped[slot]
+	local cosmetic = if id then Config.getCosmetic(id) else nil
+	if
+		cosmetic
+		and cosmetic.animationId
+		and cosmetic.animationId > 0
+		and PlayerData.ownsCosmetic(player, cosmetic.id)
+	then
+		return cosmetic
+	end
+	return nil
+end
+
+-- Swap the character's walk/run/idle animations (the Animate script's Animation objects; it
+-- reloads them when they change). Returns a function that puts the originals back.
+local function overrideAnimations(character: Model, walkId: number?, idleId: number?): () -> ()
+	local animate = character:FindFirstChild("Animate")
+	local changed: { { animation: Animation, id: string } } = {}
+	local function set(folderName: string, animationName: string, id: number?)
+		if not animate or not id or id <= 0 then
+			return
+		end
+		local folder = animate:FindFirstChild(folderName)
+		local animation = if folder then folder:FindFirstChild(animationName) else nil
+		if animation and animation:IsA("Animation") then
+			table.insert(changed, { animation = animation, id = animation.AnimationId })
+			animation.AnimationId = `rbxassetid://{id}`
+		end
+	end
+	set("walk", "WalkAnim", walkId)
+	set("run", "RunAnim", walkId)
+	set("idle", "Animation1", idleId)
+	set("idle", "Animation2", idleId)
+	return function()
+		for _, entry in changed do
+			if entry.animation.Parent then
+				entry.animation.AnimationId = entry.id
+			end
+		end
+	end
+end
+
+-- Spectators (players sitting out) who were moved to the audience for the show.
+local audienceSpectators: { Player } = {}
 
 local function runway()
 	setPhase("Runway", nil)
@@ -613,6 +667,30 @@ local function runway()
 		setMovement(p.player, 0)
 	end
 
+	-- Spectators come and watch from the audience too (they can rate but never walk).
+	audienceSpectators = {}
+	for _, player in Players:GetPlayers() do
+		if not participants[player] and getHumanoid(player) then
+			table.insert(audienceSpectators, player)
+			teleport(player, Map.audienceCFrame())
+		end
+	end
+	if Config.VotingMode == "Stars" then
+		-- Nobody rates their own walk or a look they styled.
+		Voting.beginRatings(function(voter: Player, wearerUserId: number)
+			if voter.UserId == wearerUserId then
+				return true
+			end
+			for _, p in participants do
+				if p.userId == wearerUserId then
+					return table.find(p.stylists, voter) ~= nil
+				end
+			end
+			return false
+		end)
+	end
+
+	-- Only ACTIVE players walk (participants); spectators are never in this list.
 	local order = participantList()
 	for i = #order, 2, -1 do
 		local j = math.random(1, i)
@@ -629,30 +707,16 @@ local function runway()
 		local desc = LookApplier.build(p.original, p.look)
 		local data = PlayerData.get(player)
 		local equipped: { [string]: string } = if data then data.equipped else {}
-		local walk = if equipped.Walk then Config.getCosmetic(equipped.Walk) else nil
-		if
-			walk
-			and walk.animationId
-			and walk.animationId > 0
-			and PlayerData.ownsCosmetic(player, walk.id)
-		then
-			desc.WalkAnimation = walk.animationId
-		end
-		local pose = if equipped.Pose then Config.getCosmetic(equipped.Pose) else nil
-		if
-			pose
-			and pose.animationId
-			and pose.animationId > 0
-			and PlayerData.ownsCosmetic(player, pose.id)
-		then
-			local emotes = desc:GetEmotes()
-			emotes.Signature = { pose.animationId }
-			desc:SetEmotes(emotes)
-		end
+		local walk = ownedEquipped(player, equipped, "Walk")
+		local pose = ownedEquipped(player, equipped, "Pose")
 		LookApplier.apply(humanoid, desc)
 		if participants[player] ~= p then
 			continue -- left while the look was loading
 		end
+		-- Equipped runway walk: swap the walk + idle animations for this walk only.
+		local restoreAnimations = if player.Character and walk
+			then overrideAnimations(player.Character, walk.animationId, walk.idleAnimationId)
+			else nil
 
 		local stylistNames = {}
 		for _, stylist in p.stylists do
@@ -679,9 +743,13 @@ local function runway()
 			tag.Parent = head
 			Debris:AddItem(tag, Config.Timings.RunwayPerPlayer)
 		end
+		if Config.VotingMode == "Stars" then
+			Voting.openRating(p.userId)
+		end
 		setPhase("Runway", Config.Timings.RunwayPerPlayer, {
 			runwayWearer = p.userId,
 			runwayStylists = stylistNames,
+			rating = Config.VotingMode == "Stars",
 		})
 
 		local entrance = equipped.Entrance
@@ -693,7 +761,8 @@ local function runway()
 		-- character, so that's the reliable way). If they haven't moved after 2 seconds, the server
 		-- takes physics control and walks them itself, then hands control back.
 		setMovement(player, Config.RunwayWalkSpeed)
-		Remotes.Events.RunwayEffect:FireAllClients(p.userId, Passes.owns(player, "VIP"))
+		local poseId = if pose and pose.animationId then pose.animationId else 0
+		Remotes.Events.RunwayEffect:FireAllClients(p.userId, Passes.owns(player, "VIP"), poseId)
 		local root = if player.Character then player.Character:FindFirstChild("HumanoidRootPart") else nil
 		local startPos = if root and root:IsA("BasePart") then root.Position else nil
 		local tookOver = false
@@ -716,6 +785,9 @@ local function runway()
 			return participants[player] ~= p
 		end)
 		setMovement(player, 0)
+		if restoreAnimations then
+			restoreAnimations()
+		end
 		if tookOver and root and root:IsA("BasePart") and root.Parent and isHere(player) then
 			pcall(root.SetNetworkOwner, root, player)
 		end
@@ -761,7 +833,9 @@ local function voting(): { [number]: number }
 	return totals
 end
 
-local function results(hearts: { [number]: number })
+-- hearts: userId -> points (hearts, or total stars in Stars mode).
+-- averages (Stars mode only): userId -> average stars; ranking uses the average.
+local function results(hearts: { [number]: number }, averages: { [number]: number }?)
 	local ranked: { Participant } = {}
 	local tiebreak: { [Participant]: number } = {}
 	for _, p in participantList() do
@@ -770,8 +844,15 @@ local function results(hearts: { [number]: number })
 			tiebreak[p] = math.random()
 		end
 	end
-	-- Most hearts first; ties broken randomly (never alphabetically, never by join order).
+	-- Best first (average stars, or most hearts); ties broken randomly (never alphabetically,
+	-- never by join order).
 	table.sort(ranked, function(a, b)
+		if averages then
+			local aa, ab = averages[a.userId] or 0, averages[b.userId] or 0
+			if aa ~= ab then
+				return aa > ab
+			end
+		end
 		local ha, hb = hearts[a.userId] or 0, hearts[b.userId] or 0
 		if ha ~= hb then
 			return ha > hb
@@ -799,6 +880,7 @@ local function results(hearts: { [number]: number })
 				wearerName = p.name,
 				stylistNames = stylistNames,
 				hearts = count,
+				average = if averages then math.floor((averages[p.userId] or 0) * 10 + 0.5) / 10 else nil,
 			})
 			local spot = Map.podiumCFrame(place)
 			if spot then
@@ -909,6 +991,14 @@ local function cleanup()
 	state.chaos = nil
 	state.names = nil
 	Voting.finish()
+	Voting.finishRatings()
+	-- Spectators who watched from the audience go back to the lobby too.
+	for _, player in audienceSpectators do
+		if isHere(player) and not participants[player] then
+			teleport(player, Map.lobbyCFrame())
+		end
+	end
+	audienceSpectators = {}
 end
 
 local function playRound()
@@ -933,8 +1023,24 @@ local function playRound()
 	if noOneLeft() then
 		return
 	end
-	local hearts = voting()
-	results(hearts)
+	if Config.VotingMode == "Stars" then
+		-- Stars were given during the runway; no separate voting phase.
+		local ratings, given = Voting.finishRatings()
+		for voter, count in given do
+			if voter.Parent == Players then
+				Quests.bump(voter, "heartsGiven", count)
+			end
+		end
+		local sums: { [number]: number } = {}
+		local averages: { [number]: number } = {}
+		for userId, rating in ratings do
+			sums[userId] = rating.sum
+			averages[userId] = rating.average
+		end
+		results(sums, averages)
+	else
+		results(voting())
+	end
 end
 
 -- True while the player is part of a running round (their avatar belongs to the round).
@@ -972,9 +1078,10 @@ function RoundManager.start()
 	mannequinFolder.Parent = Workspace
 
 	Remotes.Events.SetMannequinLook.OnServerEvent:Connect(onSetLook)
-	Remotes.Events.SetAfk.OnServerEvent:Connect(function(player, afk)
-		if type(afk) == "boolean" then
-			player:SetAttribute("AFK", afk)
+	-- Spectator mode: sit out (watch + vote only) or play again. Takes effect at the next round.
+	Remotes.Events.SetSpectating.OnServerEvent:Connect(function(player, spectating)
+		if type(spectating) == "boolean" then
+			player:SetAttribute("Spectating", spectating)
 			idleRounds[player] = 0
 		end
 	end)

@@ -46,6 +46,29 @@ VIP pass, Pose Pack, lobby moments (confetti rain / disco mode with your name), 
 **Also:** How to Play card, Invite Friends, Photo button (share/save a screenshot), Admin panel,
 mobile-first UI.
 
+### Newer systems
+
+- **Skin Tone + Body Type booths** (glass tubes near spawn): walk in and the panel opens; walk out and it
+  closes. 14 skin swatches and 6 body types (Classic, Slim, Tall, Petite, Sturdy, Model), saved to your
+  profile, re-applied on respawn, and exactly what walks the runway. Layered clothing re-wraps to the new
+  body; set `Config.BodySwapClearsOutfit = true` to strip the outfit on a body swap instead. For real
+  feminine/masculine packages, add catalog body part IDs to a body type's `bodyParts` in Config.
+- **Voting mode** (`Config.VotingMode`): `"Stars"` (default) = the audience rates each look 1–5 stars while
+  it walks; best average wins. `"Hearts"` = the original hearts-only voting after the runway. Your brief
+  asked for hearts only (no low scores for kids), so switch back any time with that one line.
+- **Runway cinematic:** wide tracking → orbit → low hero angle → close-up, per walker.
+- **Walks & poses:** real Roblox animation-pack walks (Stylish, Superhero, Ninja, Levitation, Toy, Robot,
+  Zombie, Grandpa Shuffle; Cartoony + Bubbly for coins) with live previews. During your walk the Animate
+  script's walk/idle animations are swapped, then restored. Poses (Wave/Point/Cheer in Pose Pack, dances
+  for Robux, Giggle for coins) play at the end of the runway.
+- **Auras:** 8 particle/trail auras (6 for Robux, Golden with VIP, Starlight free at rank 5), "Try" preview,
+  equip/unequip, visible on the runway. Templates live in `ReplicatedStorage.Auras` (edit or add your own).
+- **Spectator mode:** "Spectate" button in the lobby. Spectators keep using the lobby while others style,
+  then watch from the audience and rate; they never walk. Idle players are switched to spectating.
+- **Purchases save** in ProfileStore (DataStore underneath, with session locking), so unlocks survive
+  rejoining. Robux items need their product IDs: paste them into `Config.ProductIds` (walks, poses,
+  auras) and `Config.DevProducts` / `Config.GamePasses` (VIP, Pose Pack, entrances, moments).
+
 ## One-time setup (Windows)
 
 1. **Install Rokit:** follow https://github.com/rojo-rbx/rokit#installation, then reopen PowerShell.

@@ -36,6 +36,8 @@ local TEMPLATE: PlayerData = {
 	questClaimed = {},
 	achievementsClaimed = {},
 	lifetime = {},
+	skinTone = 0,
+	bodyType = "",
 }
 
 local store = ProfileStore.New(Config.Data.StoreName, TEMPLATE)
@@ -167,6 +169,8 @@ local function toPublic(player: Player, data: PlayerData): PublicData
 		nextDailyReward = Config.Rewards.DailyStreak[nextStreakDay(data)],
 		dailyStreak = data.dailyStreak,
 		quests = questViews(data),
+		skinTone = data.skinTone,
+		bodyType = data.bodyType,
 	}
 end
 

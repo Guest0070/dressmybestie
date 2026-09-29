@@ -31,6 +31,12 @@ Config.ChaosChance = 0.6
 Config.DefaultWalkSpeed = 16
 Config.RunwayWalkSpeed = 12
 
+-- How looks are voted on.
+--   "Stars":  while each look walks the runway, the audience rates it 1-5 stars (average wins).
+--   "Hearts": after the runway, everyone gives hearts to up to 3 favourite looks (no low scores).
+-- Either way nobody sees who voted what, and there is never a "last place".
+Config.VotingMode = "Stars" :: "Stars" | "Hearts"
+
 -- Look limits. The server enforces these; the client uses them only for friendlier UI.
 Config.Limits = {
 	MaxHeartsPerVoter = 3,
@@ -60,6 +66,8 @@ Config.Limits = {
 Config.Rewards = {
 	CoinsPerRoundPlayed = 10,
 	CoinsPerHeartReceived = 2,
+	CoinsPerStar = 1, -- Stars mode: per star your styling receives
+	XpPerStar = 2,
 	PodiumCoins = { 30, 20, 10 }, -- 1st, 2nd, 3rd (goes to the stylist)
 	XpPerRoundPlayed = 20,
 	XpPerHeartReceived = 5,
@@ -333,20 +341,73 @@ Config.DevProducts = {
 		kind = "Unlock",
 		cosmeticId = "Spotlight",
 	},
-	WalkStrut = { id = 0, price = 99, displayName = "Strut Walk", kind = "Unlock", cosmeticId = "Strut" },
-	WalkGlide = { id = 0, price = 149, displayName = "Glide Walk", kind = "Unlock", cosmeticId = "Glide" },
 } :: { [string]: DevProduct }
+
+-- Robux unlocks for walks, poses and auras (one developer product each, saved forever).
+-- Listed compactly: key = { price, cosmeticId }. Put the real product ID in Config.ProductIds.
+local UNLOCK_PRODUCTS: { [string]: { any } } = {
+	Walk_Stylish = { 99, "WalkStylish" },
+	Walk_Superhero = { 99, "WalkSuperhero" },
+	Walk_Ninja = { 99, "WalkNinja" },
+	Walk_Levitation = { 149, "WalkLevitation" },
+	Walk_Toy = { 99, "WalkToy" },
+	Walk_Robot = { 99, "WalkRobot" },
+	Walk_Elder = { 79, "WalkElder" },
+	Walk_Zombie = { 79, "WalkZombie" },
+	Pose_Groove = { 49, "PoseGroove" },
+	Pose_Spin = { 49, "PoseSpin" },
+	Pose_Showstopper = { 79, "PoseShowstopper" },
+	Aura_Angel = { 149, "AuraAngel" },
+	Aura_Hearts = { 99, "AuraHearts" },
+	Aura_Galaxy = { 199, "AuraGalaxy" },
+	Aura_Flame = { 149, "AuraFlame" },
+	Aura_Electric = { 149, "AuraElectric" },
+	Aura_Bubbles = { 99, "AuraBubbles" },
+}
+-- Paste developer product IDs here after creating them in Creator Dashboard (0 = shows "Soon").
+Config.ProductIds = {
+	Walk_Stylish = 0,
+	Walk_Superhero = 0,
+	Walk_Ninja = 0,
+	Walk_Levitation = 0,
+	Walk_Toy = 0,
+	Walk_Robot = 0,
+	Walk_Elder = 0,
+	Walk_Zombie = 0,
+	Pose_Groove = 0,
+	Pose_Spin = 0,
+	Pose_Showstopper = 0,
+	Aura_Angel = 0,
+	Aura_Hearts = 0,
+	Aura_Galaxy = 0,
+	Aura_Flame = 0,
+	Aura_Electric = 0,
+	Aura_Bubbles = 0,
+} :: { [string]: number }
+for key, spec in UNLOCK_PRODUCTS do
+	Config.DevProducts[key] = {
+		id = Config.ProductIds[key] or 0,
+		price = spec[1],
+		displayName = spec[2],
+		kind = "Unlock",
+		cosmeticId = spec[2],
+	}
+end
 
 -- Cosmetics. Every one has a fixed, disclosed outcome. Ways to own one:
 --   coinPrice  -> buy with coins earned by playing
 --   productKey -> buy with Robux (Config.DevProducts), saved forever
 --   pass       -> included with a game pass
 --   rank       -> unlocked for free at this style rank
--- animationId: a catalog animation asset ID (walks: the "Walk" animation from an animation pack;
--- poses: an emote). 0 = not picked yet, so it's hidden.
+-- Walks: animationId = walk animation, idleAnimationId = idle (both Animation IDs; the defaults
+-- below come from Roblox's own animation packs, which play in every game).
+-- Poses: animationId = the pose/dance animation played at the end of the runway.
+-- Auras: the effect template in ReplicatedStorage.Auras with the same name as the id.
+-- Any animationId of 0 shows as "Coming soon".
 export type Cosmetic = {
 	id: string,
-	slot: "Entrance" | "Walk" | "Pose" | "Trail" | "Title",
+	slot: "Entrance" | "Walk" | "Pose" | "Trail" | "Title" | "Aura",
+	idleAnimationId: number?,
 	displayName: string,
 	coinPrice: number?,
 	productKey: string?,
@@ -504,13 +565,170 @@ Config.Cosmetics = {
 		pass = "VIP",
 		color = Color3.fromRGB(255, 215, 80),
 	},
-	-- Runway walks
-	{ id = "Strut", slot = "Walk", displayName = "Strut", productKey = "WalkStrut", animationId = 0 },
-	{ id = "Glide", slot = "Walk", displayName = "Glide", productKey = "WalkGlide", animationId = 0 },
-	-- Poses at the end of the runway
-	{ id = "PoseHands", slot = "Pose", displayName = "Hands on Hips", pass = "PosePack", animationId = 0 },
-	{ id = "PoseWave", slot = "Pose", displayName = "Royal Wave", pass = "PosePack", animationId = 0 },
-	{ id = "PoseBlow", slot = "Pose", displayName = "Blow a Kiss", pass = "PosePack", animationId = 0 },
+	-- Runway walks (walk + idle from Roblox animation packs)
+	{
+		id = "WalkCartoony",
+		slot = "Walk",
+		displayName = "Cartoony",
+		coinPrice = 800,
+		animationId = 742640026,
+		idleAnimationId = 742637544,
+	},
+	{
+		id = "WalkBubbly",
+		slot = "Walk",
+		displayName = "Bubbly",
+		coinPrice = 1200,
+		animationId = 910034870,
+		idleAnimationId = 910004836,
+	},
+	{
+		id = "WalkStylish",
+		slot = "Walk",
+		displayName = "Stylish",
+		productKey = "Walk_Stylish",
+		animationId = 616146177,
+		idleAnimationId = 616136790,
+	},
+	{
+		id = "WalkSuperhero",
+		slot = "Walk",
+		displayName = "Superhero",
+		productKey = "Walk_Superhero",
+		animationId = 616122287,
+		idleAnimationId = 616111295,
+	},
+	{
+		id = "WalkNinja",
+		slot = "Walk",
+		displayName = "Ninja",
+		productKey = "Walk_Ninja",
+		animationId = 656121766,
+		idleAnimationId = 656117400,
+	},
+	{
+		id = "WalkLevitation",
+		slot = "Walk",
+		displayName = "Levitation",
+		productKey = "Walk_Levitation",
+		animationId = 616013216,
+		idleAnimationId = 616006778,
+	},
+	{
+		id = "WalkToy",
+		slot = "Walk",
+		displayName = "Toy",
+		productKey = "Walk_Toy",
+		animationId = 782843345,
+		idleAnimationId = 782841498,
+	},
+	{
+		id = "WalkRobot",
+		slot = "Walk",
+		displayName = "Robot",
+		productKey = "Walk_Robot",
+		animationId = 616095330,
+		idleAnimationId = 616088211,
+	},
+	{
+		id = "WalkElder",
+		slot = "Walk",
+		displayName = "Grandpa Shuffle",
+		productKey = "Walk_Elder",
+		animationId = 845403856,
+		idleAnimationId = 845397899,
+	},
+	{
+		id = "WalkZombie",
+		slot = "Walk",
+		displayName = "Zombie",
+		productKey = "Walk_Zombie",
+		animationId = 616168032,
+		idleAnimationId = 616158929,
+	},
+	-- Poses at the end of the runway (Roblox's built-in emote animations)
+	{ id = "PoseWave", slot = "Pose", displayName = "Wave", pass = "PosePack", animationId = 507770239 },
+	{ id = "PosePoint", slot = "Pose", displayName = "Point", pass = "PosePack", animationId = 507770453 },
+	{ id = "PoseCheer", slot = "Pose", displayName = "Cheer", pass = "PosePack", animationId = 507770677 },
+	{ id = "PoseLaugh", slot = "Pose", displayName = "Giggle", coinPrice = 500, animationId = 507770818 },
+	{
+		id = "PoseGroove",
+		slot = "Pose",
+		displayName = "Groove",
+		productKey = "Pose_Groove",
+		animationId = 507771019,
+	},
+	{
+		id = "PoseSpin",
+		slot = "Pose",
+		displayName = "Spin Move",
+		productKey = "Pose_Spin",
+		animationId = 507776043,
+	},
+	{
+		id = "PoseShowstopper",
+		slot = "Pose",
+		displayName = "Showstopper",
+		productKey = "Pose_Showstopper",
+		animationId = 507777268,
+	},
+	-- Auras (glowing effects that follow you, runway included)
+	{
+		id = "AuraAngel",
+		slot = "Aura",
+		displayName = "Angel Glow",
+		productKey = "Aura_Angel",
+		color = Color3.fromRGB(255, 250, 220),
+	},
+	{
+		id = "AuraHearts",
+		slot = "Aura",
+		displayName = "Heart Cloud",
+		productKey = "Aura_Hearts",
+		color = Color3.fromRGB(255, 110, 170),
+	},
+	{
+		id = "AuraGalaxy",
+		slot = "Aura",
+		displayName = "Galaxy Swirl",
+		productKey = "Aura_Galaxy",
+		color = Color3.fromRGB(140, 90, 255),
+	},
+	{
+		id = "AuraFlame",
+		slot = "Aura",
+		displayName = "Flame Aura",
+		productKey = "Aura_Flame",
+		color = Color3.fromRGB(255, 130, 40),
+	},
+	{
+		id = "AuraElectric",
+		slot = "Aura",
+		displayName = "Electric",
+		productKey = "Aura_Electric",
+		color = Color3.fromRGB(110, 210, 255),
+	},
+	{
+		id = "AuraBubbles",
+		slot = "Aura",
+		displayName = "Bubble Pop",
+		productKey = "Aura_Bubbles",
+		color = Color3.fromRGB(170, 230, 255),
+	},
+	{
+		id = "AuraGolden",
+		slot = "Aura",
+		displayName = "Golden Aura",
+		pass = "VIP",
+		color = Color3.fromRGB(255, 215, 80),
+	},
+	{
+		id = "AuraSparkle",
+		slot = "Aura",
+		displayName = "Starlight",
+		rank = 5,
+		color = Color3.fromRGB(255, 245, 180),
+	},
 } :: { Cosmetic }
 
 -- Sound effect asset IDs from the Creator Store (Toolbox -> Audio). 0 = silent until picked.
@@ -528,14 +746,22 @@ export type Quest = { id: string, text: string, stat: string, target: number, re
 -- Daily quests reset every day (UTC).
 Config.DailyQuests = {
 	{ id = "PlayRounds", text = "Play 3 rounds", stat = "rounds", target = 3, reward = 60 },
-	{ id = "GiveHearts", text = "Give 5 hearts", stat = "heartsGiven", target = 5, reward = 40 },
+	{
+		id = "GiveHearts",
+		text = if Config.VotingMode == "Stars" then "Rate 5 looks" else "Give 5 hearts",
+		stat = "heartsGiven",
+		target = 5,
+		reward = 40,
+	},
 	{ id = "CollectGems", text = "Collect 15 gems", stat = "gems", target = 15, reward = 40 },
 	{ id = "FinishObby", text = "Finish the obby", stat = "obby", target = 1, reward = 50 },
 	{
 		id = "GetHearts",
-		text = "Get 3 hearts for your styling",
+		text = if Config.VotingMode == "Stars"
+			then "Earn 10 stars for your styling"
+			else "Get 3 hearts for your styling",
 		stat = "heartsReceived",
-		target = 3,
+		target = if Config.VotingMode == "Stars" then 10 else 3,
 		reward = 60,
 	},
 } :: { Quest }
@@ -563,6 +789,98 @@ Config.Achievements = {
 	{ id = "Gems100", text = "Collect 100 gems", stat = "gems", target = 100, reward = 150 },
 	{ id = "Obby10", text = "Finish the obby 10 times", stat = "obby", target = 10, reward = 250 },
 } :: { Quest }
+
+-- Skin tone booth: preset swatches applied to your whole body (head, torso, arms, legs).
+Config.SkinTones = {
+	Color3.fromRGB(255, 224, 196),
+	Color3.fromRGB(245, 205, 170),
+	Color3.fromRGB(234, 184, 146),
+	Color3.fromRGB(214, 160, 120),
+	Color3.fromRGB(188, 132, 94),
+	Color3.fromRGB(160, 106, 70),
+	Color3.fromRGB(128, 82, 52),
+	Color3.fromRGB(96, 60, 38),
+	Color3.fromRGB(70, 44, 30),
+	Color3.fromRGB(255, 205, 225), -- fun: pastel pink
+	Color3.fromRGB(190, 225, 255), -- fun: pastel blue
+	Color3.fromRGB(200, 245, 210), -- fun: pastel mint
+	Color3.fromRGB(225, 205, 255), -- fun: lavender
+	Color3.fromRGB(245, 245, 245), -- fun: porcelain
+} :: { Color3 }
+
+-- Body type booth. Scales stay inside Roblox's allowed ranges (height 0.9-1.05, width 0.7-1).
+-- bodyParts (optional): catalog body part asset IDs for a full package, e.g. a feminine or
+-- masculine bundle's parts: { Torso = id, LeftArm = id, RightArm = id, LeftLeg = id, RightLeg = id }.
+-- Missing parts keep the player's own body parts.
+export type BodyType = {
+	id: string,
+	displayName: string,
+	height: number,
+	width: number,
+	depth: number,
+	bodyType: number, -- 0 = classic blocky proportions, 1 = realistic (Rthro-like)
+	proportion: number, -- 0 = normal, 1 = slender
+	bodyParts: { [string]: number }?,
+}
+Config.BodyTypes = {
+	{
+		id = "Classic",
+		displayName = "Classic",
+		height = 1,
+		width = 1,
+		depth = 1,
+		bodyType = 0,
+		proportion = 0,
+	},
+	{
+		id = "Slim",
+		displayName = "Slim",
+		height = 1.05,
+		width = 0.75,
+		depth = 0.85,
+		bodyType = 0.3,
+		proportion = 0.3,
+	},
+	{
+		id = "Tall",
+		displayName = "Tall",
+		height = 1.05,
+		width = 0.9,
+		depth = 0.9,
+		bodyType = 1,
+		proportion = 0,
+	},
+	{
+		id = "Petite",
+		displayName = "Petite",
+		height = 0.9,
+		width = 0.8,
+		depth = 0.85,
+		bodyType = 0.5,
+		proportion = 1,
+	},
+	{
+		id = "Sturdy",
+		displayName = "Sturdy",
+		height = 0.95,
+		width = 1,
+		depth = 1,
+		bodyType = 0,
+		proportion = 0,
+	},
+	{
+		id = "Model",
+		displayName = "Model",
+		height = 1.05,
+		width = 0.85,
+		depth = 0.85,
+		bodyType = 1,
+		proportion = 1,
+	},
+} :: { BodyType }
+-- true: switching body type removes accessories (no clipping at all, but you lose your outfit).
+-- false: keep the outfit; layered clothing re-wraps to the new body automatically.
+Config.BodySwapClearsOutfit = false
 
 -- Lobby activities. Coin rewards are small and capped so the lobby is fun, not a coin farm.
 Config.Lobby = {

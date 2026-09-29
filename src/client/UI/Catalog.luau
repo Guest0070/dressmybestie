@@ -272,7 +272,7 @@ local function selectCategory(category: Config.CatalogCategory)
 end
 
 local function refreshVisibility()
-	if selfMode and State.round.phase ~= "Lobby" then
+	if selfMode and not State.canUseLobby() then
 		selfMode = false -- a round started: the Dressing Room closes
 		State.setDressingRoom(false)
 	end
@@ -316,7 +316,7 @@ local function onLookSync(targetUserId: number, synced: Look, syncSeq: number?)
 end
 
 function Catalog.openDressingRoom()
-	if State.round.phase ~= "Lobby" or selfMode then
+	if not State.canUseLobby() or selfMode then
 		return
 	end
 	selfMode = true

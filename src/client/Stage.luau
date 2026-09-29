@@ -88,6 +88,32 @@ local function setCharacterHidden(hidden: boolean)
 	end
 end
 
+-- Runway cinematic. t = seconds since this walker started; pos = walker; dir = walk direction.
+-- Returns the camera CFrame, field of view and how fast to blend towards them.
+local shotWearer: number? = nil
+local shotStart = 0
+local function cinematicShot(t: number, pos: Vector3, dir: Vector3): (CFrame, number, number)
+	local chest = pos + Vector3.new(0, 1, 0)
+	if t < 3 then
+		-- 1. Wide tracking shot from the front as they start walking.
+		return CFrame.lookAt(pos + dir * 16 + Vector3.new(0, 5, 0), chest), 70, CAMERA_LERP
+	elseif t < 5.5 then
+		-- 2. Orbit around the look.
+		local angle = (t - 3) * 1.3
+		local around = CFrame.Angles(0, angle, 0):VectorToWorldSpace(dir) * 9
+		return CFrame.lookAt(pos + around + Vector3.new(0, 3, 0), chest), 60, CAMERA_LERP * 1.5
+	elseif t < 7 then
+		-- 3. Low hero angle, looking up.
+		return CFrame.lookAt(pos + dir * 7 + Vector3.new(0, -1.5, 0), pos + Vector3.new(0, 2, 0)),
+			65,
+			CAMERA_LERP * 1.5
+	end
+	-- 4. Close-up for the pose at the end.
+	return CFrame.lookAt(pos + dir * 6 + Vector3.new(0, 2.2, 0), pos + Vector3.new(0, 1.8, 0)),
+		40,
+		CAMERA_LERP
+end
+
 local function updateCamera()
 	local camera = Workspace.CurrentCamera
 	if not camera then
@@ -138,19 +164,26 @@ local function updateCamera()
 			return
 		end
 	elseif round.phase == "Runway" and round.runwayWearer then
-		-- Follow the walker from the front, like a fashion-show camera.
+		-- Cinematic: a sequence of shots per walker (see cinematicShot).
 		local root = rootOf(round.runwayWearer)
 		local startPart = mapPart({ "Runway", "Start" })
 		local endPart = mapPart({ "Runway", "End" })
 		if root and startPart and endPart then
 			camera.CameraType = Enum.CameraType.Scriptable
+			if round.runwayWearer ~= shotWearer then
+				shotWearer = round.runwayWearer
+				shotStart = os.clock()
+			end
 			local along = endPart.Position - startPart.Position
 			local dir = Vector3.new(along.X, 0, along.Z).Unit
-			local focus = root.Position + Vector3.new(0, 1, 0)
-			local desired = CFrame.lookAt(root.Position + dir * 14 + Vector3.new(0, 4, 0), focus)
-			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP)
+			local desired, fov, speed = cinematicShot(os.clock() - shotStart, root.Position, dir)
+			camera.CFrame = camera.CFrame:Lerp(desired, speed)
+			camera.FieldOfView += (fov - camera.FieldOfView) * speed
 			return
 		end
+	end
+	if camera.FieldOfView ~= 70 then
+		camera.FieldOfView = 70 -- the runway close-up zooms in; reset for every other shot
 	end
 	if round.phase == "Results" then
 		-- Close shot of the podium (winners face +Z, towards this camera). Aim a little to the
@@ -319,7 +352,7 @@ local function vipGlow()
 end
 
 -- When my own walk reaches the end of the runway, strike the stylist's emote (or my signature pose).
-local function poseAtEnd()
+local function poseAtEnd(poseAnimationId: number)
 	local finish = mapPart({ "Runway", "End" })
 	local character = State.player.Character
 	local humanoid = if character then character:FindFirstChildOfClass("Humanoid") else nil
@@ -334,12 +367,23 @@ local function poseAtEnd()
 	while os.clock() < deadline and (root.Position - finish.Position).Magnitude > 5 do
 		task.wait(0.1)
 	end
-	for _, emote in { "Pose", "Signature" } do
-		local ok, played = pcall(humanoid.PlayEmoteAsync, humanoid, emote)
-		if ok and played then
+	-- Equipped runway pose (bought in the shop): play it on my own character (it replicates).
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if poseAnimationId > 0 and animator then
+		local animation = Instance.new("Animation")
+		animation.AnimationId = `rbxassetid://{poseAnimationId}`
+		local ok, track = pcall(animator.LoadAnimation, animator, animation)
+		if ok and track then
+			track.Priority = Enum.AnimationPriority.Action
+			track:Play()
+			task.delay(3, function()
+				track:Stop(0.3)
+			end)
 			return
 		end
 	end
+	-- Otherwise the emote the stylist picked for this look, if any.
+	pcall(humanoid.PlayEmoteAsync, humanoid, "Pose")
 end
 
 function Stage.start()
@@ -365,14 +409,16 @@ function Stage.start()
 	RunService:BindToRenderStep("StyleMyBestieCamera", Enum.RenderPriority.Camera.Value + 1, updateCamera)
 	State.RoundChanged:Connect(onRoundChanged)
 	State.DressingRoomChanged:Connect(onRoundChanged)
-	Remotes.Events.RunwayEffect.OnClientEvent:Connect(function(userId: number, isVip: boolean)
-		if isVip then
-			vipGlow()
+	Remotes.Events.RunwayEffect.OnClientEvent:Connect(
+		function(userId: number, isVip: boolean, poseId: number?)
+			if isVip then
+				vipGlow()
+			end
+			if userId == State.player.UserId then
+				task.spawn(poseAtEnd, poseId or 0)
+			end
 		end
-		if userId == State.player.UserId then
-			task.spawn(poseAtEnd)
-		end
-	end)
+	)
 	onRoundChanged()
 end
 
