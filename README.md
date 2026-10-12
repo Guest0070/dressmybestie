@@ -115,6 +115,26 @@ mobile-first UI.
 
 **Unit test (optional):** `luau tests/Pairing.spec.luau` (needs the standalone Luau CLI).
 
+## Design the lobby UI yourself (Studio)
+
+The lobby screen is built by code, but you can replace it with one you design in Studio. The code then
+only makes your buttons work. It finds them by **Name**, so keep the names.
+
+1. Play. In Explorer open **Players > (you) > PlayerGui > LobbyUI**, select it, **Ctrl+C**.
+2. Stop. Select **StarterGui**, **Ctrl+V**. Untick **ResetOnSpawn** on it.
+3. Edit it with the normal Studio tools or a free plugin (e.g. AutoScale Lite). Move, resize, recolour,
+   change fonts, swap the coin/XP circles for images (set **Icon.Image**), delete the sheen gradients...
+   A button's colours in Studio become its normal look; hover, pressed and selected effects are added on top.
+4. **File > Save to Roblox.** Rojo doesn't touch StarterGui, so your design lives in the place file.
+
+Names the code needs (anywhere inside LobbyUI): `TopBar`, `Lobby` (hidden outside the lobby),
+`RoundStatus` with `Headline` + `Value` labels, `Coins` and `StyleXP` frames each with a `Value` label
+(optional `Icon`, `Glyph`, and for XP `Progress` > `Fill`), and buttons `Settings`, `JoinRandom`,
+`Spectate`, `Customize`, `Shop`, `Quests` (with a `Badge` frame), `Daily`, `BuyLooks`, `Admin`, `Invite`,
+`HowToPlay`. Text that changes (coins, timer, JOIN RANDOM/JOINED) is set by code.
+If a name is missing, Output says which one and the game uses the built-in UI instead.
+To go back to the built-in UI, delete StarterGui.LobbyUI.
+
 ## Admin panel
 
 A gold **Admin** button in the lobby opens fixed buttons: start round now, skip phase, force a chaos

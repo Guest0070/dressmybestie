@@ -6,6 +6,11 @@
 --   * Actions (bottom centre): JOIN RANDOM, SPECTATE, CUSTOMIZE.
 --   * Side columns: Shop, Quests, Daily reward, Buy looks, Admin / Invite, How to play.
 --
+-- Want to design it yourself? Put a ScreenGui named "LobbyUI" in StarterGui (copy the built one
+-- during Play, see README). This script then wires that one instead of building its own: it finds
+-- each piece by Name (TopBar, Lobby, RoundStatus > Headline/Value, Coins/StyleXP > Value, Settings,
+-- JoinRandom, Spectate, Customize, Shop, Quests > Badge, Daily, BuyLooks, Admin, Invite, HowToPlay).
+--
 -- JOIN RANDOM does not matchmake (not built yet). It opts you into the next round in this server,
 -- the same thing as turning spectating off. Everything shown comes from State; nothing is faked.
 
@@ -13,6 +18,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SocialService = game:GetService("SocialService")
+local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
@@ -40,21 +46,22 @@ LobbyUI.hasClaimableQuest = function(_data: Types.PublicData): boolean
 end
 
 local gui: ScreenGui
-local topBar: Frame
-local lobbyContent: Frame
+local topBar: GuiObject
+local lobbyContent: GuiObject
 local coinsPill: Components.PillHandle
 local xpPill: Components.PillHandle
 
 local headline: TextLabel
 local bigValue: TextLabel
-local statusPanel: Frame
+local statusPanel: GuiObject
+local valueColor = Theme.Colors.Primary -- the status number colour (taken from the design)
 
 local joinButton: Components.ButtonHandle
 local spectateButton: Components.ButtonHandle
 local dailyButton: Components.ButtonHandle
 local looksButton: Components.ButtonHandle
 local adminButton: Components.ButtonHandle
-local questsBadge: Frame
+local questsBadge: GuiObject
 
 local lastCoins: number? = nil
 
@@ -137,7 +144,7 @@ local function refreshStatus()
 		and remaining <= 10
 		and remaining > 0
 		and math.floor(remaining * 2) % 2 == 0
-	bigValue.TextColor3 = if urgent then Theme.Colors.Danger else Theme.Colors.Primary
+	bigValue.TextColor3 = if urgent then Theme.Colors.Danger else valueColor
 end
 
 local function coinPop(amount: number)
@@ -188,26 +195,27 @@ local function refreshData(data: Types.PublicData)
 end
 
 ---------------------------------------------------------------------------------------------------
--- Build
+-- Build (only used when there's no Studio-designed StarterGui.LobbyUI). Creates instances only;
+-- wire() below finds them by name and makes them work, exactly as it does for a designed one.
 ---------------------------------------------------------------------------------------------------
 
-local function buildTopBar()
-	topBar = Instance.new("Frame")
-	topBar.Name = "TopBar"
-	topBar.BackgroundTransparency = 1
-	topBar.Position = UDim2.fromOffset(12, 8)
-	topBar.Size = UDim2.new(1, -24, 0.08, 0)
-	topBar.Parent = gui
-	Components.sizeLimit(Vector2.new(0, Theme.MinTouch), Vector2.new(math.huge, 44)).Parent = topBar
+local function buildTopBar(root: ScreenGui)
+	local bar = Instance.new("Frame")
+	bar.Name = "TopBar"
+	bar.BackgroundTransparency = 1
+	bar.Position = UDim2.fromOffset(12, 8)
+	bar.Size = UDim2.new(1, -24, 0.08, 0)
+	bar.Parent = root
+	Components.sizeLimit(Vector2.new(0, Theme.MinTouch), Vector2.new(math.huge, 44)).Parent = bar
 
 	local stats = Instance.new("Frame")
 	stats.Name = "Stats"
 	stats.BackgroundTransparency = 1
 	stats.Size = UDim2.new(1, -56, 1, 0) -- leave room for the settings button
-	stats.Parent = topBar
+	stats.Parent = bar
 	Components.list(Enum.FillDirection.Horizontal, 8, Enum.HorizontalAlignment.Left).Parent = stats
 
-	coinsPill = Components.statPill({
+	local coins = Components.styleStatPill({
 		Name = "Coins",
 		Glyph = "C",
 		IconColor = Theme.Colors.Gold,
@@ -218,12 +226,13 @@ local function buildTopBar()
 	Kit.new("UIAspectRatioConstraint", {
 		AspectRatio = 3.2,
 		DominantAxis = Enum.DominantAxis.Height,
-		Parent = coinsPill.instance,
+		Parent = coins,
 	})
-	xpPill = Components.statPill({
+	local xp = Components.styleStatPill({
 		Name = "StyleXP",
 		Glyph = "XP",
 		IconColor = Theme.Colors.Primary,
+		HasProgress = true,
 		Size = UDim2.fromScale(1, 1),
 		LayoutOrder = 2,
 		Parent = stats,
@@ -231,41 +240,19 @@ local function buildTopBar()
 	Kit.new("UIAspectRatioConstraint", {
 		AspectRatio = 4.4,
 		DominantAxis = Enum.DominantAxis.Height,
-		Parent = xpPill.instance,
+		Parent = xp,
 	})
 
-	local settings = Components.button({
-		Name = "Settings",
-		Text = "⚙",
-		Variant = "Secondary",
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.fromScale(1, 0),
-		Size = UDim2.fromScale(1, 1),
-		MaxTextSize = 18,
-		Parent = topBar,
-		onClick = function()
-			LobbyUI.onOpenSettings()
-		end,
-	})
-	Kit.new("UIAspectRatioConstraint", {
-		AspectRatio = 1,
-		DominantAxis = Enum.DominantAxis.Height,
-		Parent = settings.instance,
-	})
-end
-
--- Round status lives in the top bar (after Coins and XP) so the middle of the screen stays clear
--- for the avatar. It takes whatever width is left (UIFlexItem Fill), capped on wide screens.
-local function buildStatusPanel()
-	statusPanel = Components.panel({
+	-- Round status lives in the top bar so the middle of the screen stays clear for the avatar.
+	-- It takes whatever width is left (UIFlexItem Fill), capped on wide screens.
+	local status = Components.panel({
 		Name = "RoundStatus",
 		Size = UDim2.fromScale(0, 1),
 		LayoutOrder = 3,
-		Parent = topBar:FindFirstChild("Stats"),
+		Parent = stats,
 	})
-	Kit.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill, Parent = statusPanel })
-	Components.sizeLimit(Vector2.new(140, 0), Vector2.new(420, math.huge)).Parent = statusPanel
-	-- Cyan accent line along the top edge.
+	Kit.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill, Parent = status })
+	Components.sizeLimit(Vector2.new(140, 0), Vector2.new(420, math.huge)).Parent = status
 	Kit.new("Frame", {
 		Name = "Accent",
 		AnchorPoint = Vector2.new(0.5, 0),
@@ -273,16 +260,15 @@ local function buildStatusPanel()
 		Size = UDim2.new(0.4, 0, 0, 3),
 		BackgroundColor3 = Theme.Colors.Primary,
 		BorderSizePixel = 0,
-		Parent = statusPanel,
+		Parent = status,
 	}, { Components.corner(2) })
 	local row = Kit.new("Frame", {
 		Name = "Content",
 		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(1, 1),
-		Parent = statusPanel,
+		Parent = status,
 	}, { Components.padding(4, 12), Components.list(Enum.FillDirection.Horizontal, 8) :: Instance })
-
-	headline = Components.text({
+	local head = Components.text({
 		Name = "Headline",
 		Size = UDim2.fromScale(0, 0.6),
 		FontFace = Theme.Fonts.Heading,
@@ -291,8 +277,8 @@ local function buildStatusPanel()
 		LayoutOrder = 1,
 		Parent = row,
 	})
-	Kit.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill, Parent = headline })
-	bigValue = Components.text({
+	Kit.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill, Parent = head })
+	local value = Components.text({
 		Name = "Value",
 		Size = UDim2.fromScale(1, 0.9),
 		FontFace = Theme.Fonts.Heading,
@@ -305,22 +291,37 @@ local function buildStatusPanel()
 	Kit.new("UIAspectRatioConstraint", {
 		AspectRatio = 2.4,
 		DominantAxis = Enum.DominantAxis.Height,
-		Parent = bigValue,
+		Parent = value,
+	})
+
+	local settings = Components.styleButton({
+		Name = "Settings",
+		Text = "⚙",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromScale(1, 0),
+		Size = UDim2.fromScale(1, 1),
+		MaxTextSize = 18,
+		Parent = bar,
+	})
+	Kit.new("UIAspectRatioConstraint", {
+		AspectRatio = 1,
+		DominantAxis = Enum.DominantAxis.Height,
+		Parent = settings,
 	})
 end
 
-local function buildActions()
+local function buildActions(content: Frame)
 	local actions = Instance.new("Frame")
 	actions.Name = "Actions"
 	actions.BackgroundTransparency = 1
 	actions.AnchorPoint = Vector2.new(0.5, 1)
 	actions.Position = UDim2.new(0.5, 0, 1, -12)
 	actions.Size = UDim2.fromScale(0.22, 0.2)
-	actions.Parent = lobbyContent
+	actions.Parent = content
 	Components.sizeLimit(Vector2.new(200, 80), Vector2.new(300, 120)).Parent = actions
 	Components.list(Enum.FillDirection.Vertical, 8).Parent = actions
 
-	joinButton = Components.button({
+	Components.styleButton({
 		Name = "JoinRandom",
 		Text = "JOIN RANDOM",
 		Variant = "Primary",
@@ -328,14 +329,7 @@ local function buildActions()
 		MaxTextSize = 24,
 		LayoutOrder = 1,
 		Parent = actions,
-		onClick = function()
-			-- Opt into the next round (no matchmaking yet). Already in: nothing to do.
-			if isSpectating(State.player) then
-				Remotes.Events.SetSpectating:FireServer(false)
-			end
-		end,
 	})
-
 	local row = Instance.new("Frame")
 	row.Name = "Secondary"
 	row.BackgroundTransparency = 1
@@ -345,39 +339,30 @@ local function buildActions()
 	local rowList = Components.list(Enum.FillDirection.Horizontal, 8)
 	rowList.HorizontalFlex = Enum.UIFlexAlignment.Fill -- both buttons share the width
 	rowList.Parent = row
-
-	spectateButton = Components.button({
+	Components.styleButton({
 		Name = "Spectate",
 		Text = "SPECTATE",
-		Variant = "Secondary",
 		Size = UDim2.fromScale(0, 1),
 		LayoutOrder = 1,
 		Parent = row,
-		onClick = function()
-			Remotes.Events.SetSpectating:FireServer(not isSpectating(State.player))
-		end,
 	})
-	Components.button({
+	Components.styleButton({
 		Name = "Customize",
 		Text = "CUSTOMIZE",
-		Variant = "Secondary",
 		Size = UDim2.fromScale(0, 1),
 		LayoutOrder = 2,
 		Parent = row,
-		onClick = function()
-			LobbyUI.onCustomize()
-		end,
 	})
 end
 
-local function sideColumn(name: string, anchorX: number): Frame
+local function sideColumn(content: Frame, name: string, anchorX: number): Frame
 	local column = Instance.new("Frame")
 	column.Name = name
 	column.BackgroundTransparency = 1
 	column.AnchorPoint = Vector2.new(anchorX, 0.5)
 	column.Position = UDim2.new(anchorX, if anchorX == 0 then 12 else -12, 0.56, 0)
 	column.Size = UDim2.fromScale(0.12, 0.5)
-	column.Parent = lobbyContent
+	column.Parent = content
 	Components.sizeLimit(Vector2.new(100, 0), Vector2.new(150, math.huge)).Parent = column
 	Components.list(
 		Enum.FillDirection.Vertical,
@@ -388,33 +373,31 @@ local function sideColumn(name: string, anchorX: number): Frame
 	return column
 end
 
-local function sideButton(column: Frame, options: Components.Props): Components.ButtonHandle
-	options.Size = UDim2.fromScale(1, 0.18)
-	options.MaxTextSize = options.MaxTextSize or 14
-	options.Parent = column
-	return Components.button(options)
+local function sideButton(
+	column: Frame,
+	order: number,
+	name: string,
+	text: string,
+	variant: string?,
+	visible: boolean?
+): TextButton
+	return Components.styleButton({
+		Name = name,
+		Text = text,
+		Variant = variant,
+		Size = UDim2.fromScale(1, 0.18),
+		MaxTextSize = if #text > 10 then 12 else 14,
+		LayoutOrder = order,
+		Visible = visible ~= false,
+		Parent = column,
+	})
 end
 
-local function buildSideColumns()
-	local left = sideColumn("Left", 0)
-	sideButton(left, {
-		Name = "Shop",
-		Text = "SHOP",
-		Variant = "Special",
-		LayoutOrder = 1,
-		onClick = function()
-			LobbyUI.onOpenShop()
-		end,
-	})
-	local quests = sideButton(left, {
-		Name = "Quests",
-		Text = "QUESTS",
-		LayoutOrder = 2,
-		onClick = function()
-			LobbyUI.onOpenQuests()
-		end,
-	})
-	questsBadge = Kit.new("Frame", {
+local function buildSideColumns(content: Frame)
+	local left = sideColumn(content, "Left", 0)
+	sideButton(left, 1, "Shop", "SHOP", "Special")
+	local quests = sideButton(left, 2, "Quests", "QUESTS")
+	Kit.new("Frame", {
 		Name = "Badge",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(1, -4, 0, 4),
@@ -423,77 +406,166 @@ local function buildSideColumns()
 		BorderSizePixel = 0,
 		Visible = false,
 		ZIndex = 3,
-		Parent = quests.instance,
+		Parent = quests,
 	}, { Components.corner(999), Components.stroke(Theme.Colors.Background, 2) })
-	dailyButton = sideButton(left, {
-		Name = "Daily",
-		Text = "DAILY",
-		Variant = "Special", -- outline: JOIN RANDOM stays the one filled button
-		LayoutOrder = 3,
-		Visible = false,
-		onClick = function()
-			Remotes.Events.ClaimDailyReward:FireServer()
-		end,
-	})
-	looksButton = sideButton(left, {
-		Name = "BuyLooks",
-		Text = "BUY LOOKS",
-		LayoutOrder = 4,
-		Visible = false,
-		onClick = function()
-			LobbyUI.onOpenLooks()
-		end,
-	})
-	adminButton = sideButton(left, {
-		Name = "Admin",
-		Text = "ADMIN",
-		LayoutOrder = 5,
-		Visible = false,
-		onClick = function()
-			LobbyUI.onOpenAdmin()
-		end,
-	})
+	-- Outline style: JOIN RANDOM stays the one filled button.
+	sideButton(left, 3, "Daily", "DAILY", "Special", false)
+	sideButton(left, 4, "BuyLooks", "BUY LOOKS", nil, false)
+	sideButton(left, 5, "Admin", "ADMIN", nil, false)
 
-	local right = sideColumn("Right", 1)
-	sideButton(right, {
-		Name = "Invite",
-		Text = "INVITE",
-		Variant = "Special",
-		LayoutOrder = 1,
-		onClick = function()
-			local player = State.player
-			local ok, canInvite = pcall(SocialService.CanSendGameInviteAsync, SocialService, player)
-			if ok and canInvite then
-				pcall(SocialService.PromptGameInvite, SocialService, player)
-			else
-				LobbyUI.onToast("Invites aren't available right now.")
+	local right = sideColumn(content, "Right", 1)
+	sideButton(right, 1, "Invite", "INVITE", "Special")
+	sideButton(right, 2, "HowToPlay", "HOW TO PLAY")
+end
+
+local function build(): ScreenGui
+	local root = Components.screen("LobbyUI", 1)
+	local content = Instance.new("Frame")
+	content.Name = "Lobby"
+	content.BackgroundTransparency = 1
+	content.Size = UDim2.fromScale(1, 1)
+	content.Parent = root
+	buildTopBar(root)
+	buildActions(content)
+	buildSideColumns(content)
+	return root
+end
+
+---------------------------------------------------------------------------------------------------
+-- Wire: find every piece by Name (anywhere under the ScreenGui) and make it work. Returns the
+-- names it couldn't find; an empty list means success.
+---------------------------------------------------------------------------------------------------
+
+local function wire(root: ScreenGui): { string }
+	local missing: { string } = {}
+	local function find(parent: Instance, name: string, className: string): any
+		local found = parent:FindFirstChild(name, true)
+		if found and found:IsA(className) then
+			return found
+		end
+		table.insert(missing, `{name} ({className})`)
+		return nil
+	end
+
+	topBar = find(root, "TopBar", "GuiObject")
+	lobbyContent = find(root, "Lobby", "GuiObject")
+	statusPanel = find(root, "RoundStatus", "GuiObject")
+	local coins = find(root, "Coins", "Frame")
+	local xp = find(root, "StyleXP", "Frame")
+	local buttons = {
+		settings = find(root, "Settings", "TextButton"),
+		join = find(root, "JoinRandom", "TextButton"),
+		spectate = find(root, "Spectate", "TextButton"),
+		customize = find(root, "Customize", "TextButton"),
+		shop = find(root, "Shop", "TextButton"),
+		quests = find(root, "Quests", "TextButton"),
+		daily = find(root, "Daily", "TextButton"),
+		looks = find(root, "BuyLooks", "TextButton"),
+		admin = find(root, "Admin", "TextButton"),
+		invite = find(root, "Invite", "TextButton"),
+		help = find(root, "HowToPlay", "TextButton"),
+	}
+	if statusPanel then
+		headline = find(statusPanel, "Headline", "TextLabel")
+		bigValue = find(statusPanel, "Value", "TextLabel")
+	end
+	if buttons.quests then
+		questsBadge = find(buttons.quests, "Badge", "GuiObject")
+	end
+	local coinsHandle = if coins then Components.attachStatPill(coins) else nil
+	local xpHandle = if xp then Components.attachStatPill(xp) else nil
+	if coins and not coinsHandle then
+		table.insert(missing, "Coins > Value (TextLabel)")
+	end
+	if xp and not xpHandle then
+		table.insert(missing, "StyleXP > Value (TextLabel)")
+	end
+	if #missing > 0 or not coinsHandle or not xpHandle then
+		return missing
+	end
+	coinsPill = coinsHandle
+	xpPill = xpHandle
+	valueColor = bigValue.TextColor3
+
+	Components.attachButton(buttons.settings, function()
+		LobbyUI.onOpenSettings()
+	end)
+	joinButton = Components.attachButton(buttons.join, function()
+		-- Opt into the next round (no matchmaking yet). Already in: nothing to do.
+		if isSpectating(State.player) then
+			Remotes.Events.SetSpectating:FireServer(false)
+		end
+	end)
+	spectateButton = Components.attachButton(buttons.spectate, function()
+		Remotes.Events.SetSpectating:FireServer(not isSpectating(State.player))
+	end)
+	Components.attachButton(buttons.customize, function()
+		LobbyUI.onCustomize()
+	end)
+	Components.attachButton(buttons.shop, function()
+		LobbyUI.onOpenShop()
+	end)
+	Components.attachButton(buttons.quests, function()
+		LobbyUI.onOpenQuests()
+	end)
+	dailyButton = Components.attachButton(buttons.daily, function()
+		Remotes.Events.ClaimDailyReward:FireServer()
+	end)
+	looksButton = Components.attachButton(buttons.looks, function()
+		LobbyUI.onOpenLooks()
+	end)
+	adminButton = Components.attachButton(buttons.admin, function()
+		LobbyUI.onOpenAdmin()
+	end)
+	Components.attachButton(buttons.invite, function()
+		local player = State.player
+		local ok, canInvite = pcall(SocialService.CanSendGameInviteAsync, SocialService, player)
+		if ok and canInvite then
+			pcall(SocialService.PromptGameInvite, SocialService, player)
+		else
+			LobbyUI.onToast("Invites aren't available right now.")
+		end
+	end)
+	Components.attachButton(buttons.help, function()
+		LobbyUI.onOpenHelp()
+	end)
+	return missing
+end
+
+-- Use the Studio-designed StarterGui.LobbyUI if there is one and it has every named piece;
+-- otherwise build the default. Returns the ScreenGui in use.
+local function setUp(): ScreenGui
+	local template = StarterGui:FindFirstChild("LobbyUI")
+	if template and template:IsA("ScreenGui") then
+		local playerGui = State.player:WaitForChild("PlayerGui")
+		local copy = playerGui:WaitForChild("LobbyUI", 10)
+		if copy and copy:IsA("ScreenGui") then
+			local missing = wire(copy)
+			if #missing == 0 then
+				copy.ResetOnSpawn = false -- keep the wired copy across respawns
+				return copy
 			end
-		end,
-	})
-	sideButton(right, {
-		Name = "HowToPlay",
-		Text = "HOW TO PLAY",
-		LayoutOrder = 2,
-		MaxTextSize = 12,
-		onClick = function()
-			LobbyUI.onOpenHelp()
-		end,
-	})
+			warn(
+				`[LobbyUI] StarterGui.LobbyUI is missing: {table.concat(missing, ", ")}. Using the built-in lobby UI instead.`
+			)
+			copy:Destroy()
+		end
+	end
+	local built = build()
+	local missing = wire(built)
+	assert(#missing == 0, `built-in LobbyUI is missing {table.concat(missing, ", ")}`)
+	return built
 end
 
 function LobbyUI.start()
-	gui = Components.screen("LobbyUI", 1)
-
-	lobbyContent = Instance.new("Frame")
-	lobbyContent.Name = "Lobby"
-	lobbyContent.BackgroundTransparency = 1
-	lobbyContent.Size = UDim2.fromScale(1, 1)
-	lobbyContent.Parent = gui
-
-	buildTopBar()
-	buildStatusPanel()
-	buildActions()
-	buildSideColumns()
+	gui = setUp()
+	-- If the designed template has ResetOnSpawn on, Roblox would add a fresh (unwired) copy on every
+	-- respawn; remove those so only the working one shows.
+	State.player:WaitForChild("PlayerGui").ChildAdded:Connect(function(child: Instance)
+		if child.Name == "LobbyUI" and child ~= (gui :: Instance) then
+			child:Destroy()
+		end
+	end)
 
 	State.RoundChanged:Connect(function(round)
 		refreshVisibility()

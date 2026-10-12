@@ -28,7 +28,6 @@ export type ButtonHandle = {
 
 export type PillHandle = {
 	instance: Frame,
-	icon: ImageLabel,
 	setValue: (self: PillHandle, text: string) -> (),
 	setProgress: (self: PillHandle, fraction: number?) -> (),
 }
@@ -141,40 +140,21 @@ end
 
 type Look = { bg: Color3, text: Color3, stroke: Color3, strokeThickness: number }
 
-local function lookFor(variant: ButtonVariant, state: ButtonState, hovered: boolean): Look
+-- Starting colours for a freshly built button of each variant.
+local function variantLook(variant: ButtonVariant): Look
 	local c = Theme.Colors
-	if state == "Disabled" or state == "Locked" then
-		return { bg = c.Disabled, text = c.DisabledText, stroke = c.Stroke, strokeThickness = 1 }
-	elseif state == "Active" then
-		return { bg = c.Panel, text = c.Primary, stroke = c.Primary, strokeThickness = 2.5 }
-	elseif variant == "Primary" then
-		return {
-			bg = if hovered then c.Primary:Lerp(c.Text, 0.25) else c.Primary,
-			text = c.PrimaryText,
-			stroke = c.PrimaryDark,
-			strokeThickness = 2,
-		}
+	if variant == "Primary" then
+		return { bg = c.Primary, text = c.PrimaryText, stroke = c.PrimaryDark, strokeThickness = 2 }
 	elseif variant == "Special" then
-		return {
-			bg = if hovered then c.PanelRaised else c.Panel,
-			text = c.Primary,
-			stroke = c.Primary,
-			strokeThickness = if hovered then 2.5 else 1.5,
-		}
+		return { bg = c.Panel, text = c.Primary, stroke = c.Primary, strokeThickness = 1.5 }
 	end
-	return {
-		bg = if hovered then c.SecondaryHover else c.Secondary,
-		text = if hovered then c.Text else c.Silver,
-		stroke = if hovered then c.Primary else c.Stroke,
-		strokeThickness = Theme.StrokeThickness,
-	}
+	return { bg = c.Secondary, text = c.Silver, stroke = c.Stroke, strokeThickness = Theme.StrokeThickness }
 end
 
--- options: Text, Variant, State, onClick, MaxTextSize, plus any TextButton props (Size, Position,
--- LayoutOrder, Name, Parent...). Taps are ignored while Disabled or Locked.
-function Components.button(options: Props): ButtonHandle
-	local variant: ButtonVariant = options.Variant or "Secondary"
-	local onClick: (() -> ())? = options.onClick
+-- Creates a styled TextButton (no behaviour). Pair with attachButton, or use Components.button.
+-- options: Text, Variant, MaxTextSize, plus any TextButton props (Size, Position, Name, Parent...).
+function Components.styleButton(options: Props): TextButton
+	local look = variantLook(options.Variant or "Secondary")
 	local props: Props = {
 		AutoButtonColor = false,
 		BorderSizePixel = 0,
@@ -182,6 +162,8 @@ function Components.button(options: Props): ButtonHandle
 		TextScaled = true,
 		Text = "",
 		Size = UDim2.fromScale(0.2, 0.1),
+		BackgroundColor3 = look.bg,
+		TextColor3 = look.text,
 	}
 	for key, value in options do
 		if key ~= "Variant" and key ~= "State" and key ~= "onClick" and key ~= "MaxTextSize" then
@@ -189,8 +171,7 @@ function Components.button(options: Props): ButtonHandle
 		end
 	end
 	local button: TextButton = new("TextButton", props)
-	local stroke = Components.stroke() :: UIStroke
-	stroke.Parent = button
+	Components.stroke(look.stroke, look.strokeThickness).Parent = button
 	Components.corner(Theme.Radius).Parent = button
 	Components.padding(4, 12).Parent = button
 	Components.sizeLimit(Vector2.new(Theme.MinTouch, Theme.MinTouch)).Parent = button
@@ -204,22 +185,58 @@ function Components.button(options: Props): ButtonHandle
 		Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(200, 200, 205)),
 		Parent = button,
 	})
-	local scale = new("UIScale", { Parent = button }) :: UIScale
+	return button
+end
 
-	local label = options.Text or ""
+-- Adds hover / press / focus / state behaviour to any TextButton, including one you designed in
+-- Studio. Its current colours become the Normal look, so edits made in Studio are kept.
+-- Taps are ignored while Disabled or Locked.
+function Components.attachButton(button: TextButton, onClick: (() -> ())?, state: ButtonState?): ButtonHandle
+	button.AutoButtonColor = false
+	local existing = button:FindFirstChildOfClass("UIStroke")
+	local strokeRef: UIStroke = if existing
+		then existing
+		else Components.stroke(button.BackgroundColor3, 0) :: UIStroke
+	strokeRef.Parent = button
+	local scale = button:FindFirstChildOfClass("UIScale") or new("UIScale", { Parent = button }) :: UIScale
+	scale.Scale = 1
+	local normal: Look = {
+		bg = button.BackgroundColor3,
+		text = button.TextColor3,
+		stroke = strokeRef.Color,
+		strokeThickness = strokeRef.Thickness,
+	}
+
+	local label = button.Text
 	local hovered = false
 	local focused = false -- gamepad / keyboard selection
 	local handle = {} :: ButtonHandle
 	handle.instance = button
-	handle.state = options.State or "Normal"
+	handle.state = state or "Normal"
 
+	local function lookNow(): Look
+		local c = Theme.Colors
+		if handle.state == "Disabled" or handle.state == "Locked" then
+			return { bg = c.Disabled, text = c.DisabledText, stroke = c.Stroke, strokeThickness = 1 }
+		elseif handle.state == "Active" then
+			return { bg = c.Panel, text = c.Primary, stroke = c.Primary, strokeThickness = 2.5 }
+		elseif hovered then
+			return {
+				bg = normal.bg:Lerp(c.Text, 0.15),
+				text = normal.text,
+				stroke = normal.stroke,
+				strokeThickness = normal.strokeThickness + 1,
+			}
+		end
+		return normal
+	end
 	local function paint()
-		local look = lookFor(variant, handle.state, hovered)
+		local look = lookNow()
 		TweenService:Create(button, Theme.Tween, { BackgroundColor3 = look.bg, TextColor3 = look.text })
 			:Play()
 		-- Focus ring: white and thick, so it reads without relying on colour alone.
-		stroke.Color = if focused then Theme.Colors.Text else look.stroke
-		stroke.Thickness = if focused then 3 else look.strokeThickness
+		strokeRef.Color = if focused then Theme.Colors.Text else look.stroke
+		strokeRef.Thickness = if focused then 3 else look.strokeThickness
 		button.Text = if handle.state == "Locked" then `🔒 {label}` else label
 	end
 	local function scaleTo(value: number)
@@ -229,8 +246,8 @@ function Components.button(options: Props): ButtonHandle
 		return handle.state ~= "Disabled" and handle.state ~= "Locked"
 	end
 
-	function handle.setState(self: ButtonHandle, state: ButtonState)
-		self.state = state
+	function handle.setState(self: ButtonHandle, newState: ButtonState)
+		self.state = newState
 		button.Selectable = usable()
 		button.Active = usable()
 		paint()
@@ -282,20 +299,25 @@ function Components.button(options: Props): ButtonHandle
 	return handle
 end
 
+-- Styled + working button in one call. options: as styleButton, plus onClick and State.
+function Components.button(options: Props): ButtonHandle
+	return Components.attachButton(Components.styleButton(options), options.onClick, options.State)
+end
+
 ---------------------------------------------------------------------------------------------------
 -- Stat pill (coins, XP): icon + value, optional progress bar along the bottom.
 ---------------------------------------------------------------------------------------------------
 
--- options: Glyph (placeholder text shown until Image is set), Image (rbxassetid), IconColor,
--- plus Frame props (Size, LayoutOrder, Parent...).
-function Components.statPill(options: Props): PillHandle
+-- Creates the pill instances (no behaviour). options: Glyph (placeholder text shown until Image is
+-- set), Image (rbxassetid), IconColor, HasProgress, plus Frame props (Size, Name, Parent...).
+function Components.styleStatPill(options: Props): Frame
 	local props: Props = {
 		BackgroundColor3 = Theme.Colors.Panel,
 		BackgroundTransparency = 0.04,
 		BorderSizePixel = 0,
 	}
 	for key, value in options do
-		if key ~= "Glyph" and key ~= "Image" and key ~= "IconColor" then
+		if key ~= "Glyph" and key ~= "Image" and key ~= "IconColor" and key ~= "HasProgress" then
 			props[key] = value
 		end
 	end
@@ -304,8 +326,8 @@ function Components.statPill(options: Props): PillHandle
 		Components.stroke(Theme.Colors.Stroke),
 	})
 	local iconColor: Color3 = options.IconColor or Theme.Colors.Primary
-	-- Placeholder icon: a coloured disc with a glyph. Set Icon.Image to a real PNG later and the
-	-- glyph hides itself.
+	-- Placeholder icon: a coloured disc with a glyph. Set Icon.Image to a real PNG and the glyph
+	-- hides itself.
 	local icon: ImageLabel = new("ImageLabel", {
 		Name = "Icon",
 		AnchorPoint = Vector2.new(0, 0.5),
@@ -317,7 +339,7 @@ function Components.statPill(options: Props): PillHandle
 		Image = options.Image or "",
 		Parent = pill,
 	}, { Components.corner(999) })
-	local glyph = Components.text({
+	Components.text({
 		Name = "Glyph",
 		Size = UDim2.fromScale(1, 1),
 		FontFace = Theme.Fonts.Heading,
@@ -327,59 +349,83 @@ function Components.statPill(options: Props): PillHandle
 		MinTextSize = 8,
 		Parent = icon,
 	})
-	local function syncGlyph()
-		glyph.Visible = icon.Image == ""
-		icon.BackgroundTransparency = if icon.Image == "" then 0 else 1
-	end
-	icon:GetPropertyChangedSignal("Image"):Connect(syncGlyph)
-	syncGlyph()
-
-	local value = Components.text({
+	local hasProgress = options.HasProgress == true
+	Components.text({
 		Name = "Value",
 		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(0.3, 4, 0.5, 0),
-		Size = UDim2.new(0.7, -12, 0.6, 0),
+		-- With a progress bar the number sits a little higher so they never overlap.
+		Position = UDim2.new(0.3, 4, if hasProgress then 0.42 else 0.5, 0),
+		Size = UDim2.new(0.7, -12, if hasProgress then 0.5 else 0.6, 0),
 		FontFace = Theme.Fonts.Number,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Text = "...",
 		MaxTextSize = 18,
 		Parent = pill,
 	})
-	local barBack = new("Frame", {
-		Name = "Progress",
-		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.new(0.3, 4, 1, -5),
-		Size = UDim2.new(0.7, -14, 0, 4),
-		BackgroundColor3 = Theme.Colors.Stroke,
-		BorderSizePixel = 0,
-		Visible = false,
-		Parent = pill,
-	}, { Components.corner(2) })
-	local barFill = new("Frame", {
-		Size = UDim2.fromScale(0, 1),
-		BackgroundColor3 = iconColor,
-		BorderSizePixel = 0,
-		Parent = barBack,
-	}, { Components.corner(2) })
+	if hasProgress then
+		local barBack = new("Frame", {
+			Name = "Progress",
+			AnchorPoint = Vector2.new(0, 1),
+			Position = UDim2.new(0.3, 4, 1, -5),
+			Size = UDim2.new(0.7, -14, 0, 4),
+			BackgroundColor3 = Theme.Colors.Stroke,
+			BorderSizePixel = 0,
+			Parent = pill,
+		}, { Components.corner(2) })
+		new("Frame", {
+			Name = "Fill",
+			Size = UDim2.fromScale(0, 1),
+			BackgroundColor3 = iconColor,
+			BorderSizePixel = 0,
+			Parent = barBack,
+		}, { Components.corner(2) })
+	end
+	return pill
+end
+
+-- Wires a pill (built here or designed in Studio). Needs a TextLabel "Value"; optional ImageLabel
+-- "Icon" (with TextLabel "Glyph") and Frame "Progress" (with Frame "Fill"). Nil if Value is missing.
+function Components.attachStatPill(pill: Frame): PillHandle?
+	local value = pill:FindFirstChild("Value", true)
+	if not (value and value:IsA("TextLabel")) then
+		return nil
+	end
+	local icon = pill:FindFirstChild("Icon", true)
+	if icon and icon:IsA("ImageLabel") then
+		local glyph = icon:FindFirstChild("Glyph")
+		local tint = icon.BackgroundColor3
+		local function syncGlyph()
+			if glyph and glyph:IsA("GuiObject") then
+				glyph.Visible = icon.Image == ""
+			end
+			icon.BackgroundTransparency = if icon.Image == "" then 0 else 1
+			icon.BackgroundColor3 = tint
+		end
+		icon:GetPropertyChangedSignal("Image"):Connect(syncGlyph)
+		syncGlyph()
+	end
+	local bar = pill:FindFirstChild("Progress", true)
+	local fill = if bar then bar:FindFirstChild("Fill") else nil
 
 	local handle = {} :: PillHandle
 	handle.instance = pill
-	handle.icon = icon
 	function handle.setValue(_self: PillHandle, text: string)
 		value.Text = text
 	end
 	function handle.setProgress(_self: PillHandle, fraction: number?)
-		barBack.Visible = fraction ~= nil
-		-- Lift the number above the bar so they never overlap.
-		value.Position = UDim2.new(0.3, 4, if fraction then 0.42 else 0.5, 0)
-		value.Size = UDim2.new(0.7, -12, if fraction then 0.5 else 0.6, 0)
-		if fraction then
-			TweenService
-				:Create(barFill, Theme.Tween, { Size = UDim2.fromScale(math.clamp(fraction, 0, 1), 1) })
+		if bar and bar:IsA("GuiObject") then
+			bar.Visible = fraction ~= nil
+		end
+		if fraction and fill and fill:IsA("GuiObject") then
+			TweenService:Create(fill, Theme.Tween, { Size = UDim2.fromScale(math.clamp(fraction, 0, 1), 1) })
 				:Play()
 		end
 	end
 	return handle
+end
+
+function Components.statPill(options: Props): PillHandle
+	return Components.attachStatPill(Components.styleStatPill(options)) :: PillHandle
 end
 
 ---------------------------------------------------------------------------------------------------
