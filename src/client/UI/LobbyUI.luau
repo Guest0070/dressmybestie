@@ -44,7 +44,6 @@ local lobbyContent: Frame
 local coinsPill: Components.PillHandle
 local xpPill: Components.PillHandle
 
-local roundLabel: TextLabel
 local headline: TextLabel
 local bigValue: TextLabel
 local footer: TextLabel
@@ -121,15 +120,15 @@ local function refreshStatus()
 	local spectating = isSpectating(State.player)
 	local inLobby = round.phase == "Lobby"
 
-	setText(roundLabel, `ROUND {if inLobby then round.roundNumber + 1 else round.roundNumber}`)
+	local roundText = `ROUND {if inLobby then round.roundNumber + 1 else round.roundNumber}  ·  `
 	if inLobby and remaining then
-		setText(headline, "NEXT ROUND STARTS IN")
+		setText(headline, roundText .. "STARTS IN")
 		setText(bigValue, Kit.formatTime(remaining))
 	elseif inLobby then
-		setText(headline, "WAITING FOR PLAYERS")
+		setText(headline, roundText .. "WAITING FOR PLAYERS")
 		setText(bigValue, `{readyCount()} / {playersNeeded()}`)
 	else
-		setText(headline, "ROUND IN PROGRESS")
+		setText(headline, roundText .. "IN PROGRESS")
 		setText(bigValue, if remaining then Kit.formatTime(remaining) else "--:--")
 	end
 	-- Last 10 seconds of a countdown flash red.
@@ -268,11 +267,11 @@ local function buildStatusPanel()
 	local panel = Components.panel({
 		Name = "RoundStatus",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0.12, 8),
-		Size = UDim2.fromScale(0.34, 0.3),
+		Position = UDim2.new(0.5, 0, 0, 72), -- just under the top bar (max 56 tall + 8 + gap)
+		Size = UDim2.fromScale(0.32, 0.22),
 		Parent = lobbyContent,
 	})
-	Components.sizeLimit(Vector2.new(280, 150), Vector2.new(480, 220)).Parent = panel
+	Components.sizeLimit(Vector2.new(260, 96), Vector2.new(440, 150)).Parent = panel
 	-- Cyan accent line along the top edge.
 	Kit.new("Frame", {
 		Name = "Accent",
@@ -290,18 +289,9 @@ local function buildStatusPanel()
 		Parent = panel,
 	}, { Components.padding(10, 16), Components.list(Enum.FillDirection.Vertical, 2) :: Instance })
 
-	roundLabel = Components.text({
-		Name = "Round",
-		Size = UDim2.fromScale(1, 0.16),
-		FontFace = Theme.Fonts.Button,
-		TextColor3 = Theme.Colors.Silver,
-		MaxTextSize = 18,
-		LayoutOrder = 1,
-		Parent = content,
-	})
 	headline = Components.text({
 		Name = "Headline",
-		Size = UDim2.fromScale(1, 0.2),
+		Size = UDim2.fromScale(1, 0.28),
 		FontFace = Theme.Fonts.Heading,
 		MaxTextSize = 24,
 		LayoutOrder = 2,
@@ -309,16 +299,16 @@ local function buildStatusPanel()
 	})
 	bigValue = Components.text({
 		Name = "Value",
-		Size = UDim2.fromScale(1, 0.38),
+		Size = UDim2.fromScale(1, 0.44),
 		FontFace = Theme.Fonts.Heading,
 		TextColor3 = Theme.Colors.Primary,
-		MaxTextSize = 56,
+		MaxTextSize = 48,
 		LayoutOrder = 3,
 		Parent = content,
 	})
 	footer = Components.text({
 		Name = "Footer",
-		Size = UDim2.fromScale(1, 0.16),
+		Size = UDim2.fromScale(1, 0.2),
 		TextColor3 = Theme.Colors.Muted,
 		MaxTextSize = 16,
 		LayoutOrder = 4,
@@ -332,10 +322,10 @@ local function buildActions()
 	actions.BackgroundTransparency = 1
 	actions.AnchorPoint = Vector2.new(0.5, 1)
 	actions.Position = UDim2.new(0.5, 0, 1, -12)
-	actions.Size = UDim2.fromScale(0.36, 0.3)
+	actions.Size = UDim2.fromScale(0.3, 0.26)
 	actions.Parent = lobbyContent
-	Components.sizeLimit(Vector2.new(280, 140), Vector2.new(480, 200)).Parent = actions
-	Components.list(Enum.FillDirection.Vertical, 10).Parent = actions
+	Components.sizeLimit(Vector2.new(260, 104), Vector2.new(420, 160)).Parent = actions
+	Components.list(Enum.FillDirection.Vertical, 8).Parent = actions
 
 	joinButton = Components.button({
 		Name = "JoinRandom",
@@ -356,7 +346,7 @@ local function buildActions()
 	local row = Instance.new("Frame")
 	row.Name = "Secondary"
 	row.BackgroundTransparency = 1
-	row.Size = UDim2.new(1, 0, 0.44, -10)
+	row.Size = UDim2.new(1, 0, 0.44, -8)
 	row.LayoutOrder = 2
 	row.Parent = actions
 	local rowList = Components.list(Enum.FillDirection.Horizontal, 10)

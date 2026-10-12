@@ -359,6 +359,9 @@ function Components.statPill(options: Props): PillHandle
 	end
 	function handle.setProgress(_self: PillHandle, fraction: number?)
 		barBack.Visible = fraction ~= nil
+		-- Lift the number above the bar so they never overlap.
+		value.Position = UDim2.new(0.3, 4, if fraction then 0.42 else 0.5, 0)
+		value.Size = UDim2.new(0.7, -12, if fraction then 0.5 else 0.6, 0)
 		if fraction then
 			TweenService
 				:Create(barFill, Theme.Tween, { Size = UDim2.fromScale(math.clamp(fraction, 0, 1), 1) })
