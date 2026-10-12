@@ -26,7 +26,7 @@ Theme.Colors = {
 Theme.Radius = 10 -- px, inside the 8-12 range of the brief
 Theme.RadiusLarge = 14
 Theme.StrokeThickness = 1.5
-Theme.MinTouch = 44 -- px; smallest comfortable tap target on phones
+Theme.MinTouch = 36 -- px; smallest tap target (kept compact so the lobby UI stays out of the way)
 
 Theme.Fonts = {
 	Heading = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.ExtraBold),

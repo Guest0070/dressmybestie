@@ -196,7 +196,7 @@ function Components.button(options: Props): ButtonHandle
 	Components.sizeLimit(Vector2.new(Theme.MinTouch, Theme.MinTouch)).Parent = button
 	new(
 		"UITextSizeConstraint",
-		{ MaxTextSize = options.MaxTextSize or 24, MinTextSize = 12, Parent = button }
+		{ MaxTextSize = options.MaxTextSize or 18, MinTextSize = 11, Parent = button }
 	)
 	-- Subtle top sheen so buttons read as chunky/raised.
 	new("UIGradient", {
@@ -323,7 +323,7 @@ function Components.statPill(options: Props): PillHandle
 		FontFace = Theme.Fonts.Heading,
 		TextColor3 = Theme.Colors.PrimaryText,
 		Text = options.Glyph or "",
-		MaxTextSize = 18,
+		MaxTextSize = 14,
 		MinTextSize = 8,
 		Parent = icon,
 	})
@@ -342,7 +342,7 @@ function Components.statPill(options: Props): PillHandle
 		FontFace = Theme.Fonts.Number,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Text = "...",
-		MaxTextSize = 24,
+		MaxTextSize = 18,
 		Parent = pill,
 	})
 	local barBack = new("Frame", {

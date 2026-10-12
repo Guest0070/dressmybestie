@@ -1,7 +1,8 @@
 --!strict
 -- Lobby screen (premium-fashion style, see Theme.luau):
 --   * Top bar: Coins, Style XP (with progress to next rank), Settings. Visible except while styling.
---   * Round status panel (top centre): round number, what's happening, live timer, who's in.
+--   * Round status strip (in the top bar, lobby only): round number, what's happening, live timer
+--     or players ready. Kept out of the middle so the avatar stays visible.
 --   * Actions (bottom centre): JOIN RANDOM, SPECTATE, CUSTOMIZE.
 --   * Side columns: Shop, Quests, Daily reward, Buy looks, Admin / Invite, How to play.
 --
@@ -46,7 +47,7 @@ local xpPill: Components.PillHandle
 
 local headline: TextLabel
 local bigValue: TextLabel
-local footer: TextLabel
+local statusPanel: Frame
 
 local joinButton: Components.ButtonHandle
 local spectateButton: Components.ButtonHandle
@@ -95,6 +96,7 @@ local function refreshVisibility()
 	local styling = (State.round.phase == "Styling" and State.myTarget() ~= nil) or State.dressingRoom
 	topBar.Visible = not styling
 	lobbyContent.Visible = State.canUseLobby() and not State.dressingRoom
+	statusPanel.Visible = lobbyContent.Visible
 end
 
 local function refreshSpectating()
@@ -117,7 +119,6 @@ local function refreshStatus()
 	local round = State.round
 	local now = Workspace:GetServerTimeNow()
 	local remaining = if round.endsAt then math.max(0, round.endsAt - now) else nil
-	local spectating = isSpectating(State.player)
 	local inLobby = round.phase == "Lobby"
 
 	local roundText = `ROUND {if inLobby then round.roundNumber + 1 else round.roundNumber}  ·  `
@@ -125,7 +126,7 @@ local function refreshStatus()
 		setText(headline, roundText .. "STARTS IN")
 		setText(bigValue, Kit.formatTime(remaining))
 	elseif inLobby then
-		setText(headline, roundText .. "WAITING FOR PLAYERS")
+		setText(headline, roundText .. "NEED PLAYERS")
 		setText(bigValue, `{readyCount()} / {playersNeeded()}`)
 	else
 		setText(headline, roundText .. "IN PROGRESS")
@@ -137,16 +138,6 @@ local function refreshStatus()
 		and remaining > 0
 		and math.floor(remaining * 2) % 2 == 0
 	bigValue.TextColor3 = if urgent then Theme.Colors.Danger else Theme.Colors.Primary
-
-	local line
-	if spectating then
-		line = "You're spectating  ·  tap JOIN RANDOM to play"
-	elseif not inLobby then
-		line = if round.theme then `Theme: {round.theme}  ·  you join next round` else "You join next round"
-	else
-		line = `{readyCount()} ready  ·  you're in the next round`
-	end
-	setText(footer, line)
 end
 
 local function coinPop(amount: number)
@@ -205,14 +196,14 @@ local function buildTopBar()
 	topBar.Name = "TopBar"
 	topBar.BackgroundTransparency = 1
 	topBar.Position = UDim2.fromOffset(12, 8)
-	topBar.Size = UDim2.new(1, -24, 0.1, 0)
+	topBar.Size = UDim2.new(1, -24, 0.08, 0)
 	topBar.Parent = gui
-	Components.sizeLimit(Vector2.new(0, Theme.MinTouch), Vector2.new(math.huge, 56)).Parent = topBar
+	Components.sizeLimit(Vector2.new(0, Theme.MinTouch), Vector2.new(math.huge, 44)).Parent = topBar
 
 	local stats = Instance.new("Frame")
 	stats.Name = "Stats"
 	stats.BackgroundTransparency = 1
-	stats.Size = UDim2.fromScale(0.8, 1)
+	stats.Size = UDim2.new(1, -56, 1, 0) -- leave room for the settings button
 	stats.Parent = topBar
 	Components.list(Enum.FillDirection.Horizontal, 8, Enum.HorizontalAlignment.Left).Parent = stats
 
@@ -250,7 +241,7 @@ local function buildTopBar()
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.fromScale(1, 0),
 		Size = UDim2.fromScale(1, 1),
-		MaxTextSize = 24,
+		MaxTextSize = 18,
 		Parent = topBar,
 		onClick = function()
 			LobbyUI.onOpenSettings()
@@ -263,15 +254,17 @@ local function buildTopBar()
 	})
 end
 
+-- Round status lives in the top bar (after Coins and XP) so the middle of the screen stays clear
+-- for the avatar. It takes whatever width is left (UIFlexItem Fill), capped on wide screens.
 local function buildStatusPanel()
-	local panel = Components.panel({
+	statusPanel = Components.panel({
 		Name = "RoundStatus",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 72), -- just under the top bar (max 56 tall + 8 + gap)
-		Size = UDim2.fromScale(0.32, 0.22),
-		Parent = lobbyContent,
+		Size = UDim2.fromScale(0, 1),
+		LayoutOrder = 3,
+		Parent = topBar:FindFirstChild("Stats"),
 	})
-	Components.sizeLimit(Vector2.new(260, 96), Vector2.new(440, 150)).Parent = panel
+	Kit.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill, Parent = statusPanel })
+	Components.sizeLimit(Vector2.new(140, 0), Vector2.new(420, math.huge)).Parent = statusPanel
 	-- Cyan accent line along the top edge.
 	Kit.new("Frame", {
 		Name = "Accent",
@@ -280,39 +273,39 @@ local function buildStatusPanel()
 		Size = UDim2.new(0.4, 0, 0, 3),
 		BackgroundColor3 = Theme.Colors.Primary,
 		BorderSizePixel = 0,
-		Parent = panel,
+		Parent = statusPanel,
 	}, { Components.corner(2) })
-	local content = Kit.new("Frame", {
+	local row = Kit.new("Frame", {
 		Name = "Content",
 		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(1, 1),
-		Parent = panel,
-	}, { Components.padding(8, 16), Components.list(Enum.FillDirection.Vertical, 4) :: Instance })
+		Parent = statusPanel,
+	}, { Components.padding(4, 12), Components.list(Enum.FillDirection.Horizontal, 8) :: Instance })
 
 	headline = Components.text({
 		Name = "Headline",
-		Size = UDim2.fromScale(1, 0.28),
+		Size = UDim2.fromScale(0, 0.6),
 		FontFace = Theme.Fonts.Heading,
-		MaxTextSize = 24,
-		LayoutOrder = 2,
-		Parent = content,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		MaxTextSize = 14,
+		LayoutOrder = 1,
+		Parent = row,
 	})
+	Kit.new("UIFlexItem", { FlexMode = Enum.UIFlexMode.Fill, Parent = headline })
 	bigValue = Components.text({
 		Name = "Value",
-		Size = UDim2.fromScale(1, 0.44),
+		Size = UDim2.fromScale(1, 0.9),
 		FontFace = Theme.Fonts.Heading,
 		TextColor3 = Theme.Colors.Primary,
-		MaxTextSize = 48,
-		LayoutOrder = 3,
-		Parent = content,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		MaxTextSize = 24,
+		LayoutOrder = 2,
+		Parent = row,
 	})
-	footer = Components.text({
-		Name = "Footer",
-		Size = UDim2.fromScale(1, 0.2),
-		TextColor3 = Theme.Colors.Muted,
-		MaxTextSize = 16,
-		LayoutOrder = 4,
-		Parent = content,
+	Kit.new("UIAspectRatioConstraint", {
+		AspectRatio = 2.4,
+		DominantAxis = Enum.DominantAxis.Height,
+		Parent = bigValue,
 	})
 end
 
@@ -322,9 +315,9 @@ local function buildActions()
 	actions.BackgroundTransparency = 1
 	actions.AnchorPoint = Vector2.new(0.5, 1)
 	actions.Position = UDim2.new(0.5, 0, 1, -12)
-	actions.Size = UDim2.fromScale(0.3, 0.26)
+	actions.Size = UDim2.fromScale(0.22, 0.2)
 	actions.Parent = lobbyContent
-	Components.sizeLimit(Vector2.new(260, 104), Vector2.new(420, 160)).Parent = actions
+	Components.sizeLimit(Vector2.new(200, 80), Vector2.new(300, 120)).Parent = actions
 	Components.list(Enum.FillDirection.Vertical, 8).Parent = actions
 
 	joinButton = Components.button({
@@ -332,7 +325,7 @@ local function buildActions()
 		Text = "JOIN RANDOM",
 		Variant = "Primary",
 		Size = UDim2.fromScale(1, 0.56),
-		MaxTextSize = 32,
+		MaxTextSize = 24,
 		LayoutOrder = 1,
 		Parent = actions,
 		onClick = function()
@@ -383,9 +376,9 @@ local function sideColumn(name: string, anchorX: number): Frame
 	column.BackgroundTransparency = 1
 	column.AnchorPoint = Vector2.new(anchorX, 0.5)
 	column.Position = UDim2.new(anchorX, if anchorX == 0 then 12 else -12, 0.56, 0)
-	column.Size = UDim2.fromScale(0.16, 0.62)
+	column.Size = UDim2.fromScale(0.12, 0.5)
 	column.Parent = lobbyContent
-	Components.sizeLimit(Vector2.new(130, 0), Vector2.new(200, math.huge)).Parent = column
+	Components.sizeLimit(Vector2.new(100, 0), Vector2.new(150, math.huge)).Parent = column
 	Components.list(
 		Enum.FillDirection.Vertical,
 		6,
@@ -396,8 +389,8 @@ local function sideColumn(name: string, anchorX: number): Frame
 end
 
 local function sideButton(column: Frame, options: Components.Props): Components.ButtonHandle
-	options.Size = UDim2.fromScale(1, 0.17)
-	options.MaxTextSize = options.MaxTextSize or 18
+	options.Size = UDim2.fromScale(1, 0.18)
+	options.MaxTextSize = options.MaxTextSize or 14
 	options.Parent = column
 	return Components.button(options)
 end
@@ -481,7 +474,7 @@ local function buildSideColumns()
 		Name = "HowToPlay",
 		Text = "HOW TO PLAY",
 		LayoutOrder = 2,
-		MaxTextSize = 16,
+		MaxTextSize = 12,
 		onClick = function()
 			LobbyUI.onOpenHelp()
 		end,
