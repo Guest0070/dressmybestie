@@ -1,11 +1,11 @@
 --!strict
--- Always-on screen: phase + big timer, "You're styling" banner, coins/rank, daily reward,
--- shop + looks buttons, toasts and the end-of-round reward popup.
+-- In-round screen: phase + big timer, "You're styling" banner, theme reveal, photo button, toasts
+-- and the end-of-round reward popup. Lobby things (coins/XP, round status, JOIN RANDOM, shop...)
+-- live in LobbyUI.luau.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local CaptureService = game:GetService("CaptureService")
-local SocialService = game:GetService("SocialService")
 local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
@@ -28,34 +28,14 @@ local PHASE_TITLES: { [string]: string } = {
 	Results = "Results",
 }
 
--- Callbacks other modules plug in (set by init.client).
-HUD.onOpenShop = function() end
-HUD.onOpenLooks = function() end
-HUD.onOpenHelp = function() end
-HUD.onOpenAdmin = function() end
-HUD.onOpenQuests = function() end
--- Returns true when a quest can be claimed (shows the "!" badge). Set by init.client.
-HUD.hasClaimableQuest = function(_data: Types.PublicData): boolean
-	return false
-end
-
 local root: Frame
 local topPanel: Frame
-local statsPanel: Frame
-local buttonColumn: Frame
 local phaseLabel: TextLabel
 local timerLabel: TextLabel
 local bannerFrame: Frame
 local bannerLabel: TextLabel
 local subLabel: TextLabel
-local coinsLabel: TextLabel
-local rankLabel: TextLabel
-local dailyButton: TextButton
-local looksButton: TextButton
-local adminButton: TextButton
-local questsBadge: TextLabel
 local photoButton: TextButton
-local rightColumn: Frame
 local toastLabel: TextLabel
 local revealFrame: Frame
 local revealTheme: TextLabel
@@ -134,14 +114,12 @@ end
 
 -- While styling, the catalog takes the right half of the screen, so the HUD moves to the left half.
 local function applyLayout(styling: boolean)
-	-- Lobby buttons only in the lobby: during a round they'd cover the voting/results panels.
-	local lobby = State.canUseLobby()
+	-- LobbyUI's round-status panel replaces the timer + banner whenever the lobby screen shows.
+	local lobby = State.canUseLobby() and not State.dressingRoom
 	-- Photo button for the best moments: the runway, the results and the Dressing Room.
 	local phase = State.round.phase
 	photoButton.Visible = phase == "Runway" or phase == "Results" or State.dressingRoom
-	statsPanel.Visible = not styling
-	buttonColumn.Visible = lobby and not styling
-	rightColumn.Visible = lobby and not styling
+	topPanel.Visible = not lobby
 	if styling then
 		topPanel.AnchorPoint = Vector2.new(0, 0)
 		topPanel.Position = UDim2.fromOffset(8, 8)
@@ -158,7 +136,8 @@ local function applyLayout(styling: boolean)
 		bannerFrame.Position = UDim2.new(0.5, 0, 0, 98)
 		bannerFrame.Size = UDim2.fromOffset(520, 62)
 		toastLabel.AnchorPoint = Vector2.new(0.5, 0)
-		toastLabel.Position = UDim2.new(0.5, 0, 0, 168)
+		-- In the lobby: between the round-status panel and the JOIN RANDOM buttons.
+		toastLabel.Position = if lobby then UDim2.fromScale(0.5, 0.5) else UDim2.new(0.5, 0, 0, 168)
 		toastLabel.Size = UDim2.fromOffset(520, 70)
 	end
 end
@@ -176,8 +155,7 @@ local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPha
 	bannerLabel.Text = main or ""
 	subLabel.Text = sub or ""
 	subLabel.Visible = sub ~= nil
-	bannerFrame.Visible = main ~= nil
-	looksButton.Visible = round.phase == "Lobby" and #State.lastShopLooks > 0
+	bannerFrame.Visible = main ~= nil and not (State.canUseLobby() and not State.dressingRoom)
 
 	-- Theme reveal gets a big centered card.
 	revealFrame.Visible = round.phase == "ThemeReveal"
@@ -194,47 +172,6 @@ local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPha
 	if changedFrom then
 		Kit.playSound("PhaseChange")
 	end
-end
-
-local lastCoins: number? = nil
-
--- A "+X" that floats up from the coin counter whenever coins go up.
-local function coinPop(amount: number)
-	local pop = Kit.label({
-		Text = `+{amount}`,
-		Position = UDim2.fromOffset(150, 20),
-		Size = UDim2.fromOffset(120, 36),
-		TextColor3 = Kit.Colors.Gold,
-		MaxTextSize = 32,
-		ZIndex = 20,
-		Parent = root,
-	})
-	local tween =
-		TweenService:Create(pop, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Position = UDim2.fromOffset(150, -20),
-			TextTransparency = 1,
-		})
-	tween:Play()
-	tween.Completed:Once(function()
-		pop:Destroy()
-	end)
-end
-
-local function refreshData(data: Types.PublicData)
-	if lastCoins and data.coins > lastCoins then
-		coinPop(data.coins - lastCoins)
-	end
-	lastCoins = data.coins
-	coinsLabel.Text = `{data.coins} coins`
-	local rankName = Config.RankNames[data.rank] or `Rank {data.rank}`
-	local nextXp = Config.RankXp[data.rank + 1]
-	rankLabel.Text = if nextXp
-		then `{rankName}  {data.styleXp}/{nextXp} XP`
-		else `{rankName}  {data.styleXp} XP`
-	dailyButton.Visible = data.canClaimDaily
-	dailyButton.Text = `Daily +{data.nextDailyReward}`
-	questsBadge.Visible = HUD.hasClaimableQuest(data)
-	adminButton.Visible = data.isAdmin
 end
 
 -- Big "RANK UP!" card with falling confetti and the items that just unlocked.
@@ -369,73 +306,6 @@ function HUD.start()
 		Parent = bannerFrame,
 	})
 
-	-- Top left: coins + rank
-	statsPanel =
-		Kit.panel({ Position = UDim2.fromOffset(8, 8), Size = UDim2.fromOffset(190, 64), Parent = root })
-	local stats = statsPanel
-	coinsLabel = Kit.label({
-		Size = UDim2.new(1, -16, 0, 30),
-		Position = UDim2.fromOffset(8, 4),
-		TextColor3 = Kit.Colors.Gold,
-		Text = "...",
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = stats,
-	})
-	rankLabel = Kit.label({
-		Size = UDim2.new(1, -16, 0, 20),
-		Position = UDim2.fromOffset(8, 38),
-		Font = Kit.BodyFont,
-		TextColor3 = Kit.Colors.TextDim,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = stats,
-	})
-
-	-- Left column buttons (below stats): shop, daily, looks
-	buttonColumn = Kit.new("Frame", {
-		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(8, 80),
-		Size = UDim2.fromOffset(150, 5 * (Kit.ButtonHeight + 8)),
-		Parent = root,
-	}, { Kit.list(Enum.FillDirection.Vertical, 8) })
-	local column = buttonColumn
-	Kit.button(
-		{ Text = "Shop", Size = UDim2.fromOffset(150, Kit.ButtonHeight), LayoutOrder = 1, Parent = column },
-		function()
-			HUD.onOpenShop()
-		end
-	)
-	dailyButton = Kit.button({
-		Text = `Daily +{Config.Rewards.DailyRewardCoins}`,
-		BackgroundColor3 = Kit.Colors.Green,
-		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
-		LayoutOrder = 3,
-		Visible = false,
-		Parent = column,
-	}, function()
-		Remotes.Events.ClaimDailyReward:FireServer()
-	end)
-	local questsButton = Kit.button({
-		Text = "Quests",
-		BackgroundColor3 = Kit.Colors.Blue,
-		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
-		LayoutOrder = 2,
-		Parent = column,
-	}, function()
-		HUD.onOpenQuests()
-	end)
-	questsBadge = Kit.label({
-		Text = "!",
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, 6, 0, -6),
-		Size = UDim2.fromOffset(26, 26),
-		BackgroundTransparency = 0,
-		BackgroundColor3 = Color3.fromRGB(235, 60, 60),
-		Visible = false,
-		ZIndex = 5,
-		Parent = questsButton,
-	})
-	Kit.corner(13).Parent = questsBadge
-
 	-- Photo: screenshot + Roblox's own share / save prompt (great for TikTok clips).
 	photoButton = Kit.button({
 		Text = "Photo",
@@ -459,81 +329,6 @@ function HUD.start()
 				pcall(CaptureService.PromptSaveCapturesToGallery, CaptureService, { capture }, function() end)
 			end
 		end)
-	end)
-
-	-- Right column (bottom-right): how to play + invite friends.
-	rightColumn = Kit.new("Frame", {
-		BackgroundTransparency = 1,
-		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -8, 1, -8),
-		Size = UDim2.fromOffset(170, 3 * (Kit.ButtonHeight + 8)),
-		Parent = root,
-	}, { Kit.list(Enum.FillDirection.Vertical, 8, Enum.HorizontalAlignment.Right) })
-	Kit.button({
-		Text = "Invite friends",
-		BackgroundColor3 = Kit.Colors.Green,
-		Size = UDim2.fromOffset(170, Kit.ButtonHeight),
-		LayoutOrder = 1,
-		MaxTextSize = 22,
-		Parent = rightColumn,
-	}, function()
-		local player = State.player
-		local ok, canInvite = pcall(SocialService.CanSendGameInviteAsync, SocialService, player)
-		if ok and canInvite then
-			pcall(SocialService.PromptGameInvite, SocialService, player)
-		else
-			HUD.toast("Invites aren't available right now.")
-		end
-	end)
-	-- Spectator toggle: sit out of rounds and just watch + vote (the server also switches idle
-	-- players to spectating).
-	local afkButton: TextButton
-	afkButton = Kit.button({
-		Text = "Spectate",
-		BackgroundColor3 = Kit.Colors.PanelLight,
-		Size = UDim2.fromOffset(170, Kit.ButtonHeight),
-		LayoutOrder = 3,
-		MaxTextSize = 22,
-		Parent = rightColumn,
-	}, function()
-		Remotes.Events.SetSpectating:FireServer(State.player:GetAttribute("Spectating") ~= true)
-	end)
-	local function refreshAfk()
-		local afk = State.player:GetAttribute("Spectating") == true
-		afkButton.Text = if afk then "Play next round" else "Spectate"
-		afkButton.BackgroundColor3 = if afk then Kit.Colors.Gold else Kit.Colors.PanelLight
-	end
-	State.player:GetAttributeChangedSignal("Spectating"):Connect(refreshAfk)
-	refreshAfk()
-	Kit.button({
-		Text = "How to play",
-		BackgroundColor3 = Kit.Colors.PanelLight,
-		Size = UDim2.fromOffset(170, Kit.ButtonHeight),
-		LayoutOrder = 2,
-		MaxTextSize = 22,
-		Parent = rightColumn,
-	}, function()
-		HUD.onOpenHelp()
-	end)
-	adminButton = Kit.button({
-		Text = "Admin",
-		BackgroundColor3 = Kit.Colors.Gold,
-		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
-		LayoutOrder = 5,
-		Visible = false,
-		Parent = column,
-	}, function()
-		HUD.onOpenAdmin()
-	end)
-	looksButton = Kit.button({
-		Text = "Buy looks",
-		BackgroundColor3 = Kit.Colors.PinkDark,
-		Size = UDim2.fromOffset(150, Kit.ButtonHeight),
-		LayoutOrder = 4,
-		Visible = false,
-		Parent = column,
-	}, function()
-		HUD.onOpenLooks()
 	end)
 
 	-- Theme reveal card
@@ -602,15 +397,11 @@ function HUD.start()
 	State.DressingRoomChanged:Connect(function()
 		refreshRound(State.round, nil)
 	end)
-	State.DataChanged:Connect(refreshData)
 	Remotes.Events.Toast.OnClientEvent:Connect(function(text: string)
 		HUD.toast(text)
 	end)
 	Remotes.Events.RewardSummary.OnClientEvent:Connect(showRewards)
 	refreshRound(State.round, nil)
-	if State.data then
-		refreshData(State.data)
-	end
 end
 
 return HUD

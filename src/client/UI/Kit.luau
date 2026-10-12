@@ -113,7 +113,13 @@ function Kit.playSound(key: string)
 		return
 	end
 	local soundId = if type(id) == "string" then id else `rbxassetid://{id}`
-	local sound = Kit.new("Sound", { SoundId = soundId, Volume = 0.6, Parent = SoundService })
+	local group = SoundService:FindFirstChild("SFX") -- Audio.luau; Settings mutes it
+	local sound = Kit.new("Sound", {
+		SoundId = soundId,
+		Volume = 0.6,
+		SoundGroup = if group and group:IsA("SoundGroup") then group else nil,
+		Parent = SoundService,
+	})
 	sound.Ended:Once(function()
 		sound:Destroy()
 	end)

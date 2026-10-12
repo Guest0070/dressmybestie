@@ -736,6 +736,7 @@ Config.Sounds = {
 	Click = "rbxasset://sounds/electronicpingshort.wav", -- built into every Roblox client
 	PhaseChange = 0,
 	RunwayMusic = 0,
+	LobbyMusic = 0, -- looping lobby track (Settings > Music mutes it)
 	Heart = 0,
 	Podium = 0,
 	LobbyMoment = 0,
