@@ -1,8 +1,15 @@
 --!strict
--- Shop: tabs of item cards (passes, entrance effects, trails, titles, walks & poses).
+-- Shop: tabs of item cards (passes, entrance effects, trails, titles, walks & poses, auras).
 -- Every item shows exactly what you get; nothing is random. The client only opens Roblox's
 -- purchase prompts and sends "buy with coins" / "equip" requests; the server checks everything.
 -- Opens from the lobby "Shop" button or by walking up to a kiosk in the plaza.
+--
+-- Designable in Studio: put a ScreenGui "ShopUI" in StarterGui (copy the built one during Play)
+-- and it's used instead. Pieces found by Name: Coins (TextLabel), Close (TextButton), Grid
+-- (ScrollingFrame), CardTemplate (hidden; with Preview, ItemName, Description, Action, optional
+-- Try), tab buttons Tab_Passes / Tab_Effects / Tab_Trails / Tab_Titles / Tab_Walks / Tab_Auras
+-- (delete one to hide that tab), optional Backdrop (tap to close). Each item is a copy of
+-- CardTemplate, so style that one card and every item follows.
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
@@ -13,7 +20,9 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
+local Components = require(script.Parent.Components)
 local Kit = require(script.Parent.Kit)
+local Theme = require(script.Parent.Theme)
 
 local ShopUI = {}
 
@@ -22,16 +31,16 @@ ShopUI.onDressingRoom = function() end
 
 type Tab = { id: string, label: string, slots: { string }? }
 local TABS: { Tab } = {
-	{ id = "Passes", label = "VIP & Passes" },
-	{ id = "Effects", label = "Entrances", slots = { "Entrance" } },
-	{ id = "Trails", label = "Trails", slots = { "Trail" } },
-	{ id = "Titles", label = "Titles", slots = { "Title" } },
-	{ id = "Walks", label = "Walks & Poses", slots = { "Walk", "Pose" } },
-	{ id = "Auras", label = "Auras", slots = { "Aura" } },
+	{ id = "Passes", label = "VIP & PASSES" },
+	{ id = "Effects", label = "ENTRANCES", slots = { "Entrance" } },
+	{ id = "Trails", label = "TRAILS", slots = { "Trail" } },
+	{ id = "Titles", label = "TITLES", slots = { "Title" } },
+	{ id = "Walks", label = "WALKS & POSES", slots = { "Walk", "Pose" } },
+	{ id = "Auras", label = "AURAS", slots = { "Aura" } },
 }
 
 local PASS_DESCRIPTIONS: { [string]: string } = {
-	VIP = "More item slots, VIP themes, golden runway glow, Golden Trail + VIP title",
+	VIP = "More item slots, VIP themes, golden glow, Golden Trail + VIP title",
 	PosePack = "3 signature poses at the end of your runway walk",
 }
 -- A symbol for each entrance effect's preview card.
@@ -47,10 +56,11 @@ local EFFECT_ICONS: { [string]: string } = {
 	Spotlight = "( O )",
 }
 
-local panel: Frame
+local gui: ScreenGui
 local grid: ScrollingFrame
+local cardTemplate: GuiObject
 local coinsLabel: TextLabel
-local tabButtons: { [string]: TextButton } = {}
+local tabButtons: { [string]: Components.ButtonHandle } = {}
 local currentTab = "Passes"
 local realPrices: { [string]: number } = {}
 
@@ -74,7 +84,7 @@ type CardSpec = {
 	name: string,
 	description: string,
 	buttonText: string,
-	buttonColor: Color3,
+	state: Components.ButtonState?, -- Normal (default), Active (equipped/owned), Disabled, Locked
 	onClick: (() -> ())?,
 	preview: (Frame) -> (),
 	highlight: boolean?,
@@ -82,66 +92,44 @@ type CardSpec = {
 }
 
 local order = 0
-local function card(spec: CardSpec): TextButton
+-- One item = one copy of CardTemplate.
+local function card(spec: CardSpec): Components.ButtonHandle
 	order += 1
-	local frame = Kit.new("Frame", {
-		BackgroundColor3 = Kit.Colors.PanelLight,
-		LayoutOrder = order,
-		Parent = grid,
-	}, {
-		Kit.corner(14),
-		Kit.new("UIStroke", {
-			Color = if spec.highlight then Kit.Colors.Gold else Kit.Colors.Pink,
-			Thickness = if spec.highlight then 3 else 1.5,
-			Transparency = 0.2,
-		}),
-	})
-	local preview = Kit.new("Frame", {
-		BackgroundColor3 = Kit.Colors.Panel,
-		Position = UDim2.fromOffset(8, 8),
-		Size = UDim2.new(1, -16, 0, 96),
-		ClipsDescendants = true,
-		Parent = frame,
-	}, { Kit.corner(10) })
-	spec.preview(preview)
-	if spec.try then
-		Kit.button({
-			Text = "Try",
-			AnchorPoint = Vector2.new(1, 0),
-			Position = UDim2.new(1, -4, 0, 4),
-			Size = UDim2.fromOffset(64, 32),
-			BackgroundColor3 = Kit.Colors.Blue,
-			MaxTextSize = 16,
-			ZIndex = 3,
-			Parent = preview,
-		}, spec.try)
+	local frame = cardTemplate:Clone()
+	frame.Name = "Card"
+	frame.LayoutOrder = order
+	frame.Visible = true
+	if spec.highlight then
+		local stroke = frame:FindFirstChildOfClass("UIStroke")
+		if stroke then
+			stroke.Color = Theme.Colors.Primary
+			stroke.Thickness = 2.5
+		end
 	end
-	Kit.label({
-		Text = spec.name,
-		Position = UDim2.fromOffset(8, 108),
-		Size = UDim2.new(1, -16, 0, 24),
-		MaxTextSize = 22,
-		Parent = frame,
-	})
-	Kit.label({
-		Text = spec.description,
-		Position = UDim2.fromOffset(8, 132),
-		Size = UDim2.new(1, -16, 0, 18),
-		Font = Kit.BodyFont,
-		TextColor3 = Kit.Colors.TextDim,
-		MaxTextSize = 14,
-		Parent = frame,
-	})
-	return Kit.button({
-		Text = spec.buttonText,
-		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -8),
-		Size = UDim2.new(1, -16, 0, 40),
-		BackgroundColor3 = spec.buttonColor,
-		AutoButtonColor = spec.onClick ~= nil,
-		MaxTextSize = 20,
-		Parent = frame,
-	}, spec.onClick)
+	local preview = frame:FindFirstChild("Preview", true) :: Frame
+	for _, child in preview:GetChildren() do
+		if child:IsA("GuiObject") then
+			child:Destroy() -- whatever was left in the template's preview
+		end
+	end
+	spec.preview(preview)
+	local try = frame:FindFirstChild("Try", true)
+	if try and try:IsA("TextButton") then
+		try.Visible = spec.try ~= nil
+		if spec.try then
+			Components.attachButton(try, spec.try)
+		end
+	end
+	(frame:FindFirstChild("ItemName", true) :: TextLabel).Text = spec.name;
+	(frame:FindFirstChild("Description", true) :: TextLabel).Text = spec.description
+	local action = Components.attachButton(
+		frame:FindFirstChild("Action", true) :: TextButton,
+		spec.onClick,
+		spec.state or (if spec.onClick then "Normal" else "Disabled")
+	)
+	action:setText(spec.buttonText)
+	frame.Parent = grid
+	return action
 end
 
 local function textPreview(text: string, color: Color3, background: Color3?): (Frame) -> ()
@@ -149,12 +137,13 @@ local function textPreview(text: string, color: Color3, background: Color3?): (F
 		if background then
 			frame.BackgroundColor3 = background
 		end
-		Kit.label({
+		Components.text({
 			Text = text,
 			Size = UDim2.new(1, -12, 1, -12),
 			Position = UDim2.fromOffset(6, 6),
+			FontFace = Theme.Fonts.Heading,
 			TextColor3 = color,
-			MaxTextSize = 34,
+			MaxTextSize = 32,
 			Parent = frame,
 		})
 	end
@@ -233,18 +222,18 @@ local function previewFor(cosmetic: Config.Cosmetic): (Frame) -> ()
 	elseif cosmetic.slot == "Aura" then
 		return textPreview(
 			cosmetic.displayName,
-			cosmetic.color or Kit.Colors.Gold,
-			Color3.fromRGB(40, 30, 60)
+			cosmetic.color or Theme.Colors.Gold,
+			Theme.Colors.PanelRaised
 		)
 	end
 	if cosmetic.slot == "Trail" and cosmetic.color then
 		return gradientPreview(cosmetic.color, cosmetic.color2 or cosmetic.color)
 	elseif cosmetic.slot == "Title" then
-		return textPreview(cosmetic.displayName, cosmetic.color or Kit.Colors.Text)
+		return textPreview(cosmetic.displayName, cosmetic.color or Theme.Colors.Text)
 	elseif cosmetic.slot == "Entrance" then
-		return textPreview(EFFECT_ICONS[cosmetic.id] or "*", Kit.Colors.Gold, Color3.fromRGB(60, 40, 80))
+		return textPreview(EFFECT_ICONS[cosmetic.id] or "*", Theme.Colors.Primary, Theme.Colors.PanelRaised)
 	end
-	return textPreview(cosmetic.displayName, Kit.Colors.Pink)
+	return textPreview(cosmetic.displayName, Theme.Colors.Primary)
 end
 
 local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
@@ -260,130 +249,106 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 			end
 		end
 		else nil
+	local base = { name = cosmetic.displayName, preview = preview, try = try }
+	local function with(extra: { [string]: any }): CardSpec
+		local spec = table.clone(base) :: any
+		for key, value in extra do
+			spec[key] = value
+		end
+		return spec
+	end
 	if cosmetic.animationId ~= nil and cosmetic.animationId == 0 then
-		card({
-			name = cosmetic.displayName,
-			description = "Coming soon",
-			buttonText = "Soon",
-			buttonColor = Kit.Colors.Grey,
-			preview = preview,
-			try = try,
-		})
+		card(with({ description = "Coming soon", buttonText = "SOON", state = "Disabled" }))
 	elseif owned then
-		card({
-			name = cosmetic.displayName,
+		card(with({
 			description = if equipped then "Equipped" else "Owned",
-			buttonText = if equipped then "Unequip" else "Equip",
-			buttonColor = if equipped then Kit.Colors.Grey else Kit.Colors.Blue,
+			buttonText = if equipped then "UNEQUIP" else "EQUIP",
+			state = if equipped then "Active" else "Normal",
 			highlight = equipped,
-			preview = preview,
-			try = try,
 			onClick = function()
 				Remotes.Events.EquipCosmetic:FireServer(cosmetic.slot, if equipped then nil else cosmetic.id)
 			end,
-		})
+		}))
 	elseif cosmetic.coinPrice then
 		local price = cosmetic.coinPrice
-		local affordable = data.coins >= price
-		card({
-			name = cosmetic.displayName,
+		card(with({
 			description = "Earn coins by playing",
-			buttonText = `{price} coins`,
-			buttonColor = if affordable then Kit.Colors.Gold else Kit.Colors.Grey,
-			preview = preview,
-			try = try,
+			buttonText = `{price} COINS`,
+			state = if data.coins >= price then "Normal" else "Disabled",
 			onClick = function()
 				Remotes.Events.BuyWithCoins:FireServer(cosmetic.id)
 			end,
-		})
+		}))
 	elseif cosmetic.productKey then
 		local product = Config.DevProducts[cosmetic.productKey]
 		if product.id == 0 then
-			card({
-				name = cosmetic.displayName,
-				description = "Coming soon",
-				buttonText = "Soon",
-				buttonColor = Kit.Colors.Grey,
-				preview = preview,
-				try = try,
-			})
+			card(with({ description = "Coming soon", buttonText = "SOON", state = "Disabled" }))
 			return
 		end
-		local button = card({
-			name = cosmetic.displayName,
+		local button = card(with({
 			description = "Yours forever",
 			buttonText = `R$ {product.price}`,
-			buttonColor = Kit.Colors.Green,
-			preview = preview,
-			try = try,
 			onClick = function()
 				MarketplaceService:PromptProductPurchase(State.player, product.id)
 			end,
-		})
+		}))
 		fetchPrice(`p{product.id}`, product.id, Enum.InfoType.Product, function(price)
-			button.Text = `R$ {price}`
+			button:setText(`R$ {price}`)
 		end)
 	elseif cosmetic.pass then
 		local pass = Config.GamePasses[cosmetic.pass]
-		card({
-			name = cosmetic.displayName,
+		card(with({
 			description = `Included with {pass.displayName}`,
-			buttonText = if pass.id == 0 then "Soon" else `Get {pass.displayName}`,
-			buttonColor = if pass.id == 0 then Kit.Colors.Grey else Kit.Colors.Green,
-			preview = preview,
-			try = try,
+			buttonText = if pass.id == 0 then "SOON" else `GET {string.upper(pass.displayName)}`,
+			state = if pass.id == 0 then "Disabled" else "Normal",
 			onClick = if pass.id == 0
 				then nil
 				else function()
 					MarketplaceService:PromptGamePassPurchase(State.player, pass.id)
 				end,
-		})
+		}))
 	elseif cosmetic.rank then
-		card({
-			name = cosmetic.displayName,
+		card(with({
 			description = "Free when you rank up",
-			buttonText = `Reach Lv {cosmetic.rank}`,
-			buttonColor = Kit.Colors.Grey,
-			preview = preview,
-			try = try,
-		})
+			buttonText = `LV {cosmetic.rank}`,
+			state = "Locked",
+		}))
 	end
 end
 
 local function passesTab(data: Types.PublicData)
 	for key, pass in Config.GamePasses do
 		local owned = data.ownedPasses[key] == true
-		local preview = textPreview(pass.displayName, Kit.Colors.Gold, Color3.fromRGB(70, 55, 20))
+		local preview = textPreview(pass.displayName, Theme.Colors.Gold, Theme.Colors.PanelRaised)
+		local description = PASS_DESCRIPTIONS[key] or ""
 		if pass.id == 0 then
 			card({
 				name = pass.displayName,
-				description = PASS_DESCRIPTIONS[key] or "",
-				buttonText = "Soon",
-				buttonColor = Kit.Colors.Grey,
+				description = description,
+				buttonText = "SOON",
 				preview = preview,
 			})
 		elseif owned then
 			card({
 				name = pass.displayName,
-				description = PASS_DESCRIPTIONS[key] or "",
-				buttonText = "Owned",
-				buttonColor = Kit.Colors.Grey,
-				preview = preview,
+				description = description,
+				buttonText = "OWNED",
+				state = "Active",
 				highlight = true,
+				preview = preview,
 			})
 		else
 			local button = card({
 				name = pass.displayName,
-				description = PASS_DESCRIPTIONS[key] or "",
+				description = description,
 				buttonText = `R$ {pass.price}`,
-				buttonColor = Kit.Colors.Green,
 				preview = preview,
 				onClick = function()
 					MarketplaceService:PromptGamePassPurchase(State.player, pass.id)
 				end,
 			})
 			fetchPrice(`g{pass.id}`, pass.id, Enum.InfoType.GamePass, function(price)
-				button.Text = `R$ {price}`
+				button:setText(`R$ {price}`)
 			end)
 		end
 	end
@@ -391,13 +356,12 @@ local function passesTab(data: Types.PublicData)
 		if product.kind ~= "Moment" then
 			continue
 		end
-		local preview = textPreview(product.displayName, Kit.Colors.Pink, Color3.fromRGB(60, 30, 60))
+		local preview = textPreview(product.displayName, Theme.Colors.Primary, Theme.Colors.PanelRaised)
 		if product.id == 0 then
 			card({
 				name = product.displayName,
 				description = "30s for the whole server",
-				buttonText = "Soon",
-				buttonColor = Kit.Colors.Grey,
+				buttonText = "SOON",
 				preview = preview,
 			})
 			continue
@@ -406,14 +370,13 @@ local function passesTab(data: Types.PublicData)
 			name = product.displayName,
 			description = "30s for the whole server, with your name!",
 			buttonText = `R$ {product.price}`,
-			buttonColor = Kit.Colors.Green,
 			preview = preview,
 			onClick = function()
 				MarketplaceService:PromptProductPurchase(State.player, product.id)
 			end,
 		})
 		fetchPrice(`p{product.id}`, product.id, Enum.InfoType.Product, function(price)
-			button.Text = `R$ {price}`
+			button:setText(`R$ {price}`)
 		end)
 	end
 end
@@ -426,13 +389,13 @@ local function rebuild()
 	end
 	order = 0
 	for id, button in tabButtons do
-		button.BackgroundColor3 = if id == currentTab then Kit.Colors.Pink else Kit.Colors.PanelLight
+		button:setState(if id == currentTab then "Active" else "Normal")
 	end
 	local data = State.data
 	if not data then
 		return
 	end
-	coinsLabel.Text = `{data.coins} coins`
+	coinsLabel.Text = `{data.coins} COINS`
 	if currentTab == "Passes" then
 		passesTab(data)
 		return
@@ -450,103 +413,231 @@ local function rebuild()
 	end
 end
 
+function ShopUI.close()
+	gui.Enabled = false
+end
+
 function ShopUI.open(tab: string?)
 	if not State.canUseLobby() then
 		return -- never cover the game during your round
 	end
-	if tab then
+	if tab and tabButtons[tab] then
 		currentTab = tab
 	end
 	rebuild()
-	panel.Visible = true
+	gui.Enabled = true
 end
 
-function ShopUI.start()
-	local _, root = Kit.screen("Shop", 5)
-	panel = Kit.panel({
+---------------------------------------------------------------------------------------------------
+-- Default layout (used when there's no StarterGui.ShopUI). Instances only; wire() makes them work.
+---------------------------------------------------------------------------------------------------
+
+local function buildCardTemplate(parent: Instance)
+	local template = Components.panel({
+		Name = "CardTemplate",
+		Raised = true,
+		Size = UDim2.fromOffset(150, 190),
+		Visible = false,
+		Parent = parent,
+	})
+	Kit.new("Frame", {
+		Name = "Preview",
+		Position = UDim2.fromOffset(6, 6),
+		Size = UDim2.new(1, -12, 0.46, 0),
+		BackgroundColor3 = Theme.Colors.Background,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+		Parent = template,
+	}, { Components.corner(Theme.Radius) })
+	Components.styleButton({
+		Name = "Try",
+		Text = "TRY",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromOffset(144, 10),
+		Size = UDim2.fromOffset(52, 28),
+		MaxTextSize = 12,
+		ZIndex = 3,
+		Visible = false,
+		Parent = template,
+	})
+	Components.text({
+		Name = "ItemName",
+		Position = UDim2.new(0, 8, 0.5, 0),
+		Size = UDim2.new(1, -16, 0.12, 0),
+		FontFace = Theme.Fonts.Heading,
+		MaxTextSize = 16,
+		Parent = template,
+	})
+	Components.text({
+		Name = "Description",
+		Position = UDim2.new(0, 8, 0.63, 0),
+		Size = UDim2.new(1, -16, 0.1, 0),
+		TextColor3 = Theme.Colors.Muted,
+		MaxTextSize = 12,
+		MinTextSize = 8,
+		Parent = template,
+	})
+	Components.styleButton({
+		Name = "Action",
+		Text = "BUY",
+		Variant = "Primary",
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -6),
+		Size = UDim2.new(1, -12, 0.2, 0),
+		MaxTextSize = 14,
+		Parent = template,
+	})
+end
+
+local function build(): ScreenGui
+	local root = Components.screen("ShopUI", 5)
+	local backdrop = Instance.new("TextButton")
+	backdrop.Name = "Backdrop"
+	backdrop.Text = ""
+	backdrop.AutoButtonColor = false
+	backdrop.BackgroundColor3 = Color3.new(0, 0, 0)
+	backdrop.BackgroundTransparency = 0.45
+	backdrop.Size = UDim2.fromScale(1, 1)
+	backdrop.Selectable = false
+	backdrop.Parent = root
+
+	local window = Components.panel({
+		Name = "Window",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.new(0.94, 0, 0.92, 0),
-		Visible = false,
+		Size = UDim2.fromScale(0.86, 0.84),
 		Parent = root,
 	})
-	Kit.label({
+	Components.sizeLimit(Vector2.new(320, 240), Vector2.new(960, 600)).Parent = window
+	Components.padding(12, 12).Parent = window
+
+	Components.text({
+		Name = "Title",
 		Text = "SHOP",
-		Position = UDim2.fromOffset(14, 8),
-		Size = UDim2.fromOffset(140, 40),
-		TextColor3 = Kit.Colors.Pink,
+		Size = UDim2.new(0, 90, 0, 36),
+		FontFace = Theme.Fonts.Heading,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = panel,
+		MaxTextSize = 24,
+		Parent = window,
 	})
-	coinsLabel = Kit.label({
-		Text = "",
-		Position = UDim2.fromOffset(150, 12),
-		Size = UDim2.fromOffset(220, 32),
-		TextColor3 = Kit.Colors.Gold,
+	Components.text({
+		Name = "Coins",
+		Position = UDim2.fromOffset(96, 0),
+		Size = UDim2.new(0.4, 0, 0, 36),
+		FontFace = Theme.Fonts.Number,
+		TextColor3 = Theme.Colors.Gold,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Parent = panel,
+		MaxTextSize = 18,
+		Parent = window,
 	})
-	Kit.button({
-		Text = "Close",
+	Components.styleButton({
+		Name = "Close",
+		Text = "✕",
 		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -8, 0, 8),
-		Size = UDim2.fromOffset(110, Kit.ButtonHeight - 10),
-		BackgroundColor3 = Kit.Colors.Grey,
-		Parent = panel,
-	}, function()
-		panel.Visible = false
-	end)
+		Position = UDim2.fromScale(1, 0),
+		Size = UDim2.fromOffset(Theme.MinTouch, Theme.MinTouch),
+		MaxTextSize = 18,
+		Parent = window,
+	})
 
 	local tabs = Kit.new("ScrollingFrame", {
+		Name = "Tabs",
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(8, 58),
-		Size = UDim2.new(1, -16, 0, 50),
+		Position = UDim2.fromOffset(0, 44),
+		Size = UDim2.new(1, 0, 0, 40),
 		CanvasSize = UDim2.new(0, 0, 0, 0),
 		AutomaticCanvasSize = Enum.AutomaticSize.X,
 		ScrollingDirection = Enum.ScrollingDirection.X,
-		ScrollBarThickness = 4,
-		Parent = panel,
-	}, { Kit.list(Enum.FillDirection.Horizontal, 6) })
+		ScrollBarThickness = 3,
+		Parent = window,
+	}, { Components.list(Enum.FillDirection.Horizontal, 8, Enum.HorizontalAlignment.Left) :: Instance })
 	for index, tab in TABS do
-		tabButtons[tab.id] = Kit.button({
+		Components.styleButton({
+			Name = `Tab_{tab.id}`,
 			Text = tab.label,
-			Size = UDim2.fromOffset(150, 44),
-			BackgroundColor3 = Kit.Colors.PanelLight,
+			Size = UDim2.new(0, if #tab.label > 10 then 130 else 100, 1, -4),
+			MaxTextSize = 14,
 			LayoutOrder = index,
-			MaxTextSize = 20,
 			Parent = tabs,
-		}, function()
-			currentTab = tab.id
-			rebuild()
-		end)
+		})
 	end
 
-	grid = Kit.new("ScrollingFrame", {
+	Kit.new("ScrollingFrame", {
+		Name = "Grid",
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(8, 114),
-		Size = UDim2.new(1, -16, 1, -122),
+		Position = UDim2.fromOffset(0, 92),
+		Size = UDim2.new(1, 0, 1, -92),
 		CanvasSize = UDim2.new(0, 0, 0, 0),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		ScrollingDirection = Enum.ScrollingDirection.Y,
-		ScrollBarThickness = 6,
-		Parent = panel,
+		ScrollBarThickness = 4,
+		Parent = window,
 	}, {
 		Kit.new("UIGridLayout", {
-			CellSize = UDim2.fromOffset(190, 206),
-			CellPadding = UDim2.fromOffset(10, 10),
+			CellSize = UDim2.fromOffset(150, 190),
+			CellPadding = UDim2.fromOffset(8, 8),
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
 	})
+	buildCardTemplate(window)
+	return root
+end
+
+local function wire(root: ScreenGui): { string }
+	local missing: { string } = {}
+	local find = Components.finder(missing)
+	local coins = find(root, "Coins", "TextLabel")
+	local close = find(root, "Close", "TextButton")
+	local gridFrame = find(root, "Grid", "ScrollingFrame")
+	local template = find(root, "CardTemplate", "GuiObject")
+	if template then
+		find(template, "Preview", "Frame")
+		find(template, "ItemName", "TextLabel")
+		find(template, "Description", "TextLabel")
+		find(template, "Action", "TextButton")
+	end
+	if #missing > 0 then
+		return missing
+	end
+	coinsLabel = coins
+	grid = gridFrame
+	cardTemplate = template
+	template.Visible = false
+	Components.attachButton(close, ShopUI.close)
+	local backdrop = root:FindFirstChild("Backdrop")
+	if backdrop and backdrop:IsA("GuiButton") then
+		backdrop.Activated:Connect(ShopUI.close)
+	end
+	-- Tabs are optional one by one: delete a Tab_ button in Studio to hide that tab.
+	table.clear(tabButtons)
+	for _, tab in TABS do
+		local button = root:FindFirstChild(`Tab_{tab.id}`, true)
+		if button and button:IsA("TextButton") then
+			tabButtons[tab.id] = Components.attachButton(button, function()
+				currentTab = tab.id
+				rebuild()
+			end)
+		end
+	end
+	if not tabButtons[currentTab] then
+		currentTab = next(tabButtons) or currentTab
+	end
+	return missing
+end
+
+function ShopUI.start()
+	gui = Components.designable("ShopUI", build, wire)
+	gui.Enabled = false
 
 	State.DataChanged:Connect(function()
-		if panel.Visible then
+		if gui.Enabled then
 			rebuild()
 		end
 	end)
 	-- Close the shop when a round starts so it never covers the booth.
-	State.RoundChanged:Connect(function(round)
+	State.RoundChanged:Connect(function()
 		if not State.canUseLobby() then
-			panel.Visible = false
+			ShopUI.close()
 		end
 	end)
 	-- Walking up to a kiosk in the plaza and pressing E / tapping opens that shop tab.

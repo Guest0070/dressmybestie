@@ -115,7 +115,7 @@ mobile-first UI.
 
 **Unit test (optional):** `luau tests/Pairing.spec.luau` (needs the standalone Luau CLI).
 
-## Design the lobby UI yourself (Studio)
+## Design the UI yourself (Studio): LobbyUI, ShopUI, SettingsUI
 
 The lobby screen is built by code, but you can replace it with one you design in Studio. The code then
 only makes your buttons work. It finds them by **Name**, so keep the names.
@@ -134,6 +134,10 @@ Names the code needs (anywhere inside LobbyUI): `TopBar`, `Lobby` (hidden outsid
 `HowToPlay`. Text that changes (coins, timer, JOIN RANDOM/JOINED) is set by code.
 If a name is missing, Output says which one and the game uses the built-in UI instead.
 To go back to the built-in UI, delete StarterGui.LobbyUI.
+
+The same steps work for **ShopUI** (open the shop once during Play so it exists, then copy it) and
+**SettingsUI**. Names they need are listed at the top of `src/client/UI/ShopUI.luau` and
+`SettingsUI.luau`. In the shop, every item is a copy of the hidden `CardTemplate`: style that one card.
 
 ## Admin panel
 

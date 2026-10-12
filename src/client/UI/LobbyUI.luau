@@ -18,7 +18,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SocialService = game:GetService("SocialService")
-local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
@@ -45,7 +44,6 @@ LobbyUI.hasClaimableQuest = function(_data: Types.PublicData): boolean
 	return false
 end
 
-local gui: ScreenGui
 local topBar: GuiObject
 local lobbyContent: GuiObject
 local coinsPill: Components.PillHandle
@@ -438,14 +436,7 @@ end
 
 local function wire(root: ScreenGui): { string }
 	local missing: { string } = {}
-	local function find(parent: Instance, name: string, className: string): any
-		local found = parent:FindFirstChild(name, true)
-		if found and found:IsA(className) then
-			return found
-		end
-		table.insert(missing, `{name} ({className})`)
-		return nil
-	end
+	local find = Components.finder(missing)
 
 	topBar = find(root, "TopBar", "GuiObject")
 	lobbyContent = find(root, "Lobby", "GuiObject")
@@ -532,40 +523,8 @@ local function wire(root: ScreenGui): { string }
 	return missing
 end
 
--- Use the Studio-designed StarterGui.LobbyUI if there is one and it has every named piece;
--- otherwise build the default. Returns the ScreenGui in use.
-local function setUp(): ScreenGui
-	local template = StarterGui:FindFirstChild("LobbyUI")
-	if template and template:IsA("ScreenGui") then
-		local playerGui = State.player:WaitForChild("PlayerGui")
-		local copy = playerGui:WaitForChild("LobbyUI", 10)
-		if copy and copy:IsA("ScreenGui") then
-			local missing = wire(copy)
-			if #missing == 0 then
-				copy.ResetOnSpawn = false -- keep the wired copy across respawns
-				return copy
-			end
-			warn(
-				`[LobbyUI] StarterGui.LobbyUI is missing: {table.concat(missing, ", ")}. Using the built-in lobby UI instead.`
-			)
-			copy:Destroy()
-		end
-	end
-	local built = build()
-	local missing = wire(built)
-	assert(#missing == 0, `built-in LobbyUI is missing {table.concat(missing, ", ")}`)
-	return built
-end
-
 function LobbyUI.start()
-	gui = setUp()
-	-- If the designed template has ResetOnSpawn on, Roblox would add a fresh (unwired) copy on every
-	-- respawn; remove those so only the working one shows.
-	State.player:WaitForChild("PlayerGui").ChildAdded:Connect(function(child: Instance)
-		if child.Name == "LobbyUI" and child ~= (gui :: Instance) then
-			child:Destroy()
-		end
-	end)
+	Components.designable("LobbyUI", build, wire)
 
 	State.RoundChanged:Connect(function(round)
 		refreshVisibility()

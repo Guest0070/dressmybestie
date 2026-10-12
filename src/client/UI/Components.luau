@@ -6,6 +6,7 @@
 -- Every button is a real TextButton wired through .Activated (mouse, touch and gamepad).
 
 local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 
 local Kit = require(script.Parent.Kit)
@@ -432,16 +433,18 @@ end
 -- On/off switch row for settings.
 ---------------------------------------------------------------------------------------------------
 
--- options: Text, Value, onChanged(value), plus Frame props.
-function Components.toggle(options: Props): Frame
+-- Creates a toggle row (no behaviour): a "Label" plus a "Switch" button holding a "Knob".
+-- options: Text, plus Frame props.
+function Components.styleToggle(options: Props): Frame
 	local props: Props = { BackgroundTransparency = 1 }
 	for key, value in options do
-		if key ~= "Text" and key ~= "Value" and key ~= "onChanged" then
+		if key ~= "Text" then
 			props[key] = value
 		end
 	end
 	local row: Frame = new("Frame", props)
 	Components.text({
+		Name = "Label",
 		Text = options.Text or "",
 		Size = UDim2.fromScale(0.65, 0.8),
 		AnchorPoint = Vector2.new(0, 0.5),
@@ -452,7 +455,6 @@ function Components.toggle(options: Props): Frame
 		MaxTextSize = 18,
 		Parent = row,
 	})
-	local on: boolean = options.Value == true
 	local switch: TextButton = new("TextButton", {
 		Name = "Switch",
 		Text = "",
@@ -460,6 +462,7 @@ function Components.toggle(options: Props): Frame
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.fromScale(1, 0.5),
 		Size = UDim2.fromScale(0.3, 0.9),
+		BackgroundColor3 = Theme.Colors.Secondary, -- the "off" colour
 		BorderSizePixel = 0,
 		Parent = row,
 	}, {
@@ -467,16 +470,33 @@ function Components.toggle(options: Props): Frame
 		Components.stroke(Theme.Colors.Stroke),
 		Components.sizeLimit(Vector2.new(64, Theme.MinTouch), Vector2.new(96, 52)),
 	})
-	local knob: Frame = new("Frame", {
+	new("Frame", {
+		Name = "Knob",
 		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromScale(0.04, 0.5),
 		Size = UDim2.fromScale(0.42, 0.78),
 		BackgroundColor3 = Theme.Colors.Text,
 		BorderSizePixel = 0,
 		Parent = switch,
 	}, { Components.corner(999) })
+	return row
+end
+
+-- Makes a toggle row work (built here or designed in Studio). Needs a TextButton "Switch" with a
+-- GuiObject "Knob" inside. The switch's current colour is the "off" colour; "on" is Theme Primary.
+-- Returns false if the pieces are missing.
+function Components.attachToggle(row: Instance, value: boolean, onChanged: (boolean) -> ()): boolean
+	local switch = row:FindFirstChild("Switch", true)
+	local knob = if switch then switch:FindFirstChild("Knob") else nil
+	if not (switch and switch:IsA("TextButton") and knob and knob:IsA("GuiObject")) then
+		return false
+	end
+	local offColor = switch.BackgroundColor3
+	local knobY = knob.Position.Y
+	local on = value
 	local function paint(animate: boolean)
-		local goalPos = if on then UDim2.fromScale(0.54, 0.5) else UDim2.fromScale(0.04, 0.5)
-		local goalColor = if on then Theme.Colors.Primary else Theme.Colors.Secondary
+		local goalPos = UDim2.new(if on then 0.54 else 0.04, 0, knobY.Scale, knobY.Offset)
+		local goalColor = if on then Theme.Colors.Primary else offColor
 		if animate then
 			TweenService:Create(knob, Theme.Tween, { Position = goalPos }):Play()
 			TweenService:Create(switch, Theme.Tween, { BackgroundColor3 = goalColor }):Play()
@@ -485,16 +505,75 @@ function Components.toggle(options: Props): Frame
 			switch.BackgroundColor3 = goalColor
 		end
 	end
+	switch.AutoButtonColor = false
 	switch.Activated:Connect(function()
 		on = not on
 		paint(true)
 		Kit.playSound("Click")
-		if options.onChanged then
-			options.onChanged(on)
-		end
+		onChanged(on)
 	end)
 	paint(false)
-	return row
+	return true
+end
+
+---------------------------------------------------------------------------------------------------
+-- Studio-designable screens
+---------------------------------------------------------------------------------------------------
+
+-- Use the ScreenGui named `name` from StarterGui if someone designed one in Studio and `wire` finds
+-- every piece it needs; otherwise build the default with `build` and wire that.
+-- `wire` returns the names it couldn't find (empty = success). Returns the ScreenGui in use.
+function Components.designable(
+	name: string,
+	build: () -> ScreenGui,
+	wire: (ScreenGui) -> { string }
+): ScreenGui
+	local player = Players.LocalPlayer :: Player
+	local playerGui = player:WaitForChild("PlayerGui")
+	local chosen: ScreenGui? = nil
+	local template = StarterGui:FindFirstChild(name)
+	if template and template:IsA("ScreenGui") then
+		local copy = playerGui:WaitForChild(name, 10)
+		if copy and copy:IsA("ScreenGui") then
+			local missing = wire(copy)
+			if #missing == 0 then
+				copy.ResetOnSpawn = false -- keep the wired copy across respawns
+				chosen = copy
+			else
+				warn(
+					`[UI] StarterGui.{name} is missing: {table.concat(missing, ", ")}. Using the built-in one.`
+				)
+				copy:Destroy()
+			end
+		end
+	end
+	if not chosen then
+		local built = build()
+		local missing = wire(built)
+		assert(#missing == 0, `built-in {name} is missing {table.concat(missing, ", ")}`)
+		chosen = built
+	end
+	local gui = chosen :: ScreenGui
+	-- A designed template with ResetOnSpawn on gets re-added (unwired) on every respawn; remove
+	-- those so only the working copy shows.
+	playerGui.ChildAdded:Connect(function(child: Instance)
+		if child.Name == name and child ~= (gui :: Instance) then
+			child:Destroy()
+		end
+	end)
+	return gui
+end
+
+-- Finder used by wire functions: looks anywhere under `parent` and records what's missing.
+function Components.finder(missing: { string }): (parent: Instance?, name: string, className: string) -> any
+	return function(parent: Instance?, name: string, className: string): any
+		local found = if parent then parent:FindFirstChild(name, true) else nil
+		if found and found:IsA(className) then
+			return found
+		end
+		table.insert(missing, `{name} ({className})`)
+		return nil
+	end
 end
 
 return Components
