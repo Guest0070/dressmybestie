@@ -59,7 +59,7 @@ function SettingsUI.start()
 		Parent = gui,
 	})
 	Components.sizeLimit(Vector2.new(300, 220), Vector2.new(460, 320)).Parent = window
-	Components.padding(14, 18).Parent = window
+	Components.padding(16, 16).Parent = window
 
 	Components.text({
 		Name = "Title",
@@ -67,7 +67,7 @@ function SettingsUI.start()
 		Size = UDim2.new(1, -56, 0.18, 0),
 		FontFace = Theme.Fonts.Heading,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		MaxTextSize = 28,
+		MaxTextSize = 24,
 		Parent = window,
 	})
 	closeButton = Components.button({
@@ -77,7 +77,7 @@ function SettingsUI.start()
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.fromScale(1, 0),
 		Size = UDim2.fromOffset(Theme.MinTouch, Theme.MinTouch),
-		MaxTextSize = 22,
+		MaxTextSize = 24,
 		Parent = window,
 		onClick = SettingsUI.close,
 	})
@@ -88,7 +88,7 @@ function SettingsUI.start()
 	rows.Position = UDim2.fromScale(0, 0.3)
 	rows.Size = UDim2.fromScale(1, 0.7)
 	rows.Parent = window
-	Components.list(Enum.FillDirection.Vertical, 10, nil, Enum.VerticalAlignment.Top).Parent = rows
+	Components.list(Enum.FillDirection.Vertical, 8, nil, Enum.VerticalAlignment.Top).Parent = rows
 
 	Components.toggle({
 		Name = "Music",

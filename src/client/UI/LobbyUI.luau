@@ -214,7 +214,7 @@ local function buildTopBar()
 	stats.BackgroundTransparency = 1
 	stats.Size = UDim2.fromScale(0.8, 1)
 	stats.Parent = topBar
-	Components.list(Enum.FillDirection.Horizontal, 10, Enum.HorizontalAlignment.Left).Parent = stats
+	Components.list(Enum.FillDirection.Horizontal, 8, Enum.HorizontalAlignment.Left).Parent = stats
 
 	coinsPill = Components.statPill({
 		Name = "Coins",
@@ -250,7 +250,7 @@ local function buildTopBar()
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.fromScale(1, 0),
 		Size = UDim2.fromScale(1, 1),
-		MaxTextSize = 28,
+		MaxTextSize = 24,
 		Parent = topBar,
 		onClick = function()
 			LobbyUI.onOpenSettings()
@@ -287,7 +287,7 @@ local function buildStatusPanel()
 		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(1, 1),
 		Parent = panel,
-	}, { Components.padding(10, 16), Components.list(Enum.FillDirection.Vertical, 2) :: Instance })
+	}, { Components.padding(8, 16), Components.list(Enum.FillDirection.Vertical, 4) :: Instance })
 
 	headline = Components.text({
 		Name = "Headline",
@@ -332,7 +332,7 @@ local function buildActions()
 		Text = "JOIN RANDOM",
 		Variant = "Primary",
 		Size = UDim2.fromScale(1, 0.56),
-		MaxTextSize = 34,
+		MaxTextSize = 32,
 		LayoutOrder = 1,
 		Parent = actions,
 		onClick = function()
@@ -349,7 +349,7 @@ local function buildActions()
 	row.Size = UDim2.new(1, 0, 0.44, -8)
 	row.LayoutOrder = 2
 	row.Parent = actions
-	local rowList = Components.list(Enum.FillDirection.Horizontal, 10)
+	local rowList = Components.list(Enum.FillDirection.Horizontal, 8)
 	rowList.HorizontalFlex = Enum.UIFlexAlignment.Fill -- both buttons share the width
 	rowList.Parent = row
 
@@ -397,7 +397,7 @@ end
 
 local function sideButton(column: Frame, options: Components.Props): Components.ButtonHandle
 	options.Size = UDim2.fromScale(1, 0.17)
-	options.MaxTextSize = options.MaxTextSize or 20
+	options.MaxTextSize = options.MaxTextSize or 18
 	options.Parent = column
 	return Components.button(options)
 end
@@ -435,7 +435,7 @@ local function buildSideColumns()
 	dailyButton = sideButton(left, {
 		Name = "Daily",
 		Text = "DAILY",
-		Variant = "Primary",
+		Variant = "Special", -- outline: JOIN RANDOM stays the one filled button
 		LayoutOrder = 3,
 		Visible = false,
 		onClick = function()
@@ -481,7 +481,7 @@ local function buildSideColumns()
 		Name = "HowToPlay",
 		Text = "HOW TO PLAY",
 		LayoutOrder = 2,
-		MaxTextSize = 18,
+		MaxTextSize = 16,
 		onClick = function()
 			LobbyUI.onOpenHelp()
 		end,

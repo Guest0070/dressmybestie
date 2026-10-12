@@ -192,11 +192,11 @@ function Components.button(options: Props): ButtonHandle
 	local stroke = Components.stroke() :: UIStroke
 	stroke.Parent = button
 	Components.corner(Theme.Radius).Parent = button
-	Components.padding(6, 12).Parent = button
+	Components.padding(4, 12).Parent = button
 	Components.sizeLimit(Vector2.new(Theme.MinTouch, Theme.MinTouch)).Parent = button
 	new(
 		"UITextSizeConstraint",
-		{ MaxTextSize = options.MaxTextSize or 26, MinTextSize = 12, Parent = button }
+		{ MaxTextSize = options.MaxTextSize or 24, MinTextSize = 12, Parent = button }
 	)
 	-- Subtle top sheen so buttons read as chunky/raised.
 	new("UIGradient", {
@@ -208,6 +208,7 @@ function Components.button(options: Props): ButtonHandle
 
 	local label = options.Text or ""
 	local hovered = false
+	local focused = false -- gamepad / keyboard selection
 	local handle = {} :: ButtonHandle
 	handle.instance = button
 	handle.state = options.State or "Normal"
@@ -216,8 +217,9 @@ function Components.button(options: Props): ButtonHandle
 		local look = lookFor(variant, handle.state, hovered)
 		TweenService:Create(button, Theme.Tween, { BackgroundColor3 = look.bg, TextColor3 = look.text })
 			:Play()
-		stroke.Color = look.stroke
-		stroke.Thickness = look.strokeThickness
+		-- Focus ring: white and thick, so it reads without relying on colour alone.
+		stroke.Color = if focused then Theme.Colors.Text else look.stroke
+		stroke.Thickness = if focused then 3 else look.strokeThickness
 		button.Text = if handle.state == "Locked" then `🔒 {label}` else label
 	end
 	local function scaleTo(value: number)
@@ -230,6 +232,7 @@ function Components.button(options: Props): ButtonHandle
 	function handle.setState(self: ButtonHandle, state: ButtonState)
 		self.state = state
 		button.Selectable = usable()
+		button.Active = usable()
 		paint()
 	end
 	function handle.setText(_self: ButtonHandle, text: string)
@@ -237,6 +240,14 @@ function Components.button(options: Props): ButtonHandle
 		paint()
 	end
 
+	button.SelectionGained:Connect(function()
+		focused = true
+		paint()
+	end)
+	button.SelectionLost:Connect(function()
+		focused = false
+		paint()
+	end)
 	button.MouseEnter:Connect(function()
 		hovered = usable()
 		paint()
@@ -392,7 +403,7 @@ function Components.toggle(options: Props): Frame
 		FontFace = Theme.Fonts.Button,
 		TextColor3 = Theme.Colors.Silver,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		MaxTextSize = 22,
+		MaxTextSize = 18,
 		Parent = row,
 	})
 	local on: boolean = options.Value == true
