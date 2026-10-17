@@ -201,6 +201,9 @@ function QuestsUI.start()
 			rebuild()
 		end
 	end)
+	panel:GetPropertyChangedSignal("Visible"):Connect(function()
+		Kit.hideChat("Quests", panel.Visible)
+	end)
 	State.RoundChanged:Connect(function(round)
 		if not State.canUseLobby() then
 			panel.Visible = false

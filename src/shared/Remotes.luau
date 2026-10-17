@@ -15,6 +15,7 @@ local EVENT_NAMES = {
 	"LobbyMoment", -- (moment: string, buyerName: string) confetti/disco for everyone
 	"RunwayEffect", -- (userId: number, isVip: boolean) at the start of each runway walk
 	"LookSync", -- (targetUserId: number, look: Look, seq: number?) accepted look, sent to its stylist
+	"MinigameState", -- (state: MinigameState) a lobby minigame changed (everyone gets every game)
 	-- Client -> server
 	"SetMannequinLook", -- (look: Look) stylist edits their target's mannequin
 	"CastHearts", -- ({ number }) user IDs, up to MaxHeartsPerVoter
@@ -29,6 +30,7 @@ local EVENT_NAMES = {
 	"RateLook", -- (wearerUserId: number, stars: number) Stars mode, 1-5
 	"SetSkinTone", -- (index: number) Skin Tone booth, 0 = my own skin
 	"SetBodyType", -- (id: string) Body Type booth, "" = my own body
+	"MinigameGo", -- (gameId: string) take me to that minigame (lobby only)
 }
 
 local FUNCTION_NAMES = {

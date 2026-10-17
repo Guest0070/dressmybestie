@@ -129,9 +129,16 @@ function Components.panel(props: Props): Frame
 			merged[key] = value
 		end
 	end
+	local stroke = Components.stroke(Color3.new(1, 1, 1))
+	-- Raised cards inside a panel keep a quiet border; top-level panels get the brand sheen.
+	if props.Raised then
+		(stroke :: UIStroke).Color = Theme.Colors.Stroke
+	else
+		new("UIGradient", { Color = Theme.Gradient, Rotation = 30, Parent = stroke })
+	end
 	return new("Frame", merged, {
 		Components.corner(Theme.RadiusLarge),
-		Components.stroke(Theme.Colors.Stroke),
+		stroke,
 	})
 end
 

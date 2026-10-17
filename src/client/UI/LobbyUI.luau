@@ -1,16 +1,17 @@
 --!strict
 -- Lobby screen (premium-fashion style, see Theme.luau):
---   * Top bar: Coins, Style XP (with progress to next rank), Settings. Visible except while styling.
+--   * Top bar: Coins, Style XP (with progress to next rank), Settings. Lobby only (the round timer
+--     takes its place during a round). Starts right of Roblox's chat window.
 --   * Round status strip (in the top bar, lobby only): round number, what's happening, live timer
 --     or players ready. Kept out of the middle so the avatar stays visible.
 --   * Actions (bottom centre): JOIN RANDOM, SPECTATE, CUSTOMIZE.
---   * Side columns: Shop, Quests, Daily reward, Buy looks, Admin / Invite, How to play.
+--   * Side columns: Shop, Quests, Daily reward, Buy looks, Admin / Games, Invite, How to play.
 --
 -- Want to design it yourself? Put a ScreenGui named "LobbyUI" in StarterGui (copy the built one
 -- during Play, see README). This script then wires that one instead of building its own: it finds
 -- each piece by Name (TopBar, Lobby, RoundStatus > Headline/Value, Coins/StyleXP > Value, Settings,
 -- JoinRandom, Spectate, Customize, Shop, Quests > Badge, Daily, BuyLooks, Admin, Invite, HowToPlay;
--- optional Coins > BuyCoins opens the coin packs).
+-- optional Coins > BuyCoins opens the coin packs, optional Games opens the minigames panel).
 --
 -- JOIN RANDOM does not matchmake (not built yet). It opts you into the next round in this server,
 -- the same thing as turning spectating off. Everything shown comes from State; nothing is faked.
@@ -34,6 +35,7 @@ local LobbyUI = {}
 
 -- Hooks plugged in by init.client.
 LobbyUI.onOpenShop = function(_tab: string?) end
+LobbyUI.onOpenGames = function() end
 LobbyUI.onOpenQuests = function() end
 LobbyUI.onOpenLooks = function() end
 LobbyUI.onOpenHelp = function() end
@@ -99,10 +101,11 @@ end
 ---------------------------------------------------------------------------------------------------
 
 local function refreshVisibility()
-	local styling = (State.round.phase == "Styling" and State.myTarget() ~= nil) or State.dressingRoom
-	topBar.Visible = not styling
 	lobbyContent.Visible = State.canUseLobby() and not State.dressingRoom
 	statusPanel.Visible = lobbyContent.Visible
+	-- Coins / XP / status share the top of the screen with the round timer (HUD): show one or the
+	-- other, never both.
+	topBar.Visible = lobbyContent.Visible
 end
 
 local function refreshSpectating()
@@ -188,7 +191,7 @@ local function refreshData(data: Types.PublicData)
 	end
 
 	dailyButton.instance.Visible = data.canClaimDaily
-	dailyButton:setText(`DAILY +{data.nextDailyReward}`)
+	dailyButton:setText(`🎁 DAILY +{data.nextDailyReward}`)
 	questsBadge.Visible = LobbyUI.hasClaimableQuest(data)
 	adminButton.instance.Visible = data.isAdmin
 end
@@ -202,8 +205,9 @@ local function buildTopBar(root: ScreenGui)
 	local bar = Instance.new("Frame")
 	bar.Name = "TopBar"
 	bar.BackgroundTransparency = 1
-	bar.Position = UDim2.fromOffset(12, 8)
-	bar.Size = UDim2.new(1, -24, 0.08, 0)
+	-- Starts right of Roblox's chat window (top-left, about 30% wide) so the two never overlap.
+	bar.Position = UDim2.new(0.31, 12, 0, 8)
+	bar.Size = UDim2.new(0.69, -24, 0.08, 0)
 	bar.Parent = root
 	Components.sizeLimit(Vector2.new(0, Theme.MinTouch), Vector2.new(math.huge, 44)).Parent = bar
 
@@ -399,7 +403,7 @@ local function sideButton(
 		Text = text,
 		Variant = variant,
 		Size = UDim2.fromScale(1, 0.18),
-		MaxTextSize = if #text > 10 then 12 else 14,
+		MaxTextSize = if (utf8.len(text) or #text) > 12 then 12 else 14,
 		LayoutOrder = order,
 		Visible = visible ~= false,
 		Parent = column,
@@ -408,8 +412,8 @@ end
 
 local function buildSideColumns(content: Frame)
 	local left = sideColumn(content, "Left", 0)
-	sideButton(left, 1, "Shop", "SHOP", "Special")
-	local quests = sideButton(left, 2, "Quests", "QUESTS")
+	sideButton(left, 1, "Shop", "🛍️ SHOP", "Special")
+	local quests = sideButton(left, 2, "Quests", "📜 QUESTS")
 	Kit.new("Frame", {
 		Name = "Badge",
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -422,13 +426,14 @@ local function buildSideColumns(content: Frame)
 		Parent = quests,
 	}, { Components.corner(999), Components.stroke(Theme.Colors.Background, 2) })
 	-- Outline style: JOIN RANDOM stays the one filled button.
-	sideButton(left, 3, "Daily", "DAILY", "Special", false)
-	sideButton(left, 4, "BuyLooks", "BUY LOOKS", nil, false)
-	sideButton(left, 5, "Admin", "ADMIN", nil, false)
+	sideButton(left, 3, "Daily", "🎁 DAILY", "Special", false)
+	sideButton(left, 4, "BuyLooks", "👗 BUY LOOKS", nil, false)
+	sideButton(left, 5, "Admin", "🛠️ ADMIN", nil, false)
 
 	local right = sideColumn(content, "Right", 1)
-	sideButton(right, 1, "Invite", "INVITE", "Special")
-	sideButton(right, 2, "HowToPlay", "HOW TO PLAY")
+	sideButton(right, 1, "Games", "🎮 GAMES", "Special")
+	sideButton(right, 2, "Invite", "💌 INVITE")
+	sideButton(right, 3, "HowToPlay", "❓ HOW TO PLAY")
 end
 
 local function build(): ScreenGui
@@ -511,6 +516,13 @@ local function wire(root: ScreenGui): { string }
 	Components.attachButton(buttons.shop, function()
 		LobbyUI.onOpenShop()
 	end)
+	-- Optional (a Studio-designed LobbyUI may not have it): the minigames panel.
+	local games = root:FindFirstChild("Games", true)
+	if games and games:IsA("TextButton") then
+		Components.attachButton(games, function()
+			LobbyUI.onOpenGames()
+		end)
+	end
 	-- Optional (a Studio-designed LobbyUI may not have it): opens the shop on the coin packs.
 	local buyCoins = coins:FindFirstChild("BuyCoins", true)
 	if buyCoins and buyCoins:IsA("TextButton") then

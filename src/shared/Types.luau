@@ -115,6 +115,19 @@ export type PublicData = {
 	bodyType: string,
 }
 
+-- A lobby minigame, broadcast to everyone whenever it changes.
+export type MinigameState = {
+	id: string, -- "ColorRush" | "FreezeFrame"
+	name: string,
+	phase: "Idle" | "Countdown" | "Playing" | "Result",
+	headline: string, -- big text, e.g. "PINK!" or "FREEZE!"
+	detail: string?, -- small text under it, e.g. "Wave 3 · 4 left"
+	color: Color3?, -- headline colour (Color Rush's target colour)
+	endsAt: number?, -- workspace:GetServerTimeNow() when the current step ends
+	players: { number }, -- user IDs still in the game
+	center: Vector3, -- where it is (the client shows the banner when you're near)
+}
+
 export type RewardSummary = {
 	coins: number,
 	xp: number,

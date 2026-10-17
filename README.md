@@ -34,6 +34,13 @@ Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme
 - Shop kiosks: Boutique (entrances), Trail Bar, Title Studio, VIP Lounge.
 - Obby into the sky (+40 coins, once per 10 min), 13 collectible gems (+2 each, capped per visit).
 - Dance floor with disco ball, bounce pads, fountain, palms, string lights.
+- **Minigames** on a deck east of the plaza (through the MINIGAMES arch, or the **GAMES** button):
+  *Color Rush* (a colour is called, every other floating tile vanishes, waves speed up) and
+  *Freeze Frame* (dance, then FREEZE: move and you're out). Step on to join; a short countdown
+  starts the game for everyone on it. Last one standing (or everyone who survives every wave/round)
+  wins +15 coins (max 6 paid wins an hour, `Config.Minigames`), and wins count for a daily quest
+  and an achievement. The server decides who fell or moved; a live banner shows the call, a
+  countdown bar and how many are left.
 - Top Stylists board, Hall of Fame statues of last round's top 3 (walk up → "Buy this look").
 
 **Progression:** coins + style XP, 10 ranks with free unlocks, daily login streak (50 → 200 coins),

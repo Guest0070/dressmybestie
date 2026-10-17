@@ -848,6 +848,7 @@ Config.DailyQuests = {
 	},
 	{ id = "CollectGems", text = "Collect 15 gems", stat = "gems", target = 15, reward = 40 },
 	{ id = "FinishObby", text = "Finish the obby", stat = "obby", target = 1, reward = 50 },
+	{ id = "WinMinigame", text = "Win a lobby minigame", stat = "minigameWins", target = 1, reward = 50 },
 	{
 		id = "GetHearts",
 		text = if Config.VotingMode == "Stars"
@@ -861,6 +862,7 @@ Config.DailyQuests = {
 -- Achievements count forever and pay out once.
 Config.Achievements = {
 	{ id = "FirstRound", text = "Play your first round", stat = "rounds", target = 1, reward = 50 },
+	{ id = "Minigames10", text = "Win 10 lobby minigames", stat = "minigameWins", target = 10, reward = 200 },
 	{ id = "Rounds10", text = "Play 10 rounds", stat = "rounds", target = 10, reward = 200 },
 	{ id = "Rounds50", text = "Play 50 rounds", stat = "rounds", target = 50, reward = 800 },
 	{
@@ -984,6 +986,33 @@ Config.Lobby = {
 	ObbyCooldownSeconds = 600, -- one obby reward per 10 minutes
 	BounceVelocity = 110,
 	LeaderboardRefreshSeconds = 10,
+}
+
+-- Lobby minigames (Color Rush, Freeze Frame). Short drop-in games for the wait between rounds.
+Config.Minigames = {
+	WinCoins = 15, -- per win
+	MaxRewardedWinsPerHour = 6, -- wins after this still count for quests, just no coins
+	CountdownSeconds = 6, -- after the first player steps on, before the game starts
+	ResultSeconds = 4, -- winner banner before the next game can start
+	ColorRush = {
+		Center = Vector3.new(100, 0, -15),
+		Grid = 7, -- 7x7 tiles
+		TileSize = 6,
+		Height = 6, -- tiles float this high; falling means you're out
+		Waves = 12,
+		FirstWaveSeconds = 4,
+		LastWaveSeconds = 1.6, -- waves get faster down to this
+		GoneSeconds = 2, -- how long the wrong tiles stay gone
+	},
+	FreezeFrame = {
+		Center = Vector3.new(100, 0, 44),
+		Radius = 16,
+		Rounds = 10,
+		DanceSeconds = { 3, 6 }, -- random, so nobody can count it
+		FreezeSeconds = { 2, 3.2 },
+		Grace = 0.45, -- reaction time after FREEZE! before movement counts
+		MoveTolerance = 1.2, -- studs a frozen player may drift (lag, animations)
+	},
 }
 
 -- Admins: the game owner is always an admin, and so is everyone in Studio playtests.

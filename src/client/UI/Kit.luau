@@ -1,5 +1,6 @@
 --!strict
--- Small UI toolkit so every screen looks the same and works on phones.
+-- Small UI toolkit so every screen looks the same and works on phones. Colours and fonts come
+-- from Theme.luau (shared with Components.luau), so both toolkits draw the same look.
 --
 -- Mobile-first trick: each ScreenGui has one "Root" frame drawn in DESIGN units (roughly 900x450,
 -- a phone in landscape). A UIScale grows/shrinks it to fit the real screen, so a 56-unit button
@@ -8,27 +9,30 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
+local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Theme = require(script.Parent.Theme)
 
 local Kit = {}
 
+-- Older names, mapped onto the shared Theme tokens.
 Kit.Colors = {
-	Pink = Color3.fromRGB(255, 110, 180),
-	PinkDark = Color3.fromRGB(200, 60, 135),
-	Panel = Color3.fromRGB(35, 30, 50),
-	PanelLight = Color3.fromRGB(58, 50, 80),
-	Text = Color3.fromRGB(255, 255, 255),
-	TextDim = Color3.fromRGB(200, 190, 220),
-	Gold = Color3.fromRGB(255, 210, 80),
-	Green = Color3.fromRGB(80, 200, 120),
-	Blue = Color3.fromRGB(80, 150, 255),
-	Grey = Color3.fromRGB(110, 105, 125),
+	Pink = Theme.Colors.Primary,
+	PinkDark = Theme.Colors.PrimaryDark,
+	Panel = Theme.Colors.Panel,
+	PanelLight = Theme.Colors.PanelRaised,
+	Text = Theme.Colors.Text,
+	TextDim = Theme.Colors.Muted,
+	Gold = Theme.Colors.Gold,
+	Green = Theme.Colors.Success,
+	Blue = Theme.Colors.Info,
+	Grey = Theme.Colors.Secondary,
 }
-Kit.Font = Enum.Font.FredokaOne
-Kit.BodyFont = Enum.Font.GothamBold
+Kit.Font = Theme.EnumFonts.Heading
+Kit.BodyFont = Theme.EnumFonts.Body
 Kit.ButtonHeight = 56 -- design units; ~48pt on a phone, comfortable for thumbs
 
 local DESIGN_WIDTH = 900
@@ -58,7 +62,7 @@ function Kit.new(className: string, props: Props?, children: { any }?): any
 end
 
 function Kit.corner(radius: number?): Instance
-	return Kit.new("UICorner", { CornerRadius = UDim.new(0, radius or 12) })
+	return Kit.new("UICorner", { CornerRadius = UDim.new(0, radius or Theme.Radius) })
 end
 
 function Kit.stroke(color: Color3?, thickness: number?): Instance
@@ -103,7 +107,11 @@ function Kit.label(props: Props): TextLabel
 		"UITextSizeConstraint",
 		{ MaxTextSize = props.MaxTextSize or 40, MinTextSize = 10, Parent = label }
 	)
-	Kit.new("UIStroke", { Thickness = 1.5, Transparency = 0.4, Parent = label })
+	-- Soft dark outline so text stays readable over the 3D world.
+	Kit.new(
+		"UIStroke",
+		{ Thickness = 1.2, Transparency = 0.55, Color = Theme.Colors.Background, Parent = label }
+	)
 	return label
 end
 
@@ -142,9 +150,10 @@ function Kit.button(props: Props, onClick: (() -> ())?): TextButton
 			merged[key] = value
 		end
 	end
+	local fill: Color3 = merged.BackgroundColor3
 	local button = Kit.new("TextButton", merged, {
-		Kit.corner(14),
-		Kit.stroke(Color3.new(0, 0, 0), 2),
+		Kit.corner(Theme.Radius),
+		Kit.stroke(fill:Lerp(Color3.new(0, 0, 0), 0.35), 2),
 		Kit.padding(8),
 	})
 	Kit.new(
@@ -154,7 +163,7 @@ function Kit.button(props: Props, onClick: (() -> ())?): TextButton
 	-- Soft top-to-bottom shine.
 	Kit.new("UIGradient", {
 		Rotation = 90,
-		Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(205, 205, 215)),
+		Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(215, 210, 225)),
 		Parent = button,
 	})
 	-- Squish on press, grow a touch on hover: makes every button feel alive.
@@ -183,21 +192,28 @@ function Kit.button(props: Props, onClick: (() -> ())?): TextButton
 	return button
 end
 
+-- Plum glass panel with a pink-to-violet border.
 function Kit.panel(props: Props): Frame
 	local merged: Props = {
 		BackgroundColor3 = Kit.Colors.Panel,
-		BackgroundTransparency = 0.1,
+		BackgroundTransparency = 0.06,
 		BorderSizePixel = 0,
 	}
 	for key, value in props do
 		merged[key] = value
 	end
+	local stroke = Kit.new("UIStroke", {
+		Color = Color3.new(1, 1, 1),
+		Thickness = 2,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	}, { Kit.new("UIGradient", { Color = Theme.Gradient, Rotation = 30 }) })
 	return Kit.new("Frame", merged, {
-		Kit.corner(16),
-		Kit.stroke(Kit.Colors.Pink, 2),
+		Kit.corner(Theme.RadiusLarge),
+		stroke,
+		-- Slightly lighter at the top: reads as a lit glass card.
 		Kit.new("UIGradient", {
 			Rotation = 90,
-			Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(175, 165, 195)),
+			Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(200, 195, 215)),
 		}),
 	})
 end
@@ -230,6 +246,14 @@ function Kit.screen(name: string, displayOrder: number?): (ScreenGui, Frame)
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(update)
 	update()
 	return gui, root
+end
+
+-- Roblox's chat window (top-left) draws over our big panels. Each screen that needs the space hides
+-- it under its own reason; chat comes back when no reason is left.
+local chatHiddenBy: { [string]: boolean } = {}
+function Kit.hideChat(reason: string, hidden: boolean)
+	chatHiddenBy[reason] = if hidden then true else nil
+	pcall(StarterGui.SetCoreGuiEnabled, StarterGui, Enum.CoreGuiType.Chat, next(chatHiddenBy) == nil)
 end
 
 function Kit.formatTime(seconds: number): string

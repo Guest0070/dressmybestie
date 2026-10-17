@@ -1,7 +1,7 @@
 --!strict
 -- Daily quests + achievements. Other systems call Quests.bump(player, stat, amount) when
 -- something happens; players claim finished quests from the Quests panel for fixed coins.
--- Stats: rounds, heartsGiven, gems, obby, heartsReceived, podiums.
+-- Stats: rounds, heartsGiven, gems, obby, heartsReceived, podiums, minigameWins.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -14,7 +14,8 @@ local PlayerData = require(script.Parent.Data.PlayerData)
 local Quests = {}
 
 -- rounds and heartsReceived already have lifetime fields in PlayerData; the rest live in `lifetime`.
-local LIFETIME_IN_TABLE = { gems = true, obby = true, heartsGiven = true, podiums = true }
+local LIFETIME_IN_TABLE =
+	{ gems = true, obby = true, heartsGiven = true, podiums = true, minigameWins = true }
 
 local function today(): number
 	return os.time() // 86400

@@ -20,6 +20,10 @@ State.lastShopLooks = {} :: { Types.ShopLook }
 State.RoundChanged = Signal.new() :: Signal.Signal<Types.RoundState, Types.RoundPhase?>
 State.DataChanged = Signal.new() :: Signal.Signal<Types.PublicData>
 
+-- Lobby minigames by id (Color Rush, Freeze Frame), as last sent by the server.
+State.minigames = {} :: { [string]: Types.MinigameState }
+State.MinigameChanged = Signal.new() :: Signal.Signal<Types.MinigameState>
+
 -- True while the player is in the lobby Dressing Room (dressing their own avatar).
 State.dressingRoom = false
 State.DressingRoomChanged = Signal.new() :: Signal.Signal<boolean>
@@ -83,6 +87,10 @@ end
 function State.start()
 	Remotes.Events.RoundState.OnClientEvent:Connect(setRound)
 	Remotes.Events.DataChanged.OnClientEvent:Connect(setData)
+	Remotes.Events.MinigameState.OnClientEvent:Connect(function(minigame: Types.MinigameState)
+		State.minigames[minigame.id] = minigame
+		State.MinigameChanged:Fire(minigame)
+	end)
 	task.spawn(function()
 		local ok, round = pcall(Remotes.Functions.GetRoundState.InvokeServer, Remotes.Functions.GetRoundState)
 		if ok and round then

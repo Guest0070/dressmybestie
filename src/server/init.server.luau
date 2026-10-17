@@ -10,6 +10,7 @@ local DressingRoom = require(script.Lobby.DressingRoom)
 local LookApplier = require(script.Styling.LookApplier)
 local BlendImport = require(script.Tools.BlendImport)
 local Map = require(script.Round.Map)
+local Minigames = require(script.Lobby.Minigames)
 local PassGrants = require(script.Monetization.PassGrants)
 local Passes = require(script.Monetization.Passes)
 local Quests = require(script.Quests)
@@ -38,6 +39,7 @@ Admin.start()
 DressingRoom.start()
 Appearance.start()
 Activities.start()
+Minigames.start()
 
 -- Layered clothing needs R15 avatars. Rig type is a Studio setting (File -> Avatar Settings),
 -- so we can only warn loudly if it's wrong.

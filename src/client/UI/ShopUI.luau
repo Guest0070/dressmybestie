@@ -532,6 +532,7 @@ end
 
 function ShopUI.close()
 	gui.Enabled = false
+	Kit.hideChat("Shop", false)
 end
 
 function ShopUI.open(tab: string?)
@@ -544,6 +545,7 @@ function ShopUI.open(tab: string?)
 	end
 	rebuild()
 	gui.Enabled = true
+	Kit.hideChat("Shop", true)
 end
 
 ---------------------------------------------------------------------------------------------------

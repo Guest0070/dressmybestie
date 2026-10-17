@@ -119,15 +119,17 @@ local function applyLayout(styling: boolean)
 	-- Photo button for the best moments: the runway, the results and the Dressing Room.
 	local phase = State.round.phase
 	photoButton.Visible = phase == "Runway" or phase == "Results" or State.dressingRoom
-	topPanel.Visible = not lobby
+	-- No timer in the lobby (LobbyUI shows the round status) or in the Dressing Room (nothing to time).
+	local dressingInLobby = State.dressingRoom and phase == "Lobby"
+	topPanel.Visible = not lobby and not dressingInLobby
 	if styling then
 		topPanel.AnchorPoint = Vector2.new(0, 0)
 		topPanel.Position = UDim2.fromOffset(8, 8)
 		bannerFrame.AnchorPoint = Vector2.new(0, 0)
-		bannerFrame.Position = UDim2.fromOffset(8, 98)
+		bannerFrame.Position = UDim2.fromOffset(8, if topPanel.Visible then 98 else 8)
 		bannerFrame.Size = UDim2.new(0.5, -16, 0, 62)
 		toastLabel.AnchorPoint = Vector2.new(0, 0)
-		toastLabel.Position = UDim2.fromOffset(8, 168)
+		toastLabel.Position = UDim2.fromOffset(8, if topPanel.Visible then 168 else 78)
 		toastLabel.Size = UDim2.new(0.5, -16, 0, 70)
 	else
 		topPanel.AnchorPoint = Vector2.new(0.5, 0)
@@ -145,8 +147,10 @@ end
 local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPhase?)
 	local styling = (round.phase == "Styling" and State.myTarget() ~= nil) or State.dressingRoom
 	applyLayout(styling)
-	-- Roblox's player list sits over the catalog tabs on small screens; hide it while styling.
+	-- Roblox's player list sits over the catalog tabs on small screens, and the chat window over the
+	-- timer: hide both while styling (styling is secret anyway; bubble chat still shows).
 	pcall(StarterGui.SetCoreGuiEnabled, StarterGui, Enum.CoreGuiType.PlayerList, not styling)
+	Kit.hideChat("Styling", styling)
 	phaseLabel.Text = PHASE_TITLES[round.phase] or round.phase
 	local main, sub = bannerFor(round)
 	if State.dressingRoom then
@@ -155,7 +159,10 @@ local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPha
 	bannerLabel.Text = main or ""
 	subLabel.Text = sub or ""
 	subLabel.Visible = sub ~= nil
-	bannerFrame.Visible = main ~= nil and not (State.canUseLobby() and not State.dressingRoom)
+	-- The theme reveal card says the theme already; the banner would sit right on top of it.
+	bannerFrame.Visible = main ~= nil
+		and not (State.canUseLobby() and not State.dressingRoom)
+		and round.phase ~= "ThemeReveal"
 
 	-- Theme reveal gets a big centered card.
 	revealFrame.Visible = round.phase == "ThemeReveal"
