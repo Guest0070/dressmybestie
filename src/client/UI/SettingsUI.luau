@@ -71,7 +71,7 @@ local function build(): ScreenGui
 	})
 	Components.styleButton({
 		Name = "Close",
-		Text = "✕",
+		Text = "X", -- the UI font has no ✕ glyph
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.fromScale(1, 0),
 		Size = UDim2.fromOffset(Theme.MinTouch, Theme.MinTouch),

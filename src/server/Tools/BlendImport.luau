@@ -231,8 +231,35 @@ for name in BlendPieces do
 	pieceByKey[looseKey(name)] = name
 end
 
+-- Studio cuts names over 50 characters to "<first 23>...<last 24>". Finds the piece whose full
+-- name starts and ends that way.
+local function shortenedPiece(name: string): string?
+	local head, tail = string.match(name, "^(.-)%.%.%.(.+)$")
+	if not head then
+		return nil
+	end
+	local headKey, tailKey = looseKey(head), looseKey(tail :: string)
+	local found: string? = nil
+	for key, piece in pieceByKey do
+		if
+			#key >= #headKey + #tailKey
+			and string.sub(key, 1, #headKey) == headKey
+			and string.sub(key, -#tailKey) == tailKey
+		then
+			if found then
+				return nil -- more than one piece fits; don't guess
+			end
+			found = piece
+		end
+	end
+	return found
+end
+
 -- The Blender piece name this part is, or nil if it isn't part of the building.
 local function pieceName(part: BasePart): string?
+	if string.find(part.Name, "...", 1, true) then
+		return shortenedPiece(part.Name)
+	end
 	local key = looseKey(part.Name)
 	local exact = pieceByKey[key]
 	if exact then
@@ -254,13 +281,16 @@ end
 
 -- Puts one imported piece exactly where it is in Blender (+ OFFSET), at its Blender size, and
 -- anchors it. Works however Studio imported it (anywhere, scaled, or already fallen over).
+-- Studio's 3D importer turns every mesh half a turn around Y (signs read backwards, room openings face
+-- outwards), so each piece is turned back.
+local IMPORT_TURN = CFrame.Angles(0, math.pi, 0)
 local function snap(part: BasePart, name: string)
 	local data = BlendPieces[name]
 	part.Anchored = true
 	part.AssemblyLinearVelocity = Vector3.zero
 	part.AssemblyAngularVelocity = Vector3.zero
 	part.Size = Vector3.new(data[4], data[5], data[6])
-	part.CFrame = CFrame.new(Vector3.new(data[1], data[2], data[3]) + BlendImport.OFFSET)
+	part.CFrame = CFrame.new(Vector3.new(data[1], data[2], data[3]) + BlendImport.OFFSET) * IMPORT_TURN
 end
 
 -- Top-level things in Workspace that can hold imported pieces (not the game's own map, players,
@@ -317,7 +347,7 @@ function BlendImport.apply(options: Options?)
 	local stashOld = if options and options.stashOld ~= nil then options.stashOld else true
 	local withLights = if options and options.lights ~= nil then options.lights else true
 	local runtime = options ~= nil and options.runtime == true
-	print("[BlendImport v3] starting (finds pieces by name, any model name)")
+	print("[BlendImport v4] starting (finds pieces by name, also names Studio shortened)")
 	if RunService:IsRunning() and not runtime then
 		warn(
 			"[BlendImport] Stop the game first (red Stop button), then run this again. Changes made during Play are thrown away."
@@ -348,6 +378,7 @@ function BlendImport.apply(options: Options?)
 		local matched, loose, roomPieces = 0, 0, 0
 		local unknownNames: { string } = {}
 		local tops: { [Instance]: boolean } = {}
+		local emptied: { [Instance]: boolean } = {} -- models the dressing room pieces came out of
 		for _, holder in candidates() do
 			local parts = holder:GetDescendants()
 			table.insert(parts, holder) -- a part dropped straight into Workspace
@@ -373,6 +404,9 @@ function BlendImport.apply(options: Options?)
 				if string.sub(name, 1, 4) == "PMD_" then
 					part.Parent = room
 					roomPieces += 1
+					if holder ~= part then
+						emptied[holder] = true
+					end
 				elseif part == holder then
 					part.Parent = imported
 				elseif holder ~= imported then
@@ -382,6 +416,16 @@ function BlendImport.apply(options: Options?)
 		end
 		for holder in tops do
 			holder.Parent = imported
+		end
+		-- The dressing room's imported model is left with only empty "_Node" models: remove it.
+		for holder in emptied do
+			if
+				not tops[holder]
+				and holder ~= imported
+				and not holder:FindFirstChildWhichIsA("BasePart", true)
+			then
+				holder:Destroy()
+			end
 		end
 		if roomPieces > 0 then
 			room.Parent = Workspace
@@ -526,6 +570,18 @@ function BlendImport.apply(options: Options?)
 			end
 			room.Parent = ServerStorage
 			print("[BlendImport] private dressing room -> ServerStorage.SMB_BoothTemplate")
+		end
+		-- A template made by an earlier run isn't in Workspace any more: re-snap its pieces too.
+		local template = ServerStorage:FindFirstChild("SMB_BoothTemplate")
+		if template and roomPieces == 0 then
+			for _, part in template:GetDescendants() do
+				local name = if part:IsA("BasePart") then pieceName(part) else nil
+				if name then
+					snap(part :: BasePart, name)
+					local objectName, materialName = splitName(name)
+					applyLook(part :: BasePart, objectName, materialName)
+				end
+			end
 		end
 
 		-- 6. The old part-built lobby would overlap; keep it, but out of the world.
