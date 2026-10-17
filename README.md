@@ -38,18 +38,32 @@ Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme
   marble, champagne metal, warm LEDs): a black marble path from the doors through the PLAY ZONE arch
   to a fountain, planters, light posts and a how-to-play board. Everything to do between rounds is
   here, and the **GAMES** button lists it all with a GO button:
-  - *Color Rush* (north-east): a colour is called, every other floating tile vanishes; waves speed up.
-  - *Freeze Frame* (north-west): dance, then FREEZE. Move and you're out.
-  - *Spin Sweep* (south-west): jump the spinning arm; it speeds up and becomes a cross.
-  - *Runway Dash* (east): timed obstacle course (hurdles, stepping stones, sliding blockers, a beam,
-    zig-zags). Best times on a board, personal best saved; under 30s pays 20 coins (once per 10 min).
-  - *Sky Obby* (west): 16 jumps into the sky, +40 coins once per 10 min.
+  - *Color Rush* (north-east): floating tiles under a truss with a 4-sided colour screen. A colour
+    is called, the wrong tiles blink, then drop. 15 waves that speed up; from wave 4 twists:
+    SHUFFLE (colours change mid-wave), MEMORY (colours hide before the call), FAKE OUT (the call
+    changes), TWO COLORS; from wave 11 the outer ring falls away for good.
+  - *Freeze Frame* (north-west): a paparazzi photo shoot on a disco stage. DANCE (beat + light show),
+    then FREEZE! (cameras flash; move and you're "CAUGHT MOVING!"), JUMP FOR THE CAMERA! (from
+    round 3; don't jump and you're out) or a FREE... STYLE! fake-out. The winner goes on the COVER
+    STAR board.
+  - *Spin Sweep* (south-west): jump the sparking arm or get flung off; REVERSE! and SURGE! events,
+    and a second arm (a cross) at 22s. Survive 60s or be the last one on.
+  - *Runway Dash* (east): a timed course over a glowing pool: hurdles, vanishing tiles, a spinning
+    bar, a jump pad, sliding blockers, a finish catwalk with flashing cameras. Two checkpoints (fall
+    in the pool = back to your checkpoint), live stopwatch with splits, medals (Gold 22s / Silver
+    28s / Bronze 36s, 30/20/10 coins once per 10 min), saved personal best, this server's board and
+    an all-time global top 10 (OrderedDataStore `RunwayDashBest_v1`).
+  - *Sky Obby* (west): 16 jumps into the sky with two checkpoints (fall = back to your checkpoint),
+    +40 coins once per 10 min.
   - Dance floor with disco ball, bounce pads, 13 collectible gems (+2 each, capped per visit).
-  The three round games (Color Rush, Freeze Frame, Spin Sweep): step on to join, a short countdown
-  starts it for everyone on it, last one standing (or everyone who survives) wins +15 coins (max 6
-  paid wins an hour, `Config.Minigames`); wins count for a daily quest and an achievement. The
-  server decides who fell, moved or got swept; a live banner shows the call, a countdown bar and
-  how many are left.
+  Round games (Color Rush, Freeze Frame, Spin Sweep): step on to join; a countdown (3-2-1-GO on
+  screen) starts it for everyone on it. Winners get fireworks, a shout-out to everyone nearby, +15
+  coins (max 6 paid wins an hour, `Config.Minigames`), win streaks, quest progress and a spot on
+  the PLAY ZONE CHAMPIONS board. The server decides who fell, moved or got hit; the banner shows
+  the call, a countdown bar and who's left, and the lobby buttons step aside while you play.
+  All sounds are Roblox's built-in ones (no uploads).
+- **The world:** paved ground with boulevards, street lamps and trees, a neon city skyline, dusk
+  lighting (`Config.Environment`).
 - Top Stylists board, Hall of Fame statues of last round's top 3 (walk up → "Buy this look").
 
 **Progression:** coins + style XP, 10 ranks with free unlocks, daily login streak (50 → 200 coins),

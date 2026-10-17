@@ -16,6 +16,7 @@ local EVENT_NAMES = {
 	"RunwayEffect", -- (userId: number, isVip: boolean) at the start of each runway walk
 	"LookSync", -- (targetUserId: number, look: Look, seq: number?) accepted look, sent to its stylist
 	"MinigameState", -- (state: MinigameState) a lobby minigame changed (everyone gets every game)
+	"MinigameFx", -- (fx: { kind: string, ... }) sounds, flashes, knockbacks, timers for minigames
 	-- Client -> server
 	"SetMannequinLook", -- (look: Look) stylist edits their target's mannequin
 	"CastHearts", -- ({ number }) user IDs, up to MaxHeartsPerVoter

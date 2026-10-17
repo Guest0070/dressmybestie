@@ -11,6 +11,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
@@ -91,6 +92,127 @@ local function distanceTo(minigame: Types.MinigameState): number
 	return (root.Position - minigame.center).Magnitude
 end
 
+-- Runway Dash run on this client: "ready" on the start pad, "running" once you step off,
+-- "done" for a few seconds after the finish.
+type Dash = {
+	phase: "ready" | "running" | "done",
+	started: number?,
+	splits: { number },
+	finalTime: number?,
+	medal: string?,
+	best: boolean?,
+	doneAt: number?,
+	note: string?,
+}
+local dash: Dash? = nil
+local MEDALS = Config.Minigames.RunwayDash.Medals
+local MEDAL_ICONS = { Gold = "🥇", Silver = "🥈", Bronze = "🥉" }
+
+local function popHeadline()
+	local scale = bannerHeadline:FindFirstChildOfClass("UIScale") :: UIScale
+	scale.Scale = 1.35
+	TweenService:Create(scale, Theme.TweenSlow, { Scale = 1 }):Play()
+end
+
+-- Medal pace for a time so far: the best medal still possible.
+local function paceColor(seconds: number): Color3
+	if seconds <= MEDALS.Gold then
+		return Theme.Colors.Gold
+	elseif seconds <= MEDALS.Silver then
+		return Color3.fromRGB(210, 215, 230)
+	elseif seconds <= MEDALS.Bronze then
+		return Color3.fromRGB(220, 140, 80)
+	end
+	return Theme.Colors.Text
+end
+
+function MinigameUI.onDash(fx: { [string]: any })
+	if fx.action == "ready" then
+		dash = { phase = "ready", splits = {} }
+	elseif fx.action == "split" and dash then
+		table.insert(dash.splits, fx.time)
+		dash.note = `Checkpoint {fx.checkpoint}: {string.format("%.2f", fx.time)}s`
+		popHeadline()
+	elseif fx.action == "fall" and dash then
+		dash.note = "Splash! Back to your checkpoint (clock's still running)"
+	elseif fx.action == "finish" then
+		dash = dash or { phase = "done", splits = {} }
+		local d = dash :: Dash
+		d.phase = "done"
+		d.finalTime = fx.time
+		d.medal = fx.medal
+		d.best = fx.best
+		d.doneAt = os.clock()
+		popHeadline()
+	end
+end
+
+-- Is the local player still standing on the Runway Dash start pad?
+local startPad: BasePart? = nil
+local function onStartPad(): boolean
+	if not startPad or not startPad.Parent then
+		local map = Workspace:FindFirstChild("Map")
+		local found = map and map:FindFirstChild("StartPad", true)
+		startPad = if found and found:IsA("BasePart") then found else nil
+	end
+	local pad = startPad
+	local character = State.player.Character
+	local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+	if not pad or not pad:IsA("BasePart") or not root or not root:IsA("BasePart") then
+		return false
+	end
+	local rel = pad.CFrame:PointToObjectSpace(root.Position)
+	return math.abs(rel.X) <= pad.Size.X / 2 + 0.5 and math.abs(rel.Z) <= pad.Size.Z / 2 + 0.5 and rel.Y < 6
+end
+
+-- The banner while a Runway Dash run is on. Returns false when there's no run to show.
+local function showDash(): boolean
+	local d = dash
+	if not d or not State.canUseLobby() then
+		return false
+	end
+	if d.phase == "done" and os.clock() - (d.doneAt or 0) > 6 then
+		dash = nil
+		return false
+	end
+	bannerName.Text = "RUNWAY DASH"
+	barBack.Visible = false
+	if d.phase == "ready" then
+		if not onStartPad() then
+			d.phase = "running"
+			d.started = os.clock()
+		else
+			bannerHeadline.Text = "READY..."
+			bannerHeadline.TextColor3 = Theme.Colors.Success
+			bannerDetail.Text =
+				`Step off the pad to start · 🥇 {MEDALS.Gold}s  🥈 {MEDALS.Silver}s  🥉 {MEDALS.Bronze}s`
+		end
+	end
+	if d.phase == "running" then
+		local t = os.clock() - (d.started or os.clock())
+		-- Walked off and gave up (or wandered away): stop showing the clock.
+		local dashGame = State.minigames.RunwayDash
+		if t > 120 or (dashGame and distanceTo(dashGame) > 160) then
+			dash = nil
+			return false
+		end
+		bannerHeadline.Text = string.format("%.2f", t)
+		bannerHeadline.TextColor3 = paceColor(t)
+		bannerDetail.Text = d.note or "Run! The gold pad is the finish."
+	elseif d.phase == "done" then
+		local medal = d.medal
+		bannerHeadline.Text =
+			`{string.format("%.2f", d.finalTime or 0)}s {if medal then MEDAL_ICONS[medal] else ""}`
+		bannerHeadline.TextColor3 = if medal then paceColor(MEDALS[medal]) else Theme.Colors.Text
+		bannerDetail.Text = (
+			if medal then `{string.upper(medal)} MEDAL!` else `Beat {MEDALS.Bronze}s for a medal`
+		) .. (if d.best then "  ·  New personal best!" else "")
+	end
+	banner.Visible = true
+	shownId = "RunwayDash"
+	return true
+end
+
 -- The game the banner should follow right now (the one you're in, else the nearest busy one).
 local function pick(): Types.MinigameState?
 	if not State.canUseLobby() or State.dressingRoom then
@@ -137,6 +259,9 @@ local function refreshPanel()
 end
 
 local function refreshBanner()
+	if dash then
+		return -- the stopwatch owns the banner (updated every frame)
+	end
 	local minigame = pick()
 	if not minigame then
 		banner.Visible = false
@@ -162,20 +287,37 @@ local function refreshBanner()
 	-- Pop the headline whenever it changes ("PINK!" -> "BLUE!").
 	if minigame.headline ~= lastHeadline or minigame.id ~= shownId then
 		lastHeadline = minigame.headline
-		local scale = bannerHeadline:FindFirstChildOfClass("UIScale") :: UIScale
-		scale.Scale = 1.35
-		TweenService:Create(scale, Theme.TweenSlow, { Scale = 1 }):Play()
+		popHeadline()
 	end
 	shownId = minigame.id
 	banner.Visible = true
 end
 
 -- Countdown bar: runs every frame while the banner shows a game with an end time.
+local lastCount: number? = nil
 local function tickBar()
+	if showDash() then
+		return
+	end
 	if not banner.Visible or not shownId then
 		return
 	end
 	local minigame = State.minigames[shownId]
+	-- 3, 2, 1, GO! for players who are in a starting game.
+	if minigame and minigame.phase == "Countdown" and minigame.endsAt and isIn(minigame) then
+		local left = minigame.endsAt - Workspace:GetServerTimeNow()
+		if left <= 3.2 then
+			local count = math.max(0, math.ceil(left))
+			if count ~= lastCount then
+				lastCount = count
+				bannerHeadline.Text = if count == 0 then "GO!" else tostring(count)
+				bannerHeadline.TextColor3 = if count == 0 then Theme.Colors.Success else Theme.Colors.Gold
+				popHeadline()
+			end
+		end
+	else
+		lastCount = nil
+	end
 	local endsAt = if minigame then minigame.endsAt else nil
 	barBack.Visible = endsAt ~= nil
 	if endsAt and minigame then

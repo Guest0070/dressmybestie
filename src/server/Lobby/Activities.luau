@@ -13,7 +13,6 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Analytics = require(script.Parent.Parent.Analytics)
 local PlayerData = require(script.Parent.Parent.Data.PlayerData)
-local Map = require(script.Parent.Parent.Round.Map)
 local Quests = require(script.Parent.Parent.Quests)
 local HallOfFame = require(script.Parent.HallOfFame)
 local Appearance = require(script.Parent.Appearance)
@@ -34,6 +33,9 @@ local gemCoinsThisVisit: { [Player]: number } = {}
 local lastObbyReward: { [Player]: number } = {}
 local obbyStartedAt: { [Player]: number } = {}
 local OBBY_MIN_SECONDS = 8 -- 16 jumps; nobody legit climbs it faster
+local OBBY_CHECKPOINTS = { 6, 11 } -- steps that save your progress
+local obbyCheckpoint: { [Player]: CFrame } = {}
+local OBBY_START_SPOT = CFrame.lookAt(Vector3.new(-56, 3.5, 30), Vector3.new(-70, 3.5, 30))
 local touchDebounce: { [Player]: number } = {}
 local boardLines: { TextLabel } = {}
 
@@ -170,6 +172,7 @@ local function buildObby(parent: Instance)
 		local player = playerFromHit(hit)
 		if player then
 			obbyStartedAt[player] = os.clock()
+			obbyCheckpoint[player] = nil
 		end
 	end)
 	local sign = part(obby, "StartSign", Vector3.new(12, 4, 0.6), CFrame.new(-62, 7, 34.5), DARK)
@@ -193,8 +196,49 @@ local function buildObby(parent: Instance)
 	for i = 1, steps do
 		local position = Vector3.new(-62 - i * 7, 1 + i * 1.8, 30 + math.sin(i * 0.9) * 7)
 		local small = i % 4 == 0
-		local size = if small then Vector3.new(3.5, 1, 3.5) else Vector3.new(5, 1, 5)
-		part(obby, `Step{i}`, size, CFrame.new(position), OBBY_COLORS[(i - 1) % #OBBY_COLORS + 1], i % 2 == 0)
+		local checkpoint = table.find(OBBY_CHECKPOINTS, i) ~= nil
+		local size = if checkpoint
+			then Vector3.new(7, 1, 7)
+			elseif small then Vector3.new(3.5, 1, 3.5)
+			else Vector3.new(5, 1, 5)
+		local step = part(
+			obby,
+			`Step{i}`,
+			size,
+			CFrame.new(position),
+			if checkpoint then Color3.fromRGB(255, 215, 90) else OBBY_COLORS[(i - 1) % #OBBY_COLORS + 1],
+			i % 2 == 0 or checkpoint
+		)
+		if checkpoint then
+			-- A flag on the checkpoint; touching it saves your spot (fall = back here).
+			part(
+				obby,
+				"FlagPole",
+				Vector3.new(0.3, 6, 0.3),
+				CFrame.new(position + Vector3.new(2.8, 3.5, 2.8)),
+				WHITE
+			)
+			local flag = part(
+				obby,
+				"Flag",
+				Vector3.new(0.2, 1.6, 2.4),
+				CFrame.new(position + Vector3.new(2.8, 5.6, 1.6)),
+				Color3.fromRGB(255, 215, 90),
+				true
+			)
+			flag.CanCollide = false
+			local spot = CFrame.lookAt(position + Vector3.new(0, 3.5, 0), position + Vector3.new(-10, 3.5, 0))
+			step.Touched:Connect(function(hit)
+				local player = playerFromHit(hit)
+				if player and obbyStartedAt[player] and obbyCheckpoint[player] ~= spot then
+					obbyCheckpoint[player] = spot
+					toast(
+						player,
+						`Checkpoint {table.find(OBBY_CHECKPOINTS, i)}! Fall and you'll be back here.`
+					)
+				end
+			end)
+		end
 		if i % 5 == 0 then
 			makeGem(obby, position + Vector3.new(0, 3, 0))
 		end
@@ -244,12 +288,37 @@ local function buildObby(parent: Instance)
 		else
 			toast(player, `Obby complete! Next coin reward in {math.ceil(waitLeft / 60)} min.`)
 		end
+		obbyCheckpoint[player] = nil
 		local character = player.Character
 		if character then
-			character:PivotTo(Map.lobbyCFrame())
+			character:PivotTo(OBBY_START_SPOT)
 		end
 	end)
 	obby.Parent = parent
+
+	-- Fell off mid-climb: back to your last checkpoint (or the start) instead of the ground.
+	task.spawn(function()
+		while obby.Parent do
+			task.wait(0.25)
+			for player in obbyStartedAt do
+				local character = player.Character
+				local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+				if root and root:IsA("BasePart") and root.Position.X > -50 then
+					-- Walked back into the plaza: not climbing any more.
+					obbyStartedAt[player] = nil
+					obbyCheckpoint[player] = nil
+				elseif root and root:IsA("BasePart") and root.Position.Y < 3.2 and root.Position.X < -68 then
+					character:PivotTo(obbyCheckpoint[player] or OBBY_START_SPOT)
+					toast(
+						player,
+						if obbyCheckpoint[player]
+							then "Oops! Back to your checkpoint."
+							else "Oops! Back to the start."
+					)
+				end
+			end
+		end
+	end)
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -392,6 +461,7 @@ function Activities.start()
 		gemCoinsThisVisit[player] = nil
 		lastObbyReward[player] = nil
 		obbyStartedAt[player] = nil
+		obbyCheckpoint[player] = nil
 		touchDebounce[player] = nil
 	end)
 	task.spawn(function()

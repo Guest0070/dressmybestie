@@ -10,6 +10,7 @@ local HowToPlay = require(script.UI.HowToPlay)
 local Lobby = require(script.Lobby)
 local LobbyUI = require(script.UI.LobbyUI)
 local MinigameUI = require(script.UI.MinigameUI)
+local MinigameFx = require(script.MinigameFx)
 local Moments = require(script.Moments)
 local QuestsUI = require(script.UI.QuestsUI)
 local ResultsUI = require(script.UI.ResultsUI)
@@ -35,12 +36,14 @@ QuestsUI.start()
 StarsUI.start()
 BoothsUI.start()
 MinigameUI.start()
+MinigameFx.start()
 Moments.start()
 Stage.start()
 Lobby.start()
 
 LobbyUI.onOpenShop = ShopUI.open
 LobbyUI.onOpenGames = MinigameUI.togglePanel
+MinigameFx.onDash = MinigameUI.onDash
 LobbyUI.onOpenLooks = ResultsUI.openLooks
 LobbyUI.onOpenHelp = HowToPlay.open
 LobbyUI.onOpenAdmin = AdminPanel.toggle

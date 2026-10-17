@@ -101,11 +101,22 @@ end
 ---------------------------------------------------------------------------------------------------
 
 local function refreshVisibility()
-	lobbyContent.Visible = State.canUseLobby() and not State.dressingRoom
-	statusPanel.Visible = lobbyContent.Visible
+	local lobby = State.canUseLobby() and not State.dressingRoom
+	-- While you're playing a minigame the buttons step aside (the game's banner takes over).
+	local inMinigame = false
+	for _, minigame in State.minigames do
+		if
+			(minigame.phase == "Playing" or minigame.phase == "Countdown")
+			and table.find(minigame.players, State.player.UserId)
+		then
+			inMinigame = true
+		end
+	end
+	lobbyContent.Visible = lobby and not inMinigame
+	statusPanel.Visible = lobby
 	-- Coins / XP / status share the top of the screen with the round timer (HUD): show one or the
 	-- other, never both.
-	topBar.Visible = lobbyContent.Visible
+	topBar.Visible = lobby
 end
 
 local function refreshSpectating()
@@ -566,6 +577,7 @@ function LobbyUI.start()
 		looksButton.instance.Visible = round.phase == "Lobby" and #State.lastShopLooks > 0
 	end)
 	State.DressingRoomChanged:Connect(refreshVisibility)
+	State.MinigameChanged:Connect(refreshVisibility)
 	State.DataChanged:Connect(refreshData)
 	State.player:GetAttributeChangedSignal("Spectating"):Connect(function()
 		refreshSpectating()

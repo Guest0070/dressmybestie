@@ -991,44 +991,61 @@ Config.Lobby = {
 -- Lobby minigames in the Play Zone (the plaza outside the building's foyer doors). Short drop-in
 -- games for the wait between rounds. Centres are plaza coordinates (the path runs down x = 0).
 Config.Minigames = {
-	WinCoins = 15, -- per win
+	WinCoins = 15, -- per win (round games)
 	MaxRewardedWinsPerHour = 6, -- wins after this still count for quests, just no coins
-	CountdownSeconds = 6, -- after the first player steps on, before the game starts
-	ResultSeconds = 4, -- winner banner before the next game can start
+	CountdownSeconds = 8, -- after the first player steps on, before the game starts
+	ResultSeconds = 6, -- winner celebration before the next game can start
+	CelebrateRadius = 160, -- players this close see a win's fireworks and get the "X won!" toast
 	ColorRush = {
 		Center = Vector3.new(36, 0, -30), -- north-east of the path; ramp on the south side
 		Grid = 7, -- 7x7 tiles
 		TileSize = 6,
 		Height = 6, -- tiles float this high; falling means you're out
-		Waves = 12,
-		FirstWaveSeconds = 4,
-		LastWaveSeconds = 1.6, -- waves get faster down to this
-		GoneSeconds = 2, -- how long the wrong tiles stay gone
+		Waves = 15,
+		FirstWaveSeconds = 4.2,
+		LastWaveSeconds = 1.8, -- waves get faster down to this
+		WarnSeconds = 1, -- the wrong tiles blink this long before they drop
+		GoneSeconds = 2.2, -- how long the wrong tiles stay gone
+		TwistsFromWave = 4, -- SHUFFLE / MEMORY / FAKE OUT / TWO COLORS start here
+		ShrinkFromWave = 11, -- from here the outer ring is gone for good
 	},
 	FreezeFrame = {
 		Center = Vector3.new(-36, 0, -32), -- north-west of the path
 		Radius = 16,
-		Rounds = 10,
-		DanceSeconds = { 3, 6 }, -- random, so nobody can count it
-		FreezeSeconds = { 2, 3.2 },
-		Grace = 0.45, -- reaction time after FREEZE! before movement counts
+		Rounds = 12,
+		DanceSeconds = { 2.5, 5.5 }, -- random, so nobody can count it
+		FreezeSeconds = { 2, 3.4 },
+		Grace = 0.4, -- reaction time after a call before it counts
 		MoveTolerance = 1.2, -- studs a frozen player may drift (lag, animations)
+		JumpFromRound = 3, -- "JUMP FOR THE CAMERA!" calls start here...
+		JumpChance = 0.3, -- ...this often
+		JumpWindow = 1.8, -- seconds to jump after the call
+		FakeChance = 0.18, -- "FREE... STYLE!": a fake-out call, keep dancing
 	},
 	SpinSweep = {
 		Center = Vector3.new(-34, 0, 34), -- south-west
 		Radius = 13,
 		Seconds = 60, -- survive this long to win (or be the last one on)
-		StartSpeed = 1.1, -- bar turns (radians per second) at the start...
-		EndSpeed = 3.4, -- ...and this fast at the end
-		SecondBarAt = 25, -- seconds in: a second bar joins (a cross), so jumps come twice as often
+		StartSpeed = 1.2, -- arm turns (radians per second) at the start...
+		EndSpeed = 3.6, -- ...and this fast at the end
+		SecondArmAt = 22, -- seconds in: a second arm joins (a cross)
+		EventsFrom = 12, -- REVERSE! / SURGE! events start here
+		KnockSpeed = 75, -- how hard the arm flings you off
 	},
 	RunwayDash = {
-		Start = Vector3.new(60, 0, 0), -- the course runs east from the plaza's east edge
-		Length = 96,
-		ParSeconds = 30, -- finish faster than this for the coin reward
-		RewardCoins = 20,
+		Start = Vector3.new(62, 0, 0), -- foot of the stairs on the plaza's east side
+		Height = 14, -- the course floats this high over a glowing pool
+		Medals = { Gold = 22, Silver = 28, Bronze = 36 }, -- seconds
+		MedalCoins = { Gold = 30, Silver = 20, Bronze = 10 },
 		CooldownSeconds = 600, -- one paid finish per 10 minutes
+		GlobalBoardRefresh = 60, -- seconds between all-time leaderboard refreshes
 	},
+}
+
+-- The world around the building: ground, boulevards, trees, a neon city skyline, dusk light.
+Config.Environment = {
+	Enabled = true,
+	ClockTime = 17.75, -- 17.75 = dusk (neon pops); 18.2+ = night; 14 = midday
 }
 
 -- Admins: the game owner is always an admin, and so is everyone in Studio playtests.
