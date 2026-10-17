@@ -4,6 +4,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
 local Kit = require(script.Parent.Kit)
@@ -17,7 +18,15 @@ local STEPS = {
 		"Pick hair, clothes, shoes and more from the catalog. Follow the theme... or don't.",
 	},
 	{ "3. Walk the runway", "Now you wear what YOUR stylist picked for you. Surprise!" },
-	{ "4. Give hearts", "Tap hearts on your 3 favorite looks. Hearts earn the stylist coins and XP." },
+	if Config.VotingMode == "Stars"
+		then {
+			"4. Rate the looks",
+			"Give each look 1-5 stars as it walks. Stars earn the stylist coins and XP.",
+		}
+		else {
+			"4. Give hearts",
+			"Tap hearts on your 3 favorite looks. Hearts earn the stylist coins and XP.",
+		},
 }
 
 local panel: Frame
@@ -70,6 +79,7 @@ function HowToPlay.start()
 			Size = UDim2.new(1, -16, 0, 24),
 			Position = UDim2.fromOffset(8, 29),
 			Font = Kit.BodyFont,
+			MaxTextSize = 16, -- same size on every row (a short line would scale up)
 			TextXAlignment = Enum.TextXAlignment.Left,
 			Parent = row,
 		})

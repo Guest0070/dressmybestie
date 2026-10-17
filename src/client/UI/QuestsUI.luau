@@ -187,7 +187,14 @@ function QuestsUI.start()
 		ScrollingDirection = Enum.ScrollingDirection.Y,
 		ScrollBarThickness = 6,
 		Parent = panel,
-	}, { Kit.list(Enum.FillDirection.Vertical, 8) })
+	}, {
+		-- Top, not Kit.list's Center: centred rows in a scrolling list spill above its top edge.
+		Kit.new("UIListLayout", {
+			FillDirection = Enum.FillDirection.Vertical,
+			Padding = UDim.new(0, 8),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
 
 	State.DataChanged:Connect(function()
 		if panel.Visible then

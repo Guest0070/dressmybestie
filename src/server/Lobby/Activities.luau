@@ -32,6 +32,8 @@ local OBBY_COLORS = {
 
 local gemCoinsThisVisit: { [Player]: number } = {}
 local lastObbyReward: { [Player]: number } = {}
+local obbyStartedAt: { [Player]: number } = {}
+local OBBY_MIN_SECONDS = 8 -- 16 jumps; nobody legit climbs it faster
 local touchDebounce: { [Player]: number } = {}
 local boardLines: { TextLabel } = {}
 
@@ -156,7 +158,20 @@ end
 local function buildObby(parent: Instance)
 	local obby = Instance.new("Model")
 	obby.Name = "Obby"
-	part(obby, "Start", Vector3.new(8, 1, 8), CFrame.new(-62, 0.5, 30), Color3.fromRGB(80, 220, 120), true)
+	local start = part(
+		obby,
+		"Start",
+		Vector3.new(8, 1, 8),
+		CFrame.new(-62, 0.5, 30),
+		Color3.fromRGB(80, 220, 120),
+		true
+	)
+	start.Touched:Connect(function(hit)
+		local player = playerFromHit(hit)
+		if player then
+			obbyStartedAt[player] = os.clock()
+		end
+	end)
 	local sign = part(obby, "StartSign", Vector3.new(12, 4, 0.6), CFrame.new(-62, 7, 34.5), DARK)
 	signText(
 		sign,
@@ -208,6 +223,12 @@ local function buildObby(parent: Instance)
 	finish.Touched:Connect(function(hit)
 		local player = playerFromHit(hit)
 		if not player or debounced(player, 2) then
+			return
+		end
+		-- Only a real climb counts: it starts on the Start pad and takes a while (no teleporting).
+		local startedAt = obbyStartedAt[player]
+		obbyStartedAt[player] = nil
+		if not startedAt or os.clock() - startedAt < OBBY_MIN_SECONDS then
 			return
 		end
 		Quests.bump(player, "obby", 1)
@@ -369,6 +390,7 @@ function Activities.start()
 	Players.PlayerRemoving:Connect(function(player)
 		gemCoinsThisVisit[player] = nil
 		lastObbyReward[player] = nil
+		obbyStartedAt[player] = nil
 		touchDebounce[player] = nil
 	end)
 	task.spawn(function()

@@ -131,7 +131,18 @@ local function updateCamera()
 		local pivot = dressingRoot.CFrame
 		local look = (CFrame.Angles(0, orbitAngle, 0) * pivot).LookVector
 		local dir = Vector3.new(look.X, 0, look.Z).Unit
-		local cameraPos = pivot.Position + dir * ORBIT_DISTANCE + Vector3.new(0, CAMERA_RAISE, 0)
+		-- The lobby has walls (unlike a booth): stay in front of any wall behind the camera spot, or
+		-- the camera ends up behind it and keeps that spot after the Dressing Room closes.
+		local distance = ORBIT_DISTANCE
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		params.FilterDescendantsInstances = { State.player.Character :: Instance }
+		local raise = Vector3.new(0, CAMERA_RAISE, 0)
+		local hit = Workspace:Raycast(pivot.Position + raise, dir * (ORBIT_DISTANCE + 1), params)
+		if hit then
+			distance = math.max(hit.Distance - 1.5, 4)
+		end
+		local cameraPos = pivot.Position + dir * distance + raise
 		local level = CFrame.lookAt(cameraPos, cameraPos - dir)
 		local viewport = camera.ViewportSize
 		local aspect = viewport.X / math.max(viewport.Y, 1)
@@ -192,8 +203,9 @@ local function updateCamera()
 		if first then
 			camera.CameraType = Enum.CameraType.Scriptable
 			local facing = first.CFrame.LookVector
-			local focus = first.Position + Vector3.new(0, -2, 0) + first.CFrame.RightVector * -4
-			local desired = CFrame.lookAt(first.Position + facing * 22 + Vector3.new(0, 2, 0), focus)
+			-- Aim above the winner so they sit below the theme banner at the top of the screen.
+			local focus = first.Position + Vector3.new(0, 2, 0) + first.CFrame.RightVector * -4
+			local desired = CFrame.lookAt(first.Position + facing * 16 + Vector3.new(0, 3, 0), focus)
 			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP)
 			return
 		end
@@ -215,6 +227,16 @@ local function updateCamera()
 		local humanoid = if character then character:FindFirstChildOfClass("Humanoid") else nil
 		if humanoid then
 			camera.CameraSubject = humanoid
+		end
+		-- Start behind the player (the way they came in), not wherever the default camera last
+		-- was: that can be inside a wall or a decorative capsule now.
+		local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+		if root and root:IsA("BasePart") then
+			local back = -Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z).Unit
+			camera.CFrame = CFrame.lookAt(
+				root.Position + back * 10 + Vector3.new(0, 4, 0),
+				root.Position + Vector3.new(0, 1.5, 0)
+			)
 		end
 	end
 end
