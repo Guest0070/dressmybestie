@@ -115,6 +115,29 @@ mobile-first UI.
 
 **Unit test (optional):** `luau tests/Pairing.spec.luau` (needs the standalone Luau CLI).
 
+## Blender building (assets/models)
+
+`Style_My_Bestie_Final.blend` is exported to `assets/models/SMB_*.glb`, one file per area: Hall,
+Shop, VIP Lounge, Hall of Fame, Customize/Team Up, Runway Stage, Dressing Room, VIP Ramp. Meshes are
+split by material (a Roblox mesh has one colour) and anything over 19k triangles was reduced (Roblox
+limit 20k). 1 Blender metre = 1 stud. The scripts that did this are in `tools/blender/`.
+
+**Put it in the game (once, in Studio):**
+1. Open the place, Rojo connected, `git pull` done.
+2. **File > Import 3D**, pick all 8 `.glb` files in `assets/models`. In the import window set the
+   scale unit to **Stud**, then Import. (Where they land doesn't matter.)
+3. **View > Command Bar**, paste, Enter:
+   `require(game.ServerScriptService.Server.Tools.BlendImport).apply()`
+4. Play to try it, then **File > Save to Roblox**.
+
+`apply()` puts the building just north of the lobby plaza (walk in through the foyer doors), sets
+colours, materials, glass, neon, collisions and the Blender lights, and wires the game to it:
+runway + podium on the stage, skin/body booths in the Customize capsules, shop kiosks in the shop bays,
+VIP kiosk in the lounge, Dressing Room kiosk at the Team Up console, and every styling booth becomes a
+copy of the private dressing room (`ServerStorage.SMB_BoothTemplate`). An old `Workspace.LobbyEnvironment`
+is moved to `ServerStorage.MapBackup` (not deleted). Ctrl+Z undoes the whole thing.
+Don't want the lights? `apply({ lights = false })`. Keep the old lobby? `apply({ stashOld = false })`.
+
 ## Design the UI yourself (Studio): LobbyUI, ShopUI, SettingsUI
 
 The lobby screen is built by code, but you can replace it with one you design in Studio. The code then

@@ -234,6 +234,22 @@ local function arch(parent: Instance, position: Vector3, text: string)
 	sign(top, Enum.NormalId.Back, { { text = text, color = PINK, size = 0.8 } })
 end
 
+local function buildPlazaKiosks(decor: Instance)
+	kiosk(decor, Vector3.new(-30, 0, 22), "BOUTIQUE", "Effects", PINK)
+	kiosk(decor, Vector3.new(30, 0, 22), "TRAIL BAR", "Trails", Color3.fromRGB(110, 200, 255))
+	kiosk(decor, Vector3.new(30, 0, -22), "TITLE STUDIO", "Titles", Color3.fromRGB(200, 140, 255))
+	kiosk(decor, Vector3.new(-30, 0, -22), "VIP LOUNGE", "Passes", Color3.fromRGB(255, 210, 80))
+	-- Dress your own avatar (client opens the catalog in "self" mode for this tab name).
+	kiosk(
+		decor,
+		Vector3.new(0, 0, -32),
+		"DRESSING ROOM",
+		"DressingRoom",
+		Color3.fromRGB(80, 220, 160),
+		"Dress up"
+	)
+end
+
 function MapDecor.buildLobby(lobby: Instance, hasOwnFloor: boolean)
 	if lobby:FindFirstChild("Decor") then
 		return
@@ -268,35 +284,27 @@ function MapDecor.buildLobby(lobby: Instance, hasOwnFloor: boolean)
 	-- The plaza: checker floor, fountain, shops, palms, lights and an arch.
 	plaza(decor)
 	fountain(decor, Vector3.new(0, 0, 22))
-	kiosk(decor, Vector3.new(-30, 0, 22), "BOUTIQUE", "Effects", PINK)
-	kiosk(decor, Vector3.new(30, 0, 22), "TRAIL BAR", "Trails", Color3.fromRGB(110, 200, 255))
-	kiosk(decor, Vector3.new(30, 0, -22), "TITLE STUDIO", "Titles", Color3.fromRGB(200, 140, 255))
-	kiosk(decor, Vector3.new(-30, 0, -22), "VIP LOUNGE", "Passes", Color3.fromRGB(255, 210, 80))
-	-- Dress your own avatar (client opens the catalog in "self" mode for this tab name).
-	kiosk(
-		decor,
-		Vector3.new(0, 0, -32),
-		"DRESSING ROOM",
-		"DressingRoom",
-		Color3.fromRGB(80, 220, 160),
-		"Dress up"
-	)
-	for _, spot in
-		{
-			Vector3.new(-50, 0, -50),
-			Vector3.new(50, 0, -50),
-			Vector3.new(-50, 0, 50),
-			Vector3.new(50, 0, 50),
-			Vector3.new(0, 0, -54),
-		}
-	do
+	-- With the imported Blender building, the shops, VIP lounge and dressing room are rooms inside
+	-- it (their kiosks are Map.Lobby.Kiosk_* markers) and the runway is north, inside the building.
+	local imported = lobby:GetAttribute("ImportedMap") == true
+	if not imported then
+		buildPlazaKiosks(decor)
+	end
+	local palms =
+		{ Vector3.new(-50, 0, -50), Vector3.new(50, 0, -50), Vector3.new(-50, 0, 50), Vector3.new(50, 0, 50) }
+	if not imported then
+		table.insert(palms, Vector3.new(0, 0, -54)) -- would block the walk to the imported building
+	end
+	for _, spot in palms do
 		palm(decor, spot)
 	end
 	stringLights(decor, Vector3.new(-36, 12.5, -36), Vector3.new(36, 12.5, -36))
 	stringLights(decor, Vector3.new(-36, 12.5, 36), Vector3.new(36, 12.5, 36))
 	stringLights(decor, Vector3.new(-36, 12.5, -36), Vector3.new(-36, 12.5, 36))
 	stringLights(decor, Vector3.new(36, 12.5, -36), Vector3.new(36, 12.5, 36))
-	arch(decor, Vector3.new(0, 0, 55), "TO THE RUNWAY")
+	if not imported then
+		arch(decor, Vector3.new(0, 0, 55), "TO THE RUNWAY")
+	end
 
 	if hasOwnFloor then
 		-- Neon border around the auto-built lobby floor.

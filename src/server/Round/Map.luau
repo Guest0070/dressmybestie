@@ -11,7 +11,11 @@
 --   Runway.Audience                    big flat part; players stand on it while watching
 --   Podium.First / Second / Third      results podium spots
 --   Booths.Booth_<n>.Stand / .Mannequin   private styling booths (built on demand)
+--
+-- If ServerStorage.SMB_BoothTemplate exists (the Blender dressing room, see Tools/BlendImport),
+-- every booth is a copy of it instead of the plain placeholder room.
 
+local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
 local MapDecor = require(script.Parent.MapDecor)
@@ -141,7 +145,31 @@ local function buildRunway()
 	MapDecor.buildRunway(runway)
 end
 
+-- A copy of the imported dressing room, moved so its avatar platform sits at the booth spot.
+local function copyTemplate(index: number, template: Instance): Model?
+	local anchor = template:GetAttribute("Anchor")
+	if
+		not template:IsA("Model")
+		or typeof(anchor) ~= "Vector3"
+		or not template:FindFirstChild("Stand")
+		or not template:FindFirstChild("Mannequin")
+	then
+		return nil
+	end
+	local booth = template:Clone()
+	booth.Name = `Booth_{index}`
+	local center = BOOTH_ORIGIN + Vector3.new(0, 0, (index - 1) * BOOTH_SPACING)
+	booth:PivotTo(booth:GetPivot() + (center - anchor))
+	booth.Parent = getOrCreate(root, "Booths", "Folder")
+	return booth
+end
+
 local function buildBooth(index: number): Model
+	local template = ServerStorage:FindFirstChild("SMB_BoothTemplate")
+	local copy = if template then copyTemplate(index, template) else nil
+	if copy then
+		return copy
+	end
 	local booths = getOrCreate(root, "Booths", "Folder")
 	local booth = Instance.new("Model")
 	booth.Name = `Booth_{index}`

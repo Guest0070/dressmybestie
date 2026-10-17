@@ -8,6 +8,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -191,7 +192,33 @@ local function booth(parent: Instance, position: Vector3, title: string, panel: 
 	model.Parent = parent
 end
 
+-- Imported Blender building: the Customize room's capsules are the booths. Only an invisible zone
+-- is added at each Map.Lobby.SkinToneBooth / BodyTypeBooth marker (see Tools/BlendImport).
+local function capsuleZone(parent: Instance, spot: BasePart, panel: string)
+	local zone = Instance.new("Part")
+	zone.Name = `{panel}Zone`
+	zone.Anchored = true
+	zone.CanCollide = false
+	zone.CanQuery = false
+	zone.CanTouch = false
+	zone.Transparency = 1
+	zone.Size = Vector3.new(1, 1, 1)
+	zone.CFrame = spot.CFrame
+	zone:SetAttribute("BoothPanel", panel)
+	zone:SetAttribute("Radius", 3.4)
+	zone.Parent = parent
+end
+
 function Appearance.build(parent: Instance)
+	local map = Workspace:FindFirstChild("Map")
+	local lobby = if map then map:FindFirstChild("Lobby") else nil
+	local skin = if lobby then lobby:FindFirstChild("SkinToneBooth") else nil
+	local body = if lobby then lobby:FindFirstChild("BodyTypeBooth") else nil
+	if skin and skin:IsA("BasePart") and body and body:IsA("BasePart") then
+		capsuleZone(parent, skin, "SkinTone")
+		capsuleZone(parent, body, "BodyType")
+		return
+	end
 	booth(parent, Vector3.new(-14, 0, -18), "SKIN TONES", "SkinTone", Color3.fromRGB(255, 190, 140))
 	booth(parent, Vector3.new(14, 0, -18), "BODY TYPES", "BodyType", Color3.fromRGB(150, 200, 255))
 end
