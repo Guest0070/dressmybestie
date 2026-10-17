@@ -126,7 +126,7 @@ limit 20k). 1 Blender metre = 1 stud. The scripts that did this are in `tools/bl
 1. Open the place, Rojo connected, `git pull` done.
 2. **File > Import 3D**, pick all 8 `.glb` files in `assets/models`. In the import window set the
    scale unit to **Stud**, then Import. (Where they land doesn't matter.)
-3. **View > Command Bar**, paste, Enter:
+3. Press **Stop** if the game is running (the command does nothing during Play). **View > Command Bar**, paste, Enter:
    `require(game.ServerScriptService.Server.Tools.BlendImport).apply()`
 4. Play to try it, then **File > Save to Roblox**.
 
@@ -136,6 +136,9 @@ runway + podium on the stage, skin/body booths in the Customize capsules, shop k
 VIP kiosk in the lounge, Dressing Room kiosk at the Team Up console, and every styling booth becomes a
 copy of the private dressing room (`ServerStorage.SMB_BoothTemplate`). An old `Workspace.LobbyEnvironment`
 is moved to `ServerStorage.MapBackup` (not deleted). Ctrl+Z undoes the whole thing.
+Every piece is snapped to its exact Blender position and size and anchored, so it doesn't matter where
+Studio dropped the models. If you press Play before running the command, the server does the same setup
+for that play session (walls are walk-through then); run the command in Edit mode and save to keep it.
 Don't want the lights? `apply({ lights = false })`. Keep the old lobby? `apply({ stashOld = false })`.
 
 ## Design the UI yourself (Studio): LobbyUI, ShopUI, SettingsUI

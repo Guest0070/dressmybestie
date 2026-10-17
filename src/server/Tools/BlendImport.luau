@@ -20,10 +20,12 @@
 --   * moves an old Workspace.LobbyEnvironment to ServerStorage (not deleted) so it doesn't overlap
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
+local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
 local BlendData = require(script.Parent.BlendData)
+local BlendPieces = require(script.Parent.BlendPieces)
 
 local BlendImport = {}
 
@@ -79,6 +81,10 @@ local function splitName(name: string): (string, string?)
 	return object, trimmed or material
 end
 
+-- True while the game runs the setup itself (BlendImport.autoSetup): CollisionFidelity can only be
+-- set in Studio, so walls stay walk-through instead of using a blocky default collision.
+local runtimeMode = false
+
 local function applyLook(part: BasePart, objectName: string, materialName: string?)
 	local info = if materialName then BlendData.materials[materialName] else nil
 	for _, child in part:GetChildren() do
@@ -121,6 +127,9 @@ local function applyLook(part: BasePart, objectName: string, materialName: strin
 		part.CastShadow = part.Material ~= Enum.Material.Neon and part.Material ~= Enum.Material.Glass
 	end
 	local solid = matches(objectName, SOLID_PATTERNS)
+	if runtimeMode and not matches(objectName, FLAT_PATTERNS) then
+		solid = false
+	end
 	part.CanCollide = solid
 	part.CanTouch = solid
 	part.CanQuery = solid
@@ -212,12 +221,20 @@ local function addLights(folder: Instance)
 	end
 end
 
--- Puts each imported model at its Blender position + OFFSET, whatever position Studio gave it.
-local function place(model: Model, groupName: string)
-	local group = BlendData.groups[groupName]
-	local cframe, _ = model:GetBoundingBox()
-	local target = group.center + BlendImport.OFFSET
-	model:PivotTo(model:GetPivot() + (target - cframe.Position))
+-- Puts one imported piece exactly where it is in Blender (+ OFFSET), at its Blender size, and
+-- anchors it. Works however Studio imported it (anywhere, scaled, or already fallen over).
+-- Returns false for parts that aren't pieces of the building.
+local function snap(part: BasePart): boolean
+	local data = BlendPieces[part.Name]
+	if not data then
+		return false
+	end
+	part.Anchored = true
+	part.AssemblyLinearVelocity = Vector3.zero
+	part.AssemblyAngularVelocity = Vector3.zero
+	part.Size = Vector3.new(data[4], data[5], data[6])
+	part.CFrame = CFrame.new(Vector3.new(data[1], data[2], data[3]) + BlendImport.OFFSET)
+	return true
 end
 
 local function kiosk(
@@ -245,10 +262,29 @@ local function inFrontOf(bay: Vector3, toward: Vector3, distance: number): Vecto
 	return Vector3.new(bay.X, 0, bay.Z) + flat.Unit * distance
 end
 
-function BlendImport.apply(options: { stashOld: boolean?, lights: boolean? }?)
+export type Options = { stashOld: boolean?, lights: boolean?, runtime: boolean? }
+
+function BlendImport.apply(options: Options?)
 	local stashOld = if options and options.stashOld ~= nil then options.stashOld else true
 	local withLights = if options and options.lights ~= nil then options.lights else true
-	local recording = ChangeHistoryService:TryBeginRecording("Import Style My Bestie building")
+	local runtime = options ~= nil and options.runtime == true
+	if RunService:IsRunning() and not runtime then
+		warn(
+			"[BlendImport] Stop the game first (red Stop button), then run this again. Changes made during Play are thrown away."
+		)
+		return
+	end
+	runtimeMode = runtime
+	local recording = if runtime
+		then nil
+		else select(
+			2,
+			pcall(
+				ChangeHistoryService.TryBeginRecording,
+				ChangeHistoryService,
+				"Import Style My Bestie building"
+			)
+		) :: string?
 
 	local ok, err = pcall(function()
 		local map = getOrCreate(Workspace, "Map", "Model")
@@ -271,12 +307,18 @@ function BlendImport.apply(options: { stashOld: boolean?, lights: boolean? }?)
 				continue
 			end
 			found += 1
-			place(model, groupName)
+			local snapped = 0
 			for _, descendant in model:GetDescendants() do
-				if descendant:IsA("BasePart") then
+				if descendant:IsA("BasePart") and snap(descendant) then
+					snapped += 1
 					local objectName, materialName = splitName(descendant.Name)
 					applyLook(descendant, objectName, materialName)
 				end
+			end
+			if snapped == 0 then
+				warn(
+					`[BlendImport] {groupName}: no parts matched by name. Re-import assets/models/{groupName}.glb.`
+				)
 			end
 			model.Parent = if groupName == "SMB_DressingRoom" then model.Parent else imported
 		end
@@ -423,15 +465,36 @@ function BlendImport.apply(options: { stashOld: boolean?, lights: boolean? }?)
 	end)
 
 	if recording then
-		ChangeHistoryService:FinishRecording(
+		pcall(
+			ChangeHistoryService.FinishRecording,
+			ChangeHistoryService,
 			recording,
 			if ok then Enum.FinishRecordingOperation.Commit else Enum.FinishRecordingOperation.Cancel
 		)
 	end
+	runtimeMode = false
 	if not ok then
 		warn(`[BlendImport] failed: {err}`)
 	else
-		print("[BlendImport] done. Press Play to try it, then File > Save to Roblox.")
+		print(
+			if runtime
+				then "[BlendImport] set up the building for this play session only. Stop, run the command in Edit mode and save to keep it."
+				else "[BlendImport] done. Press Play to try it, then File > Save to Roblox."
+		)
+	end
+end
+
+-- Called by the server at start. If imported SMB_* models are in Workspace but the setup was never
+-- run (or not saved), do it now so nothing falls apart. Lasts for this server only.
+function BlendImport.autoSetup()
+	local imported = Workspace:FindFirstChild("Map")
+	imported = if imported then imported:FindFirstChild("Imported") else nil
+	for groupName in BlendData.groups do
+		local model = Workspace:FindFirstChild(groupName, true)
+		if model and not (imported and model:IsDescendantOf(imported)) then
+			BlendImport.apply({ runtime = true })
+			return
+		end
 	end
 end
 

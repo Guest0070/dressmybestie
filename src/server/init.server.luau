@@ -8,6 +8,7 @@ local Cosmetics = require(script.Cosmetics)
 local Appearance = require(script.Lobby.Appearance)
 local DressingRoom = require(script.Lobby.DressingRoom)
 local LookApplier = require(script.Styling.LookApplier)
+local BlendImport = require(script.Tools.BlendImport)
 local Map = require(script.Round.Map)
 local Passes = require(script.Monetization.Passes)
 local Quests = require(script.Quests)
@@ -17,6 +18,9 @@ local RoundManager = require(script.Round.RoundManager)
 local Shop = require(script.Monetization.Shop)
 local Voting = require(script.Voting.Voting)
 
+-- Imported Blender building (assets/models) that was never set up in Studio: set it up now so
+-- it doesn't fall apart. Must run before Map.ensure (it adds the map markers).
+BlendImport.autoSetup()
 Map.ensure()
 Passes.start()
 Analytics.start() -- before PlayerData so it sees every Loaded event
