@@ -8,6 +8,8 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Permissions = require(script.Parent.Data.Permissions)
 local PlayerData = require(script.Parent.Data.PlayerData)
+local Passes = require(script.Parent.Monetization.Passes)
+local Receipts = require(script.Parent.Monetization.Receipts)
 local RoundManager = require(script.Parent.Round.RoundManager)
 
 local Admin = {}
@@ -43,6 +45,12 @@ local commands: { [string]: (Player, any) -> string } = {
 	ResetMyData = function(player)
 		PlayerData.resetToTemplate(player)
 		return "Your data was reset to a brand-new player."
+	end,
+	TestPass = function(player, key)
+		return if type(key) == "string" then Passes.testGrant(player, key) else "Pick a pass."
+	end,
+	TestProduct = function(player, key)
+		return if type(key) == "string" then Receipts.testGrant(player, key) else "Pick a product."
 	end,
 }
 

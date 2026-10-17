@@ -84,6 +84,7 @@ export type PlayerData = {
 	lifetime: { [string]: number }, -- lifetime counters not stored elsewhere (gems, obby, heartsGiven, podiums)
 	skinTone: number, -- index into Config.SkinTones, 0 = the player's own skin
 	bodyType: string, -- id in Config.BodyTypes, "" = the player's own body
+	passGrants: { [string]: boolean }, -- one-time pass rewards already given (e.g. Starter Pack coins)
 }
 
 export type QuestView = {

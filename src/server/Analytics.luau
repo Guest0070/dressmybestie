@@ -71,6 +71,25 @@ function Analytics.coins(player: Player, amount: number, isSource: boolean, reas
 	end)
 end
 
+-- Coins that came from a Robux purchase (coin pack, Starter Pack, Coin Shower).
+function Analytics.coinsBought(player: Player, amount: number, sku: string)
+	local data = PlayerData.get(player)
+	if not data or amount <= 0 then
+		return
+	end
+	pcall(function()
+		AnalyticsService:LogEconomyEvent(
+			player,
+			Enum.AnalyticsEconomyFlowType.Source,
+			"Coins",
+			amount,
+			data.coins,
+			Enum.AnalyticsEconomyTransactionType.IAP.Name,
+			sku
+		)
+	end)
+end
+
 function Analytics.start()
 	PlayerData.Loaded:Connect(function(player)
 		Analytics.funnelStep(player, 1)

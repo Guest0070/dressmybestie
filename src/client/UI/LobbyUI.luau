@@ -9,7 +9,8 @@
 -- Want to design it yourself? Put a ScreenGui named "LobbyUI" in StarterGui (copy the built one
 -- during Play, see README). This script then wires that one instead of building its own: it finds
 -- each piece by Name (TopBar, Lobby, RoundStatus > Headline/Value, Coins/StyleXP > Value, Settings,
--- JoinRandom, Spectate, Customize, Shop, Quests > Badge, Daily, BuyLooks, Admin, Invite, HowToPlay).
+-- JoinRandom, Spectate, Customize, Shop, Quests > Badge, Daily, BuyLooks, Admin, Invite, HowToPlay;
+-- optional Coins > BuyCoins opens the coin packs).
 --
 -- JOIN RANDOM does not matchmake (not built yet). It opts you into the next round in this server,
 -- the same thing as turning spectating off. Everything shown comes from State; nothing is faked.
@@ -32,7 +33,7 @@ local Theme = require(script.Parent.Theme)
 local LobbyUI = {}
 
 -- Hooks plugged in by init.client.
-LobbyUI.onOpenShop = function() end
+LobbyUI.onOpenShop = function(_tab: string?) end
 LobbyUI.onOpenQuests = function() end
 LobbyUI.onOpenLooks = function() end
 LobbyUI.onOpenHelp = function() end
@@ -222,10 +223,24 @@ local function buildTopBar(root: ScreenGui)
 		Parent = stats,
 	})
 	Kit.new("UIAspectRatioConstraint", {
-		AspectRatio = 3.2,
+		AspectRatio = 3.8,
 		DominantAxis = Enum.DominantAxis.Height,
 		Parent = coins,
 	})
+	-- "+" on the coins pill opens the coin packs.
+	local coinsValue = coins:FindFirstChild("Value") :: TextLabel
+	coinsValue.Size = UDim2.new(0.7, -40, 0.6, 0)
+	local buyCoins = Components.styleButton({
+		Name = "BuyCoins",
+		Text = "+",
+		Variant = "Primary",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -4, 0.5, 0),
+		Size = UDim2.fromScale(0.75, 0.75),
+		MaxTextSize = 18,
+		Parent = coins,
+	})
+	buyCoins.SizeConstraint = Enum.SizeConstraint.RelativeYY
 	local xp = Components.styleStatPill({
 		Name = "StyleXP",
 		Glyph = "XP",
@@ -496,6 +511,13 @@ local function wire(root: ScreenGui): { string }
 	Components.attachButton(buttons.shop, function()
 		LobbyUI.onOpenShop()
 	end)
+	-- Optional (a Studio-designed LobbyUI may not have it): opens the shop on the coin packs.
+	local buyCoins = coins:FindFirstChild("BuyCoins", true)
+	if buyCoins and buyCoins:IsA("TextButton") then
+		Components.attachButton(buyCoins, function()
+			LobbyUI.onOpenShop("Coins")
+		end)
+	end
 	Components.attachButton(buttons.quests, function()
 		LobbyUI.onOpenQuests()
 	end)

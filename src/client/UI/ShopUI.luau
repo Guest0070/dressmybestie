@@ -32,6 +32,7 @@ ShopUI.onDressingRoom = function() end
 type Tab = { id: string, label: string, slots: { string }? }
 local TABS: { Tab } = {
 	{ id = "Passes", label = "VIP & PASSES" },
+	{ id = "Coins", label = "COINS" },
 	{ id = "Effects", label = "ENTRANCES", slots = { "Entrance" } },
 	{ id = "Trails", label = "TRAILS", slots = { "Trail" } },
 	{ id = "Titles", label = "TITLES", slots = { "Title" } },
@@ -39,10 +40,52 @@ local TABS: { Tab } = {
 	{ id = "Auras", label = "AURAS", slots = { "Aura" } },
 }
 
+local VIP_DAILY_PERCENT = math.floor(Config.PassPerks.VipDailyBonus * 100)
 local PASS_DESCRIPTIONS: { [string]: string } = {
-	VIP = "More item slots, VIP themes, golden glow, Golden Trail + VIP title",
+	StarterPack = `{Config.PassPerks.StarterCoins} coins + Rising Star trail and title. One time only!`,
+	VIP = `Extra item slots, Golden Trail + Aura, VIP title, +{VIP_DAILY_PERCENT}% daily coins`,
+	DoubleCoins = `{Config.PassPerks.DoubleCoinsMultiplier}x coins from every round you play, forever`,
 	PosePack = "3 signature poses at the end of your runway walk",
 }
+-- Shop order (Config tables are keyed by name, which has no order). Anything not listed goes last.
+local PASS_ORDER = { "StarterPack", "VIP", "DoubleCoins", "PosePack" }
+local MOMENT_ORDER = { "MomentCoinShower", "MomentConfetti", "MomentDisco", "MomentHearts", "MomentSnow" }
+local MOMENT_DESCRIPTIONS: { [string]: string } = {
+	CoinShower = `Everyone in the server gets {Config.CoinShowerCoins} coins, from you!`,
+}
+
+-- Keys of a Config table in the given order, then any others sorted by name.
+local function ordered(source: { [string]: any }, first: { string }): { string }
+	local keys = {}
+	for _, key in first do
+		if source[key] then
+			table.insert(keys, key)
+		end
+	end
+	local rest = {}
+	for key in source do
+		if not table.find(keys, key) then
+			table.insert(rest, key)
+		end
+	end
+	table.sort(rest)
+	table.move(rest, 1, #rest, #keys + 1, keys)
+	return keys
+end
+
+-- Developer products of one kind, cheapest first.
+local function productsOfKind(kind: string): { Config.DevProduct }
+	local list = {}
+	for _, product in Config.DevProducts do
+		if product.kind == kind then
+			table.insert(list, product)
+		end
+	end
+	table.sort(list, function(a, b)
+		return a.price < b.price
+	end)
+	return list
+end
 -- A symbol for each entrance effect's preview card.
 local EFFECT_ICONS: { [string]: string } = {
 	Smoke = "~",
@@ -271,12 +314,24 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 		}))
 	elseif cosmetic.coinPrice then
 		local price = cosmetic.coinPrice
+		local short = price - data.coins
 		card(with({
-			description = "Earn coins by playing",
+			description = if short > 0 then `{short} more coins needed` else "Buy with coins",
 			buttonText = `{price} COINS`,
-			state = if data.coins >= price then "Normal" else "Disabled",
 			onClick = function()
-				Remotes.Events.BuyWithCoins:FireServer(cosmetic.id)
+				if short > 0 then
+					ShopUI.open("Coins") -- not enough yet: show the ways to get more
+				else
+					Remotes.Events.BuyWithCoins:FireServer(cosmetic.id)
+				end
+			end,
+		}))
+	elseif cosmetic.tip then
+		card(with({
+			description = "Thank-you for tipping the game",
+			buttonText = "TIP",
+			onClick = function()
+				ShopUI.open("Passes")
 			end,
 		}))
 	elseif cosmetic.productKey then
@@ -316,19 +371,39 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 	end
 end
 
+-- A developer product card: "SOON" until it has an ID, then the live Robux price.
+local function productCard(
+	product: Config.DevProduct,
+	description: string,
+	preview: (Frame) -> (),
+	highlight: boolean?
+)
+	if product.id == 0 then
+		card({ name = product.displayName, description = description, buttonText = "SOON", preview = preview })
+		return
+	end
+	local button = card({
+		name = product.displayName,
+		description = description,
+		buttonText = `R$ {product.price}`,
+		preview = preview,
+		highlight = highlight,
+		onClick = function()
+			MarketplaceService:PromptProductPurchase(State.player, product.id)
+		end,
+	})
+	fetchPrice(`p{product.id}`, product.id, Enum.InfoType.Product, function(price)
+		button:setText(`R$ {price}`)
+	end)
+end
+
 local function passesTab(data: Types.PublicData)
-	for key, pass in Config.GamePasses do
+	for _, key in ordered(Config.GamePasses, PASS_ORDER) do
+		local pass = Config.GamePasses[key]
 		local owned = data.ownedPasses[key] == true
 		local preview = textPreview(pass.displayName, Theme.Colors.Gold, Theme.Colors.PanelRaised)
 		local description = PASS_DESCRIPTIONS[key] or ""
-		if pass.id == 0 then
-			card({
-				name = pass.displayName,
-				description = description,
-				buttonText = "SOON",
-				preview = preview,
-			})
-		elseif owned then
+		if owned then
 			card({
 				name = pass.displayName,
 				description = description,
@@ -337,12 +412,20 @@ local function passesTab(data: Types.PublicData)
 				highlight = true,
 				preview = preview,
 			})
+		elseif pass.id == 0 then
+			card({
+				name = pass.displayName,
+				description = description,
+				buttonText = "SOON",
+				preview = preview,
+			})
 		else
 			local button = card({
 				name = pass.displayName,
 				description = description,
 				buttonText = `R$ {pass.price}`,
 				preview = preview,
+				highlight = key == "StarterPack",
 				onClick = function()
 					MarketplaceService:PromptGamePassPurchase(State.player, pass.id)
 				end,
@@ -352,30 +435,61 @@ local function passesTab(data: Types.PublicData)
 			end)
 		end
 	end
-	for _, product in Config.DevProducts do
+	for _, key in ordered(Config.DevProducts, MOMENT_ORDER) do
+		local product = Config.DevProducts[key]
 		if product.kind ~= "Moment" then
 			continue
 		end
-		local preview = textPreview(product.displayName, Theme.Colors.Primary, Theme.Colors.PanelRaised)
-		if product.id == 0 then
-			card({
-				name = product.displayName,
-				description = "30s for the whole server",
-				buttonText = "SOON",
-				preview = preview,
-			})
-			continue
-		end
-		local button = card({
-			name = product.displayName,
-			description = "30s for the whole server, with your name!",
-			buttonText = `R$ {product.price}`,
-			preview = preview,
+		local description = MOMENT_DESCRIPTIONS[product.moment or ""]
+			or "30s for the whole server, with your name!"
+		productCard(
+			product,
+			description,
+			textPreview(product.displayName, Theme.Colors.Primary, Theme.Colors.PanelRaised)
+		)
+	end
+	-- Roblox Premium: Roblox pays the game for time Premium members spend in it.
+	if State.player.MembershipType ~= Enum.MembershipType.Premium then
+		card({
+			name = "Roblox Premium",
+			description = `+{math.floor(Config.Rewards.PremiumCoinBonus * 100)}% coins from every round here`,
+			buttonText = "GET PREMIUM",
+			preview = textPreview("Premium", Theme.Colors.Text, Theme.Colors.PanelRaised),
 			onClick = function()
-				MarketplaceService:PromptProductPurchase(State.player, product.id)
+				pcall(MarketplaceService.PromptPremiumPurchase, MarketplaceService, State.player)
 			end,
 		})
-		fetchPrice(`p{product.id}`, product.id, Enum.InfoType.Product, function(price)
+	end
+	local supporter = data.ownedCosmetics.TitleSupporter == true
+	for _, product in productsOfKind("Tip") do
+		productCard(
+			product,
+			if supporter then "Thank you for supporting us!" else "Support the game + Supporter title",
+			textPreview("<3", Theme.Colors.Primary, Theme.Colors.PanelRaised)
+		)
+	end
+end
+
+local function coinsTab()
+	for _, product in productsOfKind("Coins") do
+		local coins = product.coins or 0
+		local description = if product.bonus then `{coins} coins  {product.bonus}` else `{coins} coins`
+		productCard(product, description, textPreview(`{coins}`, Theme.Colors.Gold, Theme.Colors.PanelRaised))
+	end
+	-- The coin pass lives in Passes; show it here too, where people look for coins.
+	local pass = Config.GamePasses.DoubleCoins
+	local data = State.data
+	if pass and pass.id ~= 0 and data and not data.ownedPasses.DoubleCoins then
+		local button = card({
+			name = pass.displayName,
+			description = PASS_DESCRIPTIONS.DoubleCoins,
+			buttonText = `R$ {pass.price}`,
+			preview = textPreview("2x", Theme.Colors.Gold, Theme.Colors.PanelRaised),
+			onClick = function()
+				MarketplaceService:PromptGamePassPurchase(State.player, pass.id)
+			end,
+		})
+		fetchPrice(`g{pass.id}`, pass.id, Enum.InfoType.GamePass, function(price)
 			button:setText(`R$ {price}`)
 		end)
 	end
@@ -399,6 +513,9 @@ local function rebuild()
 	if currentTab == "Passes" then
 		passesTab(data)
 		return
+	elseif currentTab == "Coins" then
+		coinsTab()
+		return
 	end
 	local slots: { string } = {}
 	for _, tab in TABS do
@@ -421,7 +538,8 @@ function ShopUI.open(tab: string?)
 	if not State.canUseLobby() then
 		return -- never cover the game during your round
 	end
-	if tab and tabButtons[tab] then
+	-- Coins opens even without a Tab_Coins button (a Studio-designed shop made before it existed).
+	if tab and (tabButtons[tab] or tab == "Coins") then
 		currentTab = tab
 	end
 	rebuild()

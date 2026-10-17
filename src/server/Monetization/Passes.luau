@@ -5,6 +5,7 @@
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Signal = require(ReplicatedStorage.Shared.Signal)
@@ -25,7 +26,25 @@ local function passKeyForId(passId: number): string?
 	return nil
 end
 
+-- Studio only (Admin panel "Test" buttons): passes given for this play session, ID or not.
+local testPasses: { [Player]: { [string]: boolean } } = {}
+
+function Passes.testGrant(player: Player, key: string): string
+	if not RunService:IsStudio() then
+		return "Test purchases only work in Studio."
+	elseif not Config.GamePasses[key] then
+		return `No pass {key}.`
+	end
+	testPasses[player] = testPasses[player] or {}
+	testPasses[player][key] = true
+	Passes.Changed:Fire(player)
+	return `Test-granted {Config.GamePasses[key].displayName} (this session only).`
+end
+
 function Passes.owns(player: Player, key: string): boolean
+	if testPasses[player] and testPasses[player][key] then
+		return true
+	end
 	local pass = Config.GamePasses[key]
 	if not pass or pass.id == 0 then
 		return false
@@ -76,6 +95,7 @@ function Passes.start()
 	end)
 	Players.PlayerRemoving:Connect(function(player)
 		cache[player] = nil
+		testPasses[player] = nil
 	end)
 end
 

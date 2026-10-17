@@ -38,6 +38,7 @@ local TEMPLATE: PlayerData = {
 	lifetime = {},
 	skinTone = 0,
 	bodyType = "",
+	passGrants = {},
 }
 
 local store = ProfileStore.New(Config.Data.StoreName, TEMPLATE)
@@ -110,6 +111,15 @@ local function nextStreakDay(data: PlayerData): number
 	return if streak > #Config.Rewards.DailyStreak then 1 else streak
 end
 
+-- Coins the next daily claim gives, VIP bonus included.
+local function dailyReward(player: Player, data: PlayerData): number
+	local reward = Config.Rewards.DailyStreak[nextStreakDay(data)]
+	if Passes.owns(player, "VIP") then
+		reward += math.floor(reward * Config.PassPerks.VipDailyBonus)
+	end
+	return reward
+end
+
 -- Lifetime value of a quest stat (some live in older fields).
 function PlayerData.lifetimeStat(data: PlayerData, stat: string): number
 	if stat == "rounds" then
@@ -166,7 +176,7 @@ local function toPublic(player: Player, data: PlayerData): PublicData
 		canClaimDaily = data.lastDailyRewardDay < currentDay(),
 		roundsPlayed = data.roundsPlayed,
 		isAdmin = Permissions.isAdmin(player),
-		nextDailyReward = Config.Rewards.DailyStreak[nextStreakDay(data)],
+		nextDailyReward = dailyReward(player, data),
 		dailyStreak = data.dailyStreak,
 		quests = questViews(data),
 		skinTone = data.skinTone,
@@ -260,6 +270,11 @@ function PlayerData.resetToTemplate(player: Player): boolean
 end
 
 local function claimDaily(player: Player)
+	local current = PlayerData.get(player)
+	if not current or current.lastDailyRewardDay >= currentDay() then
+		return -- not loaded, or already claimed; silently ignore spam
+	end
+	local amount = dailyReward(player, current) -- may yield (pass check), so before the update
 	local reward, streak = 0, 0
 	PlayerData.update(player, function(data)
 		local today = currentDay()
@@ -267,7 +282,7 @@ local function claimDaily(player: Player)
 			return -- already claimed; silently ignore spam
 		end
 		streak = nextStreakDay(data)
-		reward = Config.Rewards.DailyStreak[streak]
+		reward = amount
 		data.dailyStreak = streak
 		data.lastDailyRewardDay = today
 		data.coins += reward

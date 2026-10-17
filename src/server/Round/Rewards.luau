@@ -10,6 +10,7 @@ local Types = require(ReplicatedStorage.Shared.Types)
 local PlayerData = require(script.Parent.Parent.Data.PlayerData)
 local Analytics = require(script.Parent.Parent.Analytics)
 local Quests = require(script.Parent.Parent.Quests)
+local Passes = require(script.Parent.Parent.Monetization.Passes)
 
 local Rewards = {}
 
@@ -69,9 +70,13 @@ function Rewards.grant(participants: { Player }, results: { LookResult })
 		if not data then
 			continue
 		end
-		-- Roblox Premium perk: a fixed, disclosed bonus on round coins.
+		-- Fixed, disclosed bonuses on round coins, both worked out from the base amount.
+		local base = s.coins
+		if Passes.owns(player, "DoubleCoins") then
+			s.coins += base * (Config.PassPerks.DoubleCoinsMultiplier - 1)
+		end
 		if player.MembershipType == Enum.MembershipType.Premium then
-			s.coins += math.floor(s.coins * Config.Rewards.PremiumCoinBonus)
+			s.coins += math.floor(base * Config.Rewards.PremiumCoinBonus)
 		end
 		local rankBefore = PlayerData.getRank(data.styleXp)
 		local ok = PlayerData.update(player, function(d)

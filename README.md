@@ -168,16 +168,26 @@ The same steps work for **ShopUI** (open the shop once during Play so it exists,
 ## Admin panel
 
 A gold **Admin** button in the lobby opens fixed buttons: start round now, skip phase, force a chaos
-mode for the next round, +coins, +XP, daily reward again, reset my data.
+mode for the next round, +coins, +XP, daily reward again, reset my data, and (Studio only) test
+buttons for every coin pack, tip, lobby moment and pass.
 Who can see it: everyone in Studio, the game owner, and user IDs in `Config.AdminUserIds`.
 The server re-checks every command, so a hacked client can't use it.
 
 ## Before launch: things only you can do
 
-1. **Game passes + products** (Creator Dashboard → your game → Monetization):
-   - Passes: *VIP* (399), *Pose Pack* (149).
-   - Developer products: *Confetti Rain* (49), *Disco Mode* (49), *Sparkles/Confetti/Spotlight Entrance* (99 each), *Strut Walk* (99), *Glide Walk* (149).
-   - Paste each ID into `Config.GamePasses` / `Config.DevProducts` (replace the `0`). Items with ID `0` show as "Soon".
+1. **Game passes + products** (Creator Dashboard → your game → Monetization). Create each one with
+   this name and price, then paste its ID into `Config.luau` in place of the `0`. Anything still `0`
+   shows as "SOON" in the shop, so you can launch with only some of them.
+   - **Game passes** (`Config.GamePasses`): *Starter Pack* (99), *VIP* (399), *2x Coins* (299), *Pose Pack* (149).
+   - **Coin packs** (`Config.DevProducts`, `Coins_*`): *Pile of Coins* 500 coins (49), *Bag of Coins* 1,200 (99),
+     *Chest of Coins* 2,800 (199), *Vault of Coins* 7,000 (449).
+   - **Lobby moments** (`Moment*`): *Coin Shower* (99), *Confetti Rain*, *Disco Mode*, *Heart Rain*, *Snow Day* (49 each).
+   - **Tips** (`Tip_*`): *Small Tip* (25), *Big Tip* (100).
+   - **Unlocks** (`Entrance*` in `Config.DevProducts`, the rest in `Config.ProductIds`): Sparkles/Confetti/Spotlight
+     entrances (99 each), 8 walks (79-149), 3 poses (49-79), 6 auras (99-199).
+   - The price you set on the dashboard is what players pay; the shop shows the live price.
+   - Test every item before it has an ID: in Studio, **Admin → Test: …** runs the real grant without Robux
+     (passes last for that play session only).
 2. **Walk animations and poses:** in `Config.Cosmetics`, fill `animationId` for Strut/Glide (the *walk* animation asset from a catalog animation pack) and the three poses (catalog emote IDs). Items with `0` are hidden.
 3. **Sounds:** Toolbox → Audio, pick free sounds and put the IDs in `Config.Sounds`.
 4. **Map:** build and decorate it, keeping these part names (anchored, CanCollide off for markers):
@@ -210,7 +220,31 @@ The server re-checks every command, so a hacked client can't use it.
 - Nothing random is sold. Every item has a fixed, visible outcome.
 - `ProcessReceipt` records the purchase ID in the same save as the grant, and returns `PurchaseGranted` only after ProfileStore confirms the save. Retries never grant twice.
 - Pass ownership comes only from `UserOwnsGamePassAsync` (cached). Coin prices come only from `Config`.
-- Coins are earned only by playing.
+- **Changed:** the brief said coins are earned only by playing. Coins can now also be bought (coin
+  packs, Starter Pack, Coin Shower), because coin packs are usually a Roblox game's biggest earner.
+  Coins still only buy cosmetics, never an advantage in voting. To go back, leave the `Coins_*`
+  product IDs at `0` (the COINS tab then only shows "SOON") or delete those entries.
+- One-time grants can't repeat: the Starter Pack's coins are recorded in `passGrants` in the same
+  save as the coins.
+- No fake timers, "limited time" pressure or streak-loss prompts: the shop only opens when a player
+  taps it, and "not enough coins" leads to the coin packs instead of a dead button.
+
+## Money: what's in the game
+
+| What | How it earns |
+|---|---|
+| Coin packs (COINS tab, "+" on the coins pill) | Every coin item in the shop leads here when a player is short |
+| Starter Pack pass | Cheap first purchase: 1,500 coins + exclusive trail and title, once |
+| 2x Coins pass | Doubles round coins (stacks with Premium's +10%) |
+| VIP pass | Extra item slots, VIP themes, gold trail/aura/title, +50% daily reward |
+| Lobby moments | Server-wide effects with the buyer's name; Coin Shower gives everyone 25 coins |
+| Walks, poses, auras, entrances | Permanent cosmetics, shown on the runway to everyone |
+| Tips | Supporter title |
+| "Buy this look" (results / Hall of Fame / Dressing Room) | Roblox pays the game a commission on catalog items sold in-game (needs **Allow Third Party Sales**) |
+| Roblox Premium card | Premium Payouts: Roblox pays for time Premium members spend in the game |
+
+Also worth doing on the dashboard: **Private servers** (Monetization → Private Servers, e.g. 100 Robux/month)
+so friend groups can play together, and **Sponsored ads** once the game retains players.
 
 ## Safety (kept)
 

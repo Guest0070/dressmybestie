@@ -3,6 +3,7 @@
 -- shows for admins, and the server re-checks every command anyway.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -83,6 +84,27 @@ function AdminPanel.start()
 	add(`+{Config.Admin.XpGrant} XP`, Kit.Colors.Gold, "GiveXp")
 	add("Daily reward again", Kit.Colors.PanelLight, "DailyAgain")
 	add("Reset my data", Kit.Colors.Grey, "ResetMyData")
+	-- Studio: try coin packs, tips and moments without Robux (or a product ID).
+	if RunService:IsStudio() then
+		local keys = {}
+		for key, product in Config.DevProducts do
+			if product.kind ~= "Unlock" then
+				table.insert(keys, key)
+			end
+		end
+		table.sort(keys)
+		for _, key in keys do
+			add(`Test: {Config.DevProducts[key].displayName}`, Kit.Colors.Blue, "TestProduct", key)
+		end
+		local passKeys = {}
+		for key in Config.GamePasses do
+			table.insert(passKeys, key)
+		end
+		table.sort(passKeys)
+		for _, key in passKeys do
+			add(`Test pass: {Config.GamePasses[key].displayName}`, Kit.Colors.PinkDark, "TestPass", key)
+		end
+	end
 end
 
 return AdminPanel

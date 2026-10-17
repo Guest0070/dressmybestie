@@ -62,7 +62,7 @@ Config.Limits = {
 	LookUpdateInterval = 0.4,
 }
 
--- Rewards. Coins are only ever earned by playing.
+-- Rewards for playing. (Coins can also be bought: Config.DevProducts kind "Coins".)
 Config.Rewards = {
 	CoinsPerRoundPlayed = 10,
 	CoinsPerHeartReceived = 2,
@@ -300,18 +300,86 @@ Config.ChaosModifiers = {
 Config.GamePasses = {
 	VIP = { id = 0, price = 399, displayName = "VIP" },
 	PosePack = { id = 0, price = 149, displayName = "Pose Pack" },
+	DoubleCoins = { id = 0, price = 299, displayName = "2x Coins" },
+	StarterPack = { id = 0, price = 99, displayName = "Starter Pack" },
 } :: { [string]: { id: number, price: number, displayName: string } }
 
--- Developer products. kind "Moment" = one-time lobby moment; "Unlock" = permanent cosmetic.
+-- What the passes above give (shown in the shop exactly like this).
+Config.PassPerks = {
+	DoubleCoinsMultiplier = 2, -- 2x Coins: round coins (playing, stars, podium) are doubled
+	VipDailyBonus = 0.5, -- VIP: +50% on the daily login reward
+	StarterCoins = 1500, -- Starter Pack: coins given once, plus the Starter trail + title
+}
+
+-- Server-wide "Coin Shower" moment: everyone in the server (buyer included) gets this many coins.
+Config.CoinShowerCoins = 25
+
+-- Developer products.
+--   "Moment" = one-time lobby moment for the whole server
+--   "Unlock" = permanent cosmetic
+--   "Coins"  = a fixed amount of coins (can be bought again)
+--   "Tip"    = support the game; unlocks cosmeticId (the Supporter title) the first time
 export type DevProduct = {
 	id: number,
 	price: number,
 	displayName: string,
-	kind: "Moment" | "Unlock",
-	cosmeticId: string?, -- for Unlock
-	moment: string?, -- for Moment: "Confetti" | "Disco"
+	kind: "Moment" | "Unlock" | "Coins" | "Tip",
+	cosmeticId: string?, -- for Unlock / Tip
+	moment: string?, -- for Moment: "Confetti" | "Disco" | "Hearts" | "Snow" | "CoinShower"
+	coins: number?, -- for Coins
+	bonus: string?, -- for Coins: label shown on the card, e.g. "+20% BONUS"
 }
 Config.DevProducts = {
+	-- Coin packs. Bigger packs give more coins per Robux (shown on the card).
+	Coins_Small = { id = 0, price = 49, displayName = "Pile of Coins", kind = "Coins", coins = 500 },
+	Coins_Medium = {
+		id = 0,
+		price = 99,
+		displayName = "Bag of Coins",
+		kind = "Coins",
+		coins = 1200,
+		bonus = "+20% BONUS",
+	},
+	Coins_Large = {
+		id = 0,
+		price = 199,
+		displayName = "Chest of Coins",
+		kind = "Coins",
+		coins = 2800,
+		bonus = "+40% BONUS",
+	},
+	Coins_Huge = {
+		id = 0,
+		price = 449,
+		displayName = "Vault of Coins",
+		kind = "Coins",
+		coins = 7000,
+		bonus = "+55% BONUS",
+	},
+	-- Tips: nothing to win, just a thank-you title.
+	Tip_Small = {
+		id = 0,
+		price = 25,
+		displayName = "Small Tip",
+		kind = "Tip",
+		cosmeticId = "TitleSupporter",
+	},
+	Tip_Big = {
+		id = 0,
+		price = 100,
+		displayName = "Big Tip",
+		kind = "Tip",
+		cosmeticId = "TitleSupporter",
+	},
+	MomentHearts = { id = 0, price = 49, displayName = "Heart Rain", kind = "Moment", moment = "Hearts" },
+	MomentSnow = { id = 0, price = 49, displayName = "Snow Day", kind = "Moment", moment = "Snow" },
+	MomentCoinShower = {
+		id = 0,
+		price = 99,
+		displayName = "Coin Shower",
+		kind = "Moment",
+		moment = "CoinShower",
+	},
 	MomentConfetti = {
 		id = 0,
 		price = 49,
@@ -395,10 +463,11 @@ for key, spec in UNLOCK_PRODUCTS do
 end
 
 -- Cosmetics. Every one has a fixed, disclosed outcome. Ways to own one:
---   coinPrice  -> buy with coins earned by playing
+--   coinPrice  -> buy with coins (earned by playing or bought in a coin pack)
 --   productKey -> buy with Robux (Config.DevProducts), saved forever
 --   pass       -> included with a game pass
 --   rank       -> unlocked for free at this style rank
+--   tip        -> unlocked by tipping the game (any "Tip" developer product)
 -- Walks: animationId = walk animation, idleAnimationId = idle (both Animation IDs; the defaults
 -- below come from Roblox's own animation packs, which play in every game).
 -- Poses: animationId = the pose/dance animation played at the end of the runway.
@@ -413,6 +482,7 @@ export type Cosmetic = {
 	productKey: string?,
 	pass: string?,
 	rank: number?,
+	tip: boolean?, -- unlocked by any tip (Config.DevProducts kind "Tip")
 	animationId: number?,
 	color: Color3?, -- trails + titles
 	color2: Color3?, -- trails: end colour (gradient)
@@ -494,6 +564,14 @@ Config.Cosmetics = {
 		color = Color3.fromRGB(255, 215, 80),
 		color2 = Color3.fromRGB(255, 250, 200),
 	},
+	{
+		id = "TrailStarter",
+		slot = "Trail",
+		displayName = "Rising Star Trail",
+		pass = "StarterPack",
+		color = Color3.fromRGB(255, 140, 220),
+		color2 = Color3.fromRGB(140, 200, 255),
+	},
 	-- Titles (shown over your head and on the runway)
 	{
 		id = "TitleCute",
@@ -564,6 +642,20 @@ Config.Cosmetics = {
 		displayName = "VIP",
 		pass = "VIP",
 		color = Color3.fromRGB(255, 215, 80),
+	},
+	{
+		id = "TitleStarter",
+		slot = "Title",
+		displayName = "Rising Star",
+		pass = "StarterPack",
+		color = Color3.fromRGB(255, 140, 220),
+	},
+	{
+		id = "TitleSupporter",
+		slot = "Title",
+		displayName = "Supporter",
+		tip = true,
+		color = Color3.fromRGB(120, 230, 255),
 	},
 	-- Runway walks (walk + idle from Roblox animation packs)
 	{
