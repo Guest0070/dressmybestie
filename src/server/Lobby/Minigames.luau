@@ -1,10 +1,13 @@
 --!strict
--- Lobby minigames: short drop-in games for the wait between rounds, on a deck east of the plaza.
+-- Lobby minigames in the Play Zone (the plaza outside the building's foyer doors): short drop-in
+-- games for the wait between rounds.
 --
 --   Color Rush:   floating tiles change colour; a colour is called; every other tile vanishes.
 --                 Fall and you're out. Waves get faster. Last one standing (or everyone who
 --                 survives every wave) wins.
 --   Freeze Frame: DANCE! on the stage, then FREEZE! Move while frozen and you're out.
+--   Spin Sweep:   jump the spinning arm; later it becomes a cross and spins faster.
+--   Runway Dash:  a timed obstacle course (always open). Best times on a board; beat par for coins.
 --
 -- Step onto a game to join. When someone is on it, a short countdown starts; everyone on it when
 -- the countdown ends plays. The server decides everything (who fell, who moved); clients only show
@@ -12,6 +15,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -25,7 +29,6 @@ local RoundManager = require(script.Parent.Parent.Round.RoundManager)
 local Minigames = {}
 
 local SETTINGS = Config.Minigames
-local DECK_COLOR = Color3.fromRGB(250, 225, 240)
 local DARK = Color3.fromRGB(30, 24, 42)
 local PINK = Color3.fromRGB(255, 79, 163)
 local CYAN = Color3.fromRGB(70, 220, 255)
@@ -345,23 +348,23 @@ local function buildColorRush(parent: Instance): Game
 		local edge = part(model, "Edge", spec[1], CFrame.new(center + spec[2]), PINK, true)
 		edge.CanCollide = false
 	end
-	-- Ramp up from the deck on the plaza side (west). A wedge's low edge is its front (-Z).
+	-- Ramp up on the south side (towards the fountain). A wedge's low edge is its front (-Z).
 	local rampLength = cr.Height * 2.2
-	local rampCenter = Vector3.new(center.X - half - rampLength / 2, cr.Height / 2, center.Z)
+	local rampCenter = Vector3.new(center.X, cr.Height / 2, center.Z + half + rampLength / 2)
 	local ramp = Instance.new("WedgePart")
 	ramp.Name = "Ramp"
 	ramp.Anchored = true
 	ramp.Size = Vector3.new(8, cr.Height, rampLength)
-	ramp.CFrame = CFrame.lookAt(rampCenter, rampCenter + Vector3.new(-1, 0, 0))
-	ramp.Color = Color3.fromRGB(240, 200, 225)
-	ramp.Material = Enum.Material.SmoothPlastic
+	ramp.CFrame = CFrame.lookAt(rampCenter, rampCenter + Vector3.new(0, 0, 1))
+	ramp.Color = Color3.fromRGB(28, 26, 30)
+	ramp.Material = Enum.Material.Marble
 	ramp.Parent = model
 	-- Closed while a game runs, so nobody walks onto the tiles mid-game.
 	local gate = part(
 		model,
 		"Gate",
-		Vector3.new(0.6, 6, 8),
-		CFrame.new(center.X - half - 0.4, cr.Height + 3, center.Z),
+		Vector3.new(8, 6, 0.6),
+		CFrame.new(center.X, cr.Height + 3, center.Z + half + 0.4),
 		PINK,
 		true
 	)
@@ -396,7 +399,7 @@ local function buildColorRush(parent: Instance): Game
 		end,
 		joinSpot = function(playing: boolean): CFrame
 			if playing then
-				return CFrame.new(rampCenter - Vector3.new(rampLength, cr.Height / 2 - 3, 0))
+				return CFrame.new(Vector3.new(center.X, 3, center.Z + half + rampLength + 3))
 			end
 			return CFrame.new(center + Vector3.new(0, cr.Height + 3, 0))
 		end,
@@ -678,47 +681,451 @@ local function buildFreezeFrame(parent: Instance): Game
 end
 
 ---------------------------------------------------------------------------------------------------
--- Deck + start
+-- Spin Sweep
 ---------------------------------------------------------------------------------------------------
 
-local function buildDeck(parent: Instance)
-	-- Joins the plaza's east edge (x = 60), with a neon trim around the outside.
-	local minX, maxX, minZ, maxZ = 60, 140, -50, 74
-	local size = Vector3.new(maxX - minX, 2, maxZ - minZ)
-	local mid = Vector3.new((minX + maxX) / 2, -1, (minZ + maxZ) / 2)
-	part(parent, "Deck", size, CFrame.new(mid), DECK_COLOR)
-	for _, spec in
-		{
-			{ Vector3.new(size.X, 0.4, 0.6), Vector3.new(mid.X, 0.2, maxZ) },
-			{ Vector3.new(size.X, 0.4, 0.6), Vector3.new(mid.X, 0.2, minZ) },
-			{ Vector3.new(0.6, 0.4, size.Z), Vector3.new(maxX, 0.2, mid.Z) },
-		}
-	do
-		local trim = part(parent, "Trim", spec[1], CFrame.new(spec[2]), PINK, true)
-		trim.CanCollide = false
+local function buildSpinSweep(parent: Instance): Game
+	local ss = SETTINGS.SpinSweep
+	local model = Instance.new("Model")
+	model.Name = "SpinSweep"
+	local center = ss.Center
+	local diameter = ss.Radius * 2
+	local top = 1 -- platform surface height
+	local platform = part(
+		model,
+		"Platform",
+		Vector3.new(1, diameter, diameter),
+		CFrame.new(center + Vector3.new(0, top - 0.5, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+		Color3.fromRGB(28, 26, 30)
+	)
+	platform.Shape = Enum.PartType.Cylinder
+	platform.Material = Enum.Material.Marble
+	local ring = part(
+		model,
+		"Ring",
+		Vector3.new(0.8, diameter + 1.2, diameter + 1.2),
+		CFrame.new(center + Vector3.new(0, top - 0.6, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+		PINK,
+		true
+	)
+	ring.Shape = Enum.PartType.Cylinder
+	-- Hub in the middle (you can't stand on it) and the spinning arms. The arms are physics parts
+	-- turned by a motor, so they move smoothly for every client; they never push anyone (no
+	-- collisions). Who got hit is worked out from the arms' position on the server.
+	local hub = part(
+		model,
+		"Hub",
+		Vector3.new(5, 2.4, 2.4),
+		CFrame.new(center + Vector3.new(0, top + 2.5, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+		CYAN,
+		true
+	)
+	hub.Shape = Enum.PartType.Cylinder
+	local armHeight = top + 1.4 -- jump it!
+	local pivot =
+		part(model, "Pivot", Vector3.new(1, 1, 1), CFrame.new(center + Vector3.new(0, armHeight, 0)), CYAN)
+	pivot.Transparency = 1
+	pivot.CanCollide = false
+	pivot.CanQuery = false
+	pivot.CanTouch = false
+	local function arm(name: string, yaw: number): Part
+		local a = part(
+			model,
+			name,
+			Vector3.new(0.9, 0.9, diameter),
+			CFrame.new(center + Vector3.new(0, armHeight, 0)) * CFrame.Angles(0, yaw, 0),
+			PINK,
+			true
+		)
+		a.Anchored = false
+		a.CanCollide = false
+		a.CanTouch = false
+		a.CanQuery = false
+		a.Massless = true
+		return a
 	end
-	-- Arch at the entrance from the plaza.
-	local archX = minX + 4
-	part(parent, "ArchL", Vector3.new(1, 12, 1), CFrame.new(archX, 6, 14), DARK)
-	part(parent, "ArchR", Vector3.new(1, 12, 1), CFrame.new(archX, 6, -14), DARK)
-	local top = part(parent, "ArchTop", Vector3.new(1.4, 3, 30), CFrame.new(archX, 12.5, 0), DARK)
-	for _, face in { Enum.NormalId.Left, Enum.NormalId.Right } do
-		local gui = Instance.new("SurfaceGui")
-		gui.Face = face
-		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-		gui.PixelsPerStud = 30
-		gui.LightInfluence = 0
-		gui.Parent = top
+	local armA = arm("ArmA", 0)
+	local armB = arm("ArmB", math.pi / 2)
+	armB.Transparency = 1
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0 = armA
+	weld.Part1 = armB
+	weld.Parent = armA
+	-- Motor: a hinge between an anchored pivot and the arm. A hinge turns around its attachments'
+	-- X axis; rotating them 90 degrees around Z makes that the vertical axis.
+	local pivotAttach = Instance.new("Attachment")
+	pivotAttach.CFrame = CFrame.Angles(0, 0, math.rad(90))
+	pivotAttach.Parent = pivot
+	local armAttach = Instance.new("Attachment")
+	armAttach.CFrame = CFrame.Angles(0, 0, math.rad(90))
+	armAttach.Parent = armA
+	local motor = Instance.new("HingeConstraint")
+	motor.ActuatorType = Enum.ActuatorType.Motor
+	motor.MotorMaxTorque = math.huge
+	motor.MotorMaxAcceleration = math.huge
+	motor.AngularVelocity = 0.4
+	motor.Attachment0 = pivotAttach
+	motor.Attachment1 = armAttach
+	motor.Parent = pivot
+	local status, detail =
+		sign(model, "SpinSweep", CFrame.new(center + Vector3.new(0, 11, -ss.Radius - 4)), "SPIN SWEEP")
+	model.Parent = parent
+	-- The server spins it, so every player sees the same arm. (Deferred: only works once the
+	-- folder is in the Workspace, which Minigames.start does after building everything.)
+	task.defer(function()
+		pcall(function()
+			armA:SetNetworkOwner(nil)
+		end)
+	end)
+
+	local outSpot = center + Vector3.new(ss.Radius + 5, 3, 0)
+	local function isOn(player: Player): boolean
+		local root = rootOf(player)
+		if not root then
+			return false
+		end
+		local p = root.Position - center
+		return Vector2.new(p.X, p.Z).Magnitude <= ss.Radius - 0.3 and p.Y > top and p.Y < top + 14
+	end
+	-- Is this arm sweeping through the player right now? (Near its line, and not jumping over it.)
+	local function hitBy(armPart: Part, root: BasePart): boolean
+		local rel = root.Position - center
+		local flat = Vector3.new(rel.X, 0, rel.Z)
+		local dir = armPart.CFrame.LookVector
+		dir = Vector3.new(dir.X, 0, dir.Z).Unit
+		local along = flat:Dot(dir)
+		local across = (flat - dir * along).Magnitude
+		local feet = root.Position.Y - 3
+		return math.abs(along) <= ss.Radius and across < 1.3 and feet < armHeight + 0.45
+	end
+
+	local g: Game
+	g = {
+		state = {
+			id = "SpinSweep",
+			name = "Spin Sweep",
+			phase = "Idle",
+			headline = "",
+			players = {},
+			center = center + Vector3.new(0, top, 0),
+		},
+		sign = status,
+		subSign = detail,
+		isOn = isOn,
+		joinSpot = function(playing: boolean): CFrame
+			-- Not on the hub: half way out, between the arms.
+			return if playing
+				then CFrame.new(outSpot)
+				else CFrame.new(center + Vector3.new(ss.Radius * 0.55, top + 3, ss.Radius * 0.55))
+		end,
+		play = function(self: Game, participants: { Player }): { Player }
+			local alive = table.clone(participants)
+			local solo = #participants == 1
+			local started = os.clock()
+			local finish = now() + ss.Seconds
+			local crossed = false
+			-- A moment to get ready: the arm starts slow.
+			motor.AngularVelocity = ss.StartSpeed
+			local function stateNow()
+				setState(self, {
+					phase = "Playing",
+					headline = if crossed then "DOUBLE TROUBLE!" else "JUMP!",
+					color = if crossed then CYAN else PINK,
+					detail = if solo then "Survive to win" else `{#alive} left`,
+					endsAt = finish,
+					players = userIds(alive),
+				})
+			end
+			stateNow()
+			while true do
+				task.wait(0.1)
+				local t = os.clock() - started
+				local progress = math.clamp(t / ss.Seconds, 0, 1)
+				motor.AngularVelocity = ss.StartSpeed + (ss.EndSpeed - ss.StartSpeed) * progress
+				if not crossed and t >= ss.SecondBarAt then
+					crossed = true
+					armB.Transparency = 0
+					stateNow()
+				end
+				local kept = {}
+				for _, player in alive do
+					local root = rootOf(player)
+					if not root or not eligible(player) or not isOn(player) then
+						toast(player, "Out! You left the platform.")
+					elseif t > 1.5 and (hitBy(armA, root) or (crossed and hitBy(armB, root))) then
+						local character = player.Character
+						if character then
+							character:PivotTo(CFrame.new(outSpot))
+						end
+						toast(player, `Swept! You lasted {math.floor(t)}s.`)
+					else
+						table.insert(kept, player)
+					end
+				end
+				if #kept ~= #alive then
+					alive = kept
+					stateNow()
+				end
+				if #alive == 0 then
+					break
+				elseif not solo and #alive == 1 then
+					break
+				elseif t >= ss.Seconds then
+					break
+				end
+			end
+			motor.AngularVelocity = 0.4
+			armB.Transparency = 1
+			return alive
+		end,
+	}
+	return g
+end
+
+---------------------------------------------------------------------------------------------------
+-- Runway Dash: a timed obstacle course east of the plaza (always open, no rounds)
+---------------------------------------------------------------------------------------------------
+
+type DashTime = { name: string, seconds: number }
+local dashBoard: { DashTime } = {} -- best times on this server
+local dashStarted: { [Player]: number } = {}
+local dashLastReward: { [Player]: number } = {}
+local dashLastFall: { [Player]: number } = {}
+
+local function buildRunwayDash(parent: Instance): Game
+	local rd = SETTINGS.RunwayDash
+	local model = Instance.new("Model")
+	model.Name = "RunwayDash"
+	local origin = rd.Start
+	local BLACK = Color3.fromRGB(28, 26, 30)
+	local WHITE = Color3.fromRGB(240, 236, 232)
+	local function at(x: number, y: number, z: number): CFrame
+		return CFrame.new(origin + Vector3.new(x, y, z))
+	end
+	local function slab(name: string, size: Vector3, cframe: CFrame, color: Color3?): Part
+		local p = part(model, name, size, cframe, color or WHITE)
+		p.Material = Enum.Material.Marble
+		return p
+	end
+
+	-- Start pad (on the plaza edge) and the first stretch.
+	local startPad = slab("Start", Vector3.new(10, 1, 12), at(5, -0.5, 0), Color3.fromRGB(62, 224, 143))
+	-- 1. Hurdles.
+	slab("Lane1", Vector3.new(16, 1, 10), at(18, -0.5, 0))
+	for i, x in { 13, 18, 23 } do
+		local h = slab(`Hurdle{i}`, Vector3.new(1, 1.6 + i * 0.3, 10), at(x, 0.8 + i * 0.15, 0), PINK)
+		h.Material = Enum.Material.Neon
+	end
+	-- 2. Stepping stones over the gap.
+	for i, spec in { { 30, -2 }, { 35, 2 }, { 40, -2 }, { 45, 2 } } do
+		slab(`Stone{i}`, Vector3.new(3.5, 1, 3.5), at(spec[1], -0.5, spec[2]), BLACK)
+	end
+	-- 3. Sliding blockers on a lane.
+	slab("Lane3", Vector3.new(16, 1, 10), at(56, -0.5, 0))
+	for i, x in { 52, 58 } do
+		local blocker = slab(`Blocker{i}`, Vector3.new(2, 4, 4), at(x, 2, -3), CYAN)
+		blocker.Material = Enum.Material.Neon
+		local goal = { CFrame = at(x, 2, 3) }
+		local tween = TweenService:Create(
+			blocker,
+			TweenInfo.new(1.1 + i * 0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+			goal
+		)
+		tween:Play()
+	end
+	-- 4. Narrow beam.
+	slab("Beam", Vector3.new(14, 1, 1.6), at(71, -0.5, 0), BLACK)
+	-- 5. Zig-zag platforms.
+	for i, spec in { { 81, 3 }, { 86, -3 }, { 91, 3 } } do
+		slab(`Zig{i}`, Vector3.new(4, 1, 4), at(spec[1], -0.5 + i * 0.6, spec[2]))
+	end
+	-- Finish: a short pink catwalk and the finish pad.
+	local catwalk = slab("Catwalk", Vector3.new(8, 1, 6), at(rd.Length - 0.5, 1.3, 0), PINK)
+	catwalk.Material = Enum.Material.SmoothPlastic
+	local finishPad =
+		slab("Finish", Vector3.new(6, 0.4, 6), at(rd.Length + 6.5, 1.5, 0), Color3.fromRGB(255, 201, 74))
+	finishPad.Material = Enum.Material.Neon
+	slab("FinishDeck", Vector3.new(8, 1, 10), at(rd.Length + 6.5, 0.8, 0), BLACK)
+	-- Fall catcher under the whole course: back to the start.
+	local catcher = part(
+		model,
+		"Catcher",
+		Vector3.new(rd.Length + 30, 1, 40),
+		at(rd.Length / 2 + 6, -12, 0),
+		Color3.fromRGB(45, 36, 62)
+	)
+	catcher.Transparency = 0.4
+
+	-- Best times board at the start.
+	local board =
+		slab("Board", Vector3.new(0.6, 10, 16), at(2, 8, -9) * CFrame.Angles(0, math.rad(90), 0), BLACK)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 30
+	gui.LightInfluence = 0
+	gui.Parent = board
+	local layout = Instance.new("UIListLayout")
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.Parent = gui
+	local lines: { TextLabel } = {}
+	for i = 0, 6 do
 		local label = Instance.new("TextLabel")
+		label.LayoutOrder = i
 		label.BackgroundTransparency = 1
-		label.Size = UDim2.fromScale(1, 1)
+		label.Size = UDim2.fromScale(0.95, if i == 0 then 0.2 else 0.12)
 		label.Font = Enum.Font.FredokaOne
 		label.TextScaled = true
-		label.TextColor3 = PINK
-		label.Text = "MINIGAMES"
+		label.TextColor3 = if i == 0
+			then PINK
+			elseif i == 6 then Color3.fromRGB(200, 190, 220)
+			else Color3.new(1, 1, 1)
+		label.Text = if i == 0 then "RUNWAY DASH" elseif i == 6 then `Beat {rd.ParSeconds}s for coins!` else ""
 		label.Parent = gui
+		if i >= 1 and i <= 5 then
+			table.insert(lines, label)
+		end
 	end
+	model.Parent = parent
+
+	-- On the plaza, just before the start pad (standing on the pad starts the clock).
+	local besideStart = at(-4, 3.5, 0) * CFrame.Angles(0, math.rad(-90), 0)
+
+	local g: Game
+	g = {
+		state = {
+			id = "RunwayDash",
+			name = "Runway Dash",
+			phase = "Idle",
+			headline = "Open: run it!",
+			players = {},
+			center = origin + Vector3.new(rd.Length / 2, 0, 0),
+		},
+		isOn = function()
+			return false -- no rounds: always open
+		end,
+		joinSpot = function(): CFrame
+			return besideStart
+		end,
+		play = function()
+			return {}
+		end,
+	}
+
+	local function refreshBoard()
+		for i, label in lines do
+			local row = dashBoard[i]
+			label.Text = if row then `{i}. {row.name}  {string.format("%.2f", row.seconds)}s` else ""
+		end
+		local best = dashBoard[1]
+		setState(g, {
+			phase = "Idle",
+			headline = if best then `Best: {string.format("%.2f", best.seconds)}s` else "Open: run it!",
+			detail = if best then `by {best.name}` else nil,
+			players = {},
+		})
+	end
+
+	startPad.Touched:Connect(function(hit)
+		local character = hit:FindFirstAncestorOfClass("Model")
+		local player = if character then Players:GetPlayerFromCharacter(character) else nil
+		if player and eligible(player) then
+			if not dashStarted[player] then
+				Remotes.Events.Toast:FireClient(
+					player,
+					"Runway Dash: GO! The clock starts when you leave the pad."
+				)
+			end
+			dashStarted[player] = os.clock() -- the last touch is when you left the pad
+		end
+	end)
+	catcher.Touched:Connect(function(hit)
+		local character = hit:FindFirstAncestorOfClass("Model")
+		local player = if character then Players:GetPlayerFromCharacter(character) else nil
+		if player and character then
+			-- Several body parts touch at once: only the first one counts.
+			local t = os.clock()
+			if t - (dashLastFall[player] or 0) < 1 then
+				return
+			end
+			dashLastFall[player] = t
+			dashStarted[player] = nil
+			character:PivotTo(besideStart)
+			toast(player, "Fell! Back to the start. Try again!")
+		end
+	end)
+	finishPad.Touched:Connect(function(hit)
+		local character = hit:FindFirstAncestorOfClass("Model")
+		local player = if character then Players:GetPlayerFromCharacter(character) else nil
+		local started = if player then dashStarted[player] else nil
+		if not player or not started then
+			return
+		end
+		dashStarted[player] = nil
+		local seconds = os.clock() - started
+		if seconds < 6 then
+			return -- not a real run
+		end
+		-- Personal best is saved (in milliseconds); the board shows this server's best.
+		local ms = math.floor(seconds * 1000)
+		local personalBest = false
+		PlayerData.update(player, function(data)
+			local previous = data.lifetime.dashBestMs
+			if not previous or ms < previous then
+				data.lifetime.dashBestMs = ms
+				personalBest = previous ~= nil
+			end
+		end)
+		local existing = nil
+		for _, row in dashBoard do
+			if row.name == player.DisplayName then
+				existing = row
+			end
+		end
+		if existing then
+			existing.seconds = math.min(existing.seconds, seconds)
+		else
+			table.insert(dashBoard, { name = player.DisplayName, seconds = seconds })
+		end
+		table.sort(dashBoard, function(a, b)
+			return a.seconds < b.seconds
+		end)
+		while #dashBoard > 5 do
+			table.remove(dashBoard)
+		end
+		refreshBoard()
+		Quests.bump(player, "obby", 1)
+		local text = `Runway Dash: {string.format("%.2f", seconds)}s!`
+		if personalBest then
+			text ..= " New personal best!"
+		end
+		local waitLeft = (dashLastReward[player] or 0) + rd.CooldownSeconds - os.clock()
+		if seconds <= rd.ParSeconds and waitLeft <= 0 then
+			dashLastReward[player] = os.clock()
+			PlayerData.update(player, function(data)
+				data.coins += rd.RewardCoins
+			end)
+			Analytics.coins(player, rd.RewardCoins, true, "Minigame_RunwayDash")
+			text ..= ` +{rd.RewardCoins} coins`
+		elseif seconds > rd.ParSeconds then
+			text ..= ` Beat {rd.ParSeconds}s for coins.`
+		end
+		toast(player, text)
+		character:PivotTo(besideStart)
+	end)
+	Players.PlayerRemoving:Connect(function(player)
+		dashStarted[player] = nil
+		dashLastReward[player] = nil
+		dashLastFall[player] = nil
+	end)
+	task.defer(refreshBoard)
+	return g
 end
+
+---------------------------------------------------------------------------------------------------
+-- Start
+---------------------------------------------------------------------------------------------------
 
 -- Take a player to a game (from the Games panel).
 local function go(player: Player, gameId: any)
@@ -749,9 +1156,33 @@ function Minigames.start()
 	end
 	local folder = Instance.new("Folder")
 	folder.Name = "Minigames"
-	buildDeck(folder)
 	games.ColorRush = buildColorRush(folder)
 	games.FreezeFrame = buildFreezeFrame(folder)
+	games.SpinSweep = buildSpinSweep(folder)
+	games.RunwayDash = buildRunwayDash(folder)
+	-- The Sky Obby lives in Lobby/Activities; listed here so the Games panel can take you there.
+	games.Obby = {
+		state = {
+			id = "Obby",
+			name = "Sky Obby",
+			phase = "Idle",
+			headline = "Open: climb it!",
+			players = {},
+			center = Vector3.new(-62, 0, 30),
+		},
+		isOn = function()
+			return false
+		end,
+		joinSpot = function(): CFrame
+			return CFrame.lookAt(Vector3.new(-56, 3.5, 30), Vector3.new(-70, 3.5, 30))
+		end,
+		play = function()
+			return {}
+		end,
+	}
+	task.defer(function()
+		Remotes.Events.MinigameState:FireAllClients(games.Obby.state)
+	end)
 	folder.Parent = lobby
 
 	Remotes.Events.MinigameGo.OnServerEvent:Connect(go)
@@ -765,8 +1196,10 @@ function Minigames.start()
 		rewardTimes[player] = nil
 		lastGo[player] = nil
 	end)
-	for _, g in games do
-		task.spawn(runLoop, g)
+	for id, g in games do
+		if id ~= "RunwayDash" and id ~= "Obby" then -- those two are always open, no rounds
+			task.spawn(runLoop, g)
+		end
 	end
 end
 

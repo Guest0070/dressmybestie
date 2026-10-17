@@ -1,6 +1,7 @@
 --!strict
--- Decorations for the auto-built placeholder map: neon catwalk, spotlights, a backdrop that
--- shows the current theme, bleachers, and a lobby title sign + how-to-play board.
+-- Decorations for the auto-built map: the Play Zone plaza outside the building (marble, champagne,
+-- warm LEDs, fountain, planters, how-to-play board) and the placeholder runway (neon catwalk,
+-- spotlights, a backdrop that shows the current theme, bleachers).
 -- Everything lives in "Decor" models, so a hand-built map can simply delete them.
 
 local MapDecor = {}
@@ -65,24 +66,6 @@ local function sign(
 	end
 end
 
-local function lamp(parent: Instance, position: Vector3)
-	part(parent, "LampPost", Vector3.new(1, 12, 1), CFrame.new(position + Vector3.new(0, 6, 0)), DARK)
-	local bulb = part(
-		parent,
-		"LampBulb",
-		Vector3.new(2.5, 2.5, 2.5),
-		CFrame.new(position + Vector3.new(0, 13, 0)),
-		PINK,
-		true
-	)
-	bulb.Shape = Enum.PartType.Ball
-	local light = Instance.new("PointLight")
-	light.Color = PINK
-	light.Range = 24
-	light.Brightness = 1.5
-	light.Parent = bulb
-end
-
 -- A shop kiosk: counter, pillars, striped awning, glowing sign and a "press E / tap" prompt.
 -- The prompt's ShopTab attribute tells the client which shop tab to open.
 local function kiosk(
@@ -126,59 +109,123 @@ local function kiosk(
 	model.Parent = parent
 end
 
-local function palm(parent: Instance, position: Vector3)
-	local trunk = part(
-		parent,
-		"PalmTrunk",
-		Vector3.new(1.6, 16, 1.6),
-		CFrame.new(position + Vector3.new(0, 8, 0)),
-		Color3.fromRGB(140, 95, 60)
-	)
-	trunk.Material = Enum.Material.Wood
-	local top = position + Vector3.new(0, 16, 0)
-	for i = 0, 5 do
-		local angle = math.rad(i * 60)
-		local leaf = part(
-			parent,
-			"PalmLeaf",
-			Vector3.new(2.4, 0.4, 9),
-			CFrame.new(top)
-				* CFrame.Angles(0, angle, 0)
-				* CFrame.new(0, -1, -4)
-				* CFrame.Angles(math.rad(-25), 0, 0),
-			Color3.fromRGB(70, 190, 100)
-		)
-		leaf.Material = Enum.Material.Grass
-	end
+-- Play Zone palette: the same materials as the imported Blender building.
+local MARBLE_BLACK = Color3.fromRGB(28, 26, 30)
+local CHAMPAGNE = Color3.fromRGB(214, 190, 150)
+local LED_WARM = Color3.fromRGB(255, 214, 160)
+local FOLIAGE = Color3.fromRGB(60, 140, 80)
+
+local function material(p: BasePart, mat: Enum.Material): BasePart
+	p.Material = mat
+	return p
 end
 
-local function fountain(parent: Instance, position: Vector3)
-	local rim = part(
+-- Decorative part players walk over (inlays, trims, LED lines).
+local function flat(p: BasePart): BasePart
+	p.CanCollide = false
+	p.CanQuery = false
+	return p
+end
+
+-- Black marble planter box with a shrub and a warm LED strip.
+local function planter(parent: Instance, position: Vector3)
+	material(
+		part(
+			parent,
+			"Planter",
+			Vector3.new(6, 3, 6),
+			CFrame.new(position + Vector3.new(0, 1.5, 0)),
+			MARBLE_BLACK
+		),
+		Enum.Material.Marble
+	)
+	flat(
+		part(
+			parent,
+			"PlanterLed",
+			Vector3.new(6.2, 0.3, 6.2),
+			CFrame.new(position + Vector3.new(0, 2.9, 0)),
+			LED_WARM,
+			true
+		)
+	)
+	local shrub =
+		part(parent, "Shrub", Vector3.new(5, 5, 5), CFrame.new(position + Vector3.new(0, 5, 0)), FOLIAGE)
+	shrub.Shape = Enum.PartType.Ball
+	shrub.Material = Enum.Material.Grass
+end
+
+-- Slim champagne light post with a warm glowing head.
+local function lightPost(parent: Instance, position: Vector3)
+	material(
+		part(
+			parent,
+			"Post",
+			Vector3.new(0.6, 10, 0.6),
+			CFrame.new(position + Vector3.new(0, 5, 0)),
+			CHAMPAGNE
+		),
+		Enum.Material.Metal
+	)
+	local head = part(
 		parent,
-		"FountainRim",
+		"PostLight",
+		Vector3.new(1.4, 1.4, 1.4),
+		CFrame.new(position + Vector3.new(0, 10.6, 0)),
+		LED_WARM,
+		true
+	)
+	head.Shape = Enum.PartType.Ball
+	local light = Instance.new("PointLight")
+	light.Color = LED_WARM
+	light.Range = 20
+	light.Brightness = 1.2
+	light.Parent = head
+end
+
+-- Black marble fountain with a champagne rim and a soft spray.
+local function fountain(parent: Instance, position: Vector3)
+	local basin = part(
+		parent,
+		"FountainBasin",
 		Vector3.new(2, 16, 16),
 		CFrame.new(position + Vector3.new(0, 1, 0)) * CFrame.Angles(0, 0, math.pi / 2),
-		WHITE
+		MARBLE_BLACK
+	)
+	basin.Shape = Enum.PartType.Cylinder
+	basin.Material = Enum.Material.Marble
+	local rim = flat(
+		part(
+			parent,
+			"FountainRim",
+			Vector3.new(0.4, 16.6, 16.6),
+			CFrame.new(position + Vector3.new(0, 2.05, 0)) * CFrame.Angles(0, 0, math.pi / 2),
+			CHAMPAGNE
+		)
 	)
 	rim.Shape = Enum.PartType.Cylinder
-	local water = part(
-		parent,
-		"FountainWater",
-		Vector3.new(0.4, 14, 14),
-		CFrame.new(position + Vector3.new(0, 2.1, 0)) * CFrame.Angles(0, 0, math.pi / 2),
-		Color3.fromRGB(110, 200, 255)
+	rim.Material = Enum.Material.Metal
+	local water = flat(
+		part(
+			parent,
+			"FountainWater",
+			Vector3.new(0.4, 14, 14),
+			CFrame.new(position + Vector3.new(0, 2.15, 0)) * CFrame.Angles(0, 0, math.pi / 2),
+			Color3.fromRGB(110, 200, 255)
+		)
 	)
 	water.Shape = Enum.PartType.Cylinder
 	water.Material = Enum.Material.Glass
-	water.Transparency = 0.3
-	water.CanCollide = false
-	local pillar = part(
-		parent,
-		"FountainPillar",
-		Vector3.new(2, 7, 2),
-		CFrame.new(position + Vector3.new(0, 4.5, 0)),
-		PINK,
-		true
+	water.Transparency = 0.35
+	local pillar = material(
+		part(
+			parent,
+			"FountainPillar",
+			Vector3.new(2, 7, 2),
+			CFrame.new(position + Vector3.new(0, 4.5, 0)),
+			CHAMPAGNE
+		),
+		Enum.Material.Metal
 	)
 	local spray = Instance.new("ParticleEmitter")
 	spray.Rate = 60
@@ -188,48 +235,54 @@ local function fountain(parent: Instance, position: Vector3)
 	spray.Acceleration = Vector3.new(0, -30, 0)
 	spray.Size = NumberSequence.new(0.5, 0.1)
 	spray.Transparency = NumberSequence.new(0.2, 1)
-	spray.Color = ColorSequence.new(Color3.fromRGB(200, 240, 255))
+	spray.Color = ColorSequence.new(Color3.fromRGB(220, 245, 255))
 	spray.EmissionDirection = Enum.NormalId.Top
 	spray.Parent = pillar
 end
 
--- Strings of coloured bulbs between two points.
-local function stringLights(parent: Instance, from: Vector3, to: Vector3)
-	local colors = { PINK, Color3.fromRGB(255, 220, 80), Color3.fromRGB(110, 200, 255), WHITE }
-	local count = math.floor((to - from).Magnitude / 4)
-	for i = 0, count do
-		local t = i / count
-		local sag = math.sin(t * math.pi) * 2
-		local bulb = part(
-			parent,
-			"Bulb",
-			Vector3.new(0.8, 0.8, 0.8),
-			CFrame.new(from:Lerp(to, t) - Vector3.new(0, sag, 0)),
-			colors[i % #colors + 1],
-			true
-		)
-		bulb.Shape = Enum.PartType.Ball
-		bulb.CanCollide = false
-	end
-end
-
-local function plaza(parent: Instance)
-	-- Pink/white checker tiles, 10x10 studs each, just above the ground.
-	for x = -4, 3 do
-		for z = -4, 3 do
-			local color = if (x + z) % 2 == 0 then Color3.fromRGB(255, 190, 220) else WHITE
-			local tile =
-				part(parent, "Tile", Vector3.new(10, 0.2, 10), CFrame.new(x * 10 + 5, 0.1, z * 10 + 5), color)
-			tile.CanCollide = false
-		end
-	end
-end
-
 local function arch(parent: Instance, position: Vector3, text: string)
-	part(parent, "ArchL", Vector3.new(2, 18, 2), CFrame.new(position + Vector3.new(-10, 9, 0)), PINK, true)
-	part(parent, "ArchR", Vector3.new(2, 18, 2), CFrame.new(position + Vector3.new(10, 9, 0)), PINK, true)
-	local top =
-		part(parent, "ArchTop", Vector3.new(22, 4, 2), CFrame.new(position + Vector3.new(0, 19, 0)), DARK)
+	for _, side in { -1, 1 } do
+		material(
+			part(
+				parent,
+				"ArchPillar",
+				Vector3.new(2, 16, 2),
+				CFrame.new(position + Vector3.new(side * 9, 8, 0)),
+				MARBLE_BLACK
+			),
+			Enum.Material.Marble
+		)
+		flat(
+			part(
+				parent,
+				"ArchLed",
+				Vector3.new(0.3, 15, 0.3),
+				CFrame.new(position + Vector3.new(side * 7.9, 8, 0)),
+				LED_WARM,
+				true
+			)
+		)
+	end
+	local top = material(
+		part(
+			parent,
+			"ArchTop",
+			Vector3.new(22, 4, 2),
+			CFrame.new(position + Vector3.new(0, 17, 0)),
+			MARBLE_BLACK
+		),
+		Enum.Material.Marble
+	)
+	material(
+		part(
+			parent,
+			"ArchTrim",
+			Vector3.new(22.4, 0.4, 2.4),
+			CFrame.new(position + Vector3.new(0, 15, 0)),
+			CHAMPAGNE
+		),
+		Enum.Material.Metal
+	)
 	sign(top, Enum.NormalId.Front, { { text = text, color = PINK, size = 0.8 } })
 	sign(top, Enum.NormalId.Back, { { text = text, color = PINK, size = 0.8 } })
 end
@@ -250,73 +303,108 @@ local function buildPlazaKiosks(decor: Instance)
 	)
 end
 
+-- The plaza outside the building's foyer doors: the "Play Zone". White marble with a black marble
+-- path from the doors to a fountain, champagne + warm LED trim (the building's own materials),
+-- planters and light posts. The minigames (Lobby/Minigames) and activities (Lobby/Activities) sit
+-- around the path.
 function MapDecor.buildLobby(lobby: Instance, hasOwnFloor: boolean)
 	if lobby:FindFirstChild("Decor") then
 		return
 	end
 	local decor = Instance.new("Model")
 	decor.Name = "Decor"
+	local imported = lobby:GetAttribute("ImportedMap") == true
 
-	-- Title sign behind the spawn, readable from the spawn pad (faces +Z).
-	local title = part(decor, "TitleSign", Vector3.new(48, 16, 1), CFrame.new(0, 12, -45), DARK)
-	part(decor, "TitleGlow", Vector3.new(50, 18, 0.5), CFrame.new(0, 12, -45.8), PINK, true)
-	sign(title, Enum.NormalId.Back, {
-		{ text = "STYLE MY BESTIE", color = PINK, size = 0.5 },
-		{ text = "Style your bestie. Blind. Then walk the runway!", color = WHITE, size = 0.25 },
-	})
+	-- Black marble path from the foyer doors (north, z = -60) to the fountain, champagne edges.
+	material(
+		flat(part(decor, "Path", Vector3.new(10, 0.1, 58), CFrame.new(0, 0.05, -31), MARBLE_BLACK)),
+		Enum.Material.Marble
+	)
+	for _, x in { -5.2, 5.2 } do
+		material(
+			flat(part(decor, "PathEdge", Vector3.new(0.4, 0.12, 58), CFrame.new(x, 0.06, -31), CHAMPAGNE)),
+			Enum.Material.Metal
+		)
+	end
+	-- Medallion around the fountain.
+	for _, spec in { { 27, CHAMPAGNE, 0.04 }, { 26, MARBLE_BLACK, 0.05 } } do
+		local disc = flat(
+			part(
+				decor,
+				"Medallion",
+				Vector3.new(0.1, spec[1], spec[1]),
+				CFrame.new(0, spec[3], 8) * CFrame.Angles(0, 0, math.pi / 2),
+				spec[2]
+			)
+		)
+		disc.Shape = Enum.PartType.Cylinder
+		disc.Material = if spec[2] == CHAMPAGNE then Enum.Material.Metal else Enum.Material.Marble
+	end
+	fountain(decor, Vector3.new(0, 0, 8))
 
-	-- How-to-play board on the left side (faces +X, toward the spawn).
-	local board = part(decor, "HowToBoard", Vector3.new(1, 16, 30), CFrame.new(-45, 9, 0), DARK)
+	arch(decor, Vector3.new(0, 0, -56), if imported then "PLAY ZONE" else "STYLE MY BESTIE")
+	for _, z in { -46, -30, -14 } do
+		lightPost(decor, Vector3.new(-8, 0, z))
+		lightPost(decor, Vector3.new(8, 0, z))
+	end
+	for _, spot in
+		{
+			Vector3.new(-55, 0, -55),
+			Vector3.new(55, 0, -55),
+			Vector3.new(-55, 0, 55),
+			Vector3.new(55, 0, 55),
+			Vector3.new(-12, 0, 20),
+			Vector3.new(12, 0, 20),
+		}
+	do
+		planter(decor, spot)
+	end
+
+	-- How-to-play board on the west edge (faces +X, into the plaza).
+	local board = material(
+		part(decor, "HowToBoard", Vector3.new(1, 14, 26), CFrame.new(-59, 8, 0), MARBLE_BLACK),
+		Enum.Material.Marble
+	)
+	material(
+		part(decor, "HowToFrame", Vector3.new(0.8, 14.6, 26.6), CFrame.new(-59.4, 8, 0), CHAMPAGNE),
+		Enum.Material.Metal
+	)
 	sign(board, Enum.NormalId.Right, {
 		{ text = "HOW TO PLAY", color = PINK, size = 0.2 },
 		{ text = "1. You secretly style your partner's mannequin", color = WHITE, size = 0.15 },
 		{ text = "2. Match the theme (or don't!)", color = WHITE, size = 0.15 },
 		{ text = "3. Walk the runway in what THEY picked for you", color = WHITE, size = 0.15 },
-		{ text = "4. Give hearts to your favorite looks", color = WHITE, size = 0.15 },
+		{ text = "4. Rate the looks. Best stylist wins!", color = WHITE, size = 0.15 },
 	})
 
-	for _, corner in
-		{ Vector3.new(-36, 0, -36), Vector3.new(36, 0, -36), Vector3.new(-36, 0, 36), Vector3.new(36, 0, 36) }
-	do
-		lamp(decor, corner)
-	end
-
-	-- The plaza: checker floor, fountain, shops, palms, lights and an arch.
-	plaza(decor)
-	fountain(decor, Vector3.new(0, 0, 22))
-	-- With the imported Blender building, the shops, VIP lounge and dressing room are rooms inside
-	-- it (their kiosks are Map.Lobby.Kiosk_* markers) and the runway is north, inside the building.
-	local imported = lobby:GetAttribute("ImportedMap") == true
 	if not imported then
 		buildPlazaKiosks(decor)
 	end
-	local palms =
-		{ Vector3.new(-50, 0, -50), Vector3.new(50, 0, -50), Vector3.new(-50, 0, 50), Vector3.new(50, 0, 50) }
-	if not imported then
-		table.insert(palms, Vector3.new(0, 0, -54)) -- would block the walk to the imported building
-	end
-	for _, spot in palms do
-		palm(decor, spot)
-	end
-	stringLights(decor, Vector3.new(-36, 12.5, -36), Vector3.new(36, 12.5, -36))
-	stringLights(decor, Vector3.new(-36, 12.5, 36), Vector3.new(36, 12.5, 36))
-	stringLights(decor, Vector3.new(-36, 12.5, -36), Vector3.new(-36, 12.5, 36))
-	stringLights(decor, Vector3.new(36, 12.5, -36), Vector3.new(36, 12.5, 36))
-	if not imported then
-		arch(decor, Vector3.new(0, 0, 55), "TO THE RUNWAY")
-	end
 
 	if hasOwnFloor then
-		-- Neon border around the auto-built lobby floor.
+		-- Black marble band and a warm LED line around the plaza floor.
 		for _, spec in
 			{
-				{ Vector3.new(120, 0.4, 0.6), Vector3.new(0, 0.2, 60) },
-				{ Vector3.new(120, 0.4, 0.6), Vector3.new(0, 0.2, -60) },
-				{ Vector3.new(0.6, 0.4, 120), Vector3.new(60, 0.2, 0) },
-				{ Vector3.new(0.6, 0.4, 120), Vector3.new(-60, 0.2, 0) },
+				{ Vector3.new(120, 0.1, 3), Vector3.new(0, 0.05, 58.5) },
+				{ Vector3.new(120, 0.1, 3), Vector3.new(0, 0.05, -58.5) },
+				{ Vector3.new(3, 0.1, 120), Vector3.new(58.5, 0.05, 0) },
+				{ Vector3.new(3, 0.1, 120), Vector3.new(-58.5, 0.05, 0) },
 			}
 		do
-			part(decor, "Border", spec[1], CFrame.new(spec[2]), PINK, true)
+			material(
+				flat(part(decor, "Border", spec[1], CFrame.new(spec[2]), MARBLE_BLACK)),
+				Enum.Material.Marble
+			)
+		end
+		for _, spec in
+			{
+				{ Vector3.new(114, 0.12, 0.3), Vector3.new(0, 0.06, 56.8) },
+				{ Vector3.new(114, 0.12, 0.3), Vector3.new(0, 0.06, -56.8) },
+				{ Vector3.new(0.3, 0.12, 114), Vector3.new(56.8, 0.06, 0) },
+				{ Vector3.new(0.3, 0.12, 114), Vector3.new(-56.8, 0.06, 0) },
+			}
+		do
+			flat(part(decor, "BorderLed", spec[1], CFrame.new(spec[2]), LED_WARM, true))
 		end
 	end
 	decor.Parent = lobby

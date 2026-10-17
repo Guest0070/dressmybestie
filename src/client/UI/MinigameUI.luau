@@ -24,15 +24,44 @@ local NEAR_DISTANCE = 55 -- studs: close enough to watch a game
 local GAMES = {
 	{
 		id = "ColorRush",
+		name = "Color Rush",
 		icon = "🟪",
 		blurb = "A colour is called. Every other tile vanishes. Don't fall!",
+		hint = "Stand on the tile of the colour that's called",
 	},
 	{
 		id = "FreezeFrame",
+		name = "Freeze Frame",
 		icon = "🧊",
 		blurb = "Dance on the stage... then FREEZE. Move and you're out!",
+		hint = "Dance, then don't move a muscle on FREEZE!",
+	},
+	{
+		id = "SpinSweep",
+		name = "Spin Sweep",
+		icon = "🌀",
+		blurb = "Jump the spinning arm. It speeds up, then becomes a cross!",
+		hint = "Jump when the arm comes round",
+	},
+	{
+		id = "RunwayDash",
+		name = "Runway Dash",
+		icon = "⏱️",
+		blurb = "Timed obstacle course. Beat the clock for coins!",
+		hint = "Step on the green pad and run for the gold one",
+	},
+	{
+		id = "Obby",
+		name = "Sky Obby",
+		icon = "🧗",
+		blurb = "16 jumps into the sky. Reach the top for coins!",
+		hint = "Climb to the golden deck at the top",
 	},
 }
+local HINTS: { [string]: string } = {}
+for _, info in GAMES do
+	HINTS[info.id] = info.hint
+end
 
 local banner: Frame
 local bannerName: TextLabel
@@ -82,7 +111,9 @@ local function pick(): Types.MinigameState?
 end
 
 local function statusText(minigame: Types.MinigameState): string
-	if minigame.phase == "Idle" then
+	if minigame.id == "RunwayDash" or minigame.id == "Obby" then
+		return minigame.headline -- always open
+	elseif minigame.phase == "Idle" then
 		return "Open: step on to start"
 	elseif minigame.phase == "Countdown" then
 		return `Starting soon · {#minigame.players} ready`
@@ -116,11 +147,11 @@ local function refreshBanner()
 	local out = minigame.phase == "Playing" and not inIt and wasIn[minigame.id] == true
 	bannerName.Text = string.upper(minigame.name)
 	if minigame.phase == "Idle" then
-		bannerHeadline.Text = "Step on to play!"
+		bannerHeadline.Text = if minigame.id == "RunwayDash" or minigame.id == "Obby"
+			then minigame.headline
+			else "Step on to play!"
 		bannerHeadline.TextColor3 = Theme.Colors.Text
-		bannerDetail.Text = if minigame.id == "ColorRush"
-			then "Stand on the tile of the colour that's called"
-			else "Dance, then don't move a muscle on FREEZE!"
+		bannerDetail.Text = HINTS[minigame.id] or ""
 	else
 		bannerHeadline.Text = minigame.headline
 		bannerHeadline.TextColor3 = minigame.color or Theme.Colors.Text
@@ -224,8 +255,8 @@ local function buildPanel(root: Frame)
 	panel = Components.panel({
 		Name = "GamesPanel",
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.52),
-		Size = UDim2.fromOffset(560, 300),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(760, 400),
 		Visible = false,
 		ZIndex = 2,
 		Parent = root,
@@ -262,11 +293,16 @@ local function buildPanel(root: Frame)
 		Position = UDim2.fromOffset(16, 74),
 		Size = UDim2.new(1, -32, 1, -90),
 		Parent = panel,
-	}, { Components.list(Enum.FillDirection.Horizontal, 12) })
+	}, {
+		Kit.new("UIGridLayout", {
+			CellSize = UDim2.new(1 / 3, -8, 0, 148),
+			CellPadding = UDim2.fromOffset(12, 12),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
 	for index, info in GAMES do
 		local card = Components.panel({
 			Raised = true,
-			Size = UDim2.new(0.5, -6, 1, 0),
 			LayoutOrder = index,
 			Parent = list,
 		})
@@ -278,7 +314,7 @@ local function buildPanel(root: Frame)
 			Parent = card,
 		})
 		Components.text({
-			Text = if info.id == "ColorRush" then "Color Rush" else "Freeze Frame",
+			Text = info.name,
 			Position = UDim2.fromOffset(62, 14),
 			Size = UDim2.new(1, -74, 0, 26),
 			FontFace = Theme.Fonts.Heading,
@@ -298,8 +334,8 @@ local function buildPanel(root: Frame)
 		})
 		Components.text({
 			Text = info.blurb,
-			Position = UDim2.fromOffset(14, 64),
-			Size = UDim2.new(1, -28, 0, 44),
+			Position = UDim2.fromOffset(14, 62),
+			Size = UDim2.new(1, -28, 0, 34),
 			TextColor3 = Theme.Colors.Silver,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextYAlignment = Enum.TextYAlignment.Top,
@@ -312,8 +348,8 @@ local function buildPanel(root: Frame)
 			Variant = "Primary",
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.new(0.5, 0, 1, -12),
-			Size = UDim2.new(1, -28, 0, 40),
-			MaxTextSize = 20,
+			Size = UDim2.new(1, -28, 0, 36),
+			MaxTextSize = 18,
 			onClick = function()
 				Remotes.Events.MinigameGo:FireServer(info.id)
 				panel.Visible = false

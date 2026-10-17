@@ -988,14 +988,15 @@ Config.Lobby = {
 	LeaderboardRefreshSeconds = 10,
 }
 
--- Lobby minigames (Color Rush, Freeze Frame). Short drop-in games for the wait between rounds.
+-- Lobby minigames in the Play Zone (the plaza outside the building's foyer doors). Short drop-in
+-- games for the wait between rounds. Centres are plaza coordinates (the path runs down x = 0).
 Config.Minigames = {
 	WinCoins = 15, -- per win
 	MaxRewardedWinsPerHour = 6, -- wins after this still count for quests, just no coins
 	CountdownSeconds = 6, -- after the first player steps on, before the game starts
 	ResultSeconds = 4, -- winner banner before the next game can start
 	ColorRush = {
-		Center = Vector3.new(100, 0, -15),
+		Center = Vector3.new(36, 0, -30), -- north-east of the path; ramp on the south side
 		Grid = 7, -- 7x7 tiles
 		TileSize = 6,
 		Height = 6, -- tiles float this high; falling means you're out
@@ -1005,13 +1006,28 @@ Config.Minigames = {
 		GoneSeconds = 2, -- how long the wrong tiles stay gone
 	},
 	FreezeFrame = {
-		Center = Vector3.new(100, 0, 44),
+		Center = Vector3.new(-36, 0, -32), -- north-west of the path
 		Radius = 16,
 		Rounds = 10,
 		DanceSeconds = { 3, 6 }, -- random, so nobody can count it
 		FreezeSeconds = { 2, 3.2 },
 		Grace = 0.45, -- reaction time after FREEZE! before movement counts
 		MoveTolerance = 1.2, -- studs a frozen player may drift (lag, animations)
+	},
+	SpinSweep = {
+		Center = Vector3.new(-34, 0, 34), -- south-west
+		Radius = 13,
+		Seconds = 60, -- survive this long to win (or be the last one on)
+		StartSpeed = 1.1, -- bar turns (radians per second) at the start...
+		EndSpeed = 3.4, -- ...and this fast at the end
+		SecondBarAt = 25, -- seconds in: a second bar joins (a cross), so jumps come twice as often
+	},
+	RunwayDash = {
+		Start = Vector3.new(60, 0, 0), -- the course runs east from the plaza's east edge
+		Length = 96,
+		ParSeconds = 30, -- finish faster than this for the coin reward
+		RewardCoins = 20,
+		CooldownSeconds = 600, -- one paid finish per 10 minutes
 	},
 }
 

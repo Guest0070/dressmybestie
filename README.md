@@ -32,15 +32,24 @@ Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme
 **Lobby (things to do between rounds):**
 - Dressing Room kiosk: dress your own avatar from the catalog, then "Buy these".
 - Shop kiosks: Boutique (entrances), Trail Bar, Title Studio, VIP Lounge.
-- Obby into the sky (+40 coins, once per 10 min), 13 collectible gems (+2 each, capped per visit).
-- Dance floor with disco ball, bounce pads, fountain, palms, string lights.
-- **Minigames** on a deck east of the plaza (through the MINIGAMES arch, or the **GAMES** button):
-  *Color Rush* (a colour is called, every other floating tile vanishes, waves speed up) and
-  *Freeze Frame* (dance, then FREEZE: move and you're out). Step on to join; a short countdown
-  starts the game for everyone on it. Last one standing (or everyone who survives every wave/round)
-  wins +15 coins (max 6 paid wins an hour, `Config.Minigames`), and wins count for a daily quest
-  and an achievement. The server decides who fell or moved; a live banner shows the call, a
-  countdown bar and how many are left.
+- **Spawn:** players arrive inside the Blender building's hall, just inside the foyer doors,
+  facing the runway stage (and come back there after every round).
+- **Play Zone:** the plaza outside the foyer doors, in the building's materials (white and black
+  marble, champagne metal, warm LEDs): a black marble path from the doors through the PLAY ZONE arch
+  to a fountain, planters, light posts and a how-to-play board. Everything to do between rounds is
+  here, and the **GAMES** button lists it all with a GO button:
+  - *Color Rush* (north-east): a colour is called, every other floating tile vanishes; waves speed up.
+  - *Freeze Frame* (north-west): dance, then FREEZE. Move and you're out.
+  - *Spin Sweep* (south-west): jump the spinning arm; it speeds up and becomes a cross.
+  - *Runway Dash* (east): timed obstacle course (hurdles, stepping stones, sliding blockers, a beam,
+    zig-zags). Best times on a board, personal best saved; under 30s pays 20 coins (once per 10 min).
+  - *Sky Obby* (west): 16 jumps into the sky, +40 coins once per 10 min.
+  - Dance floor with disco ball, bounce pads, 13 collectible gems (+2 each, capped per visit).
+  The three round games (Color Rush, Freeze Frame, Spin Sweep): step on to join, a short countdown
+  starts it for everyone on it, last one standing (or everyone who survives) wins +15 coins (max 6
+  paid wins an hour, `Config.Minigames`); wins count for a daily quest and an achievement. The
+  server decides who fell, moved or got swept; a live banner shows the call, a countdown bar and
+  how many are left.
 - Top Stylists board, Hall of Fame statues of last round's top 3 (walk up → "Buy this look").
 
 **Progression:** coins + style XP, 10 ranks with free unlocks, daily login streak (50 → 200 coins),

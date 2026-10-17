@@ -85,22 +85,35 @@ end
 
 local function buildLobby()
 	local lobby = getOrCreate(root, "Lobby", "Model")
+	-- With the imported Blender building (see Tools/BlendImport), players arrive in its hall, just
+	-- inside the foyer doors, facing the runway stage. The plaza outside becomes the Play Zone.
+	local imported = lobby:GetAttribute("ImportedMap") == true
+	local arrival = if imported
+		then CFrame.lookAt(Vector3.new(0, 0.2, -100), Vector3.new(0, 0.2, -110))
+		else CFrame.new(0, 0.5, 0)
 	if not lobby:FindFirstChild("Spawn") then
-		marker(lobby, "Spawn", CFrame.new(0, 4, 0))
+		marker(lobby, "Spawn", arrival + Vector3.new(0, 3.5, 0))
 	end
 	-- An empty place (no Baseplate) has nothing to stand on: players fall and never count as
 	-- ready. Build a floor + spawn pad if the place has no SpawnLocation of its own.
 	local builtFloor = false
 	if not Workspace:FindFirstChildWhichIsA("SpawnLocation", true) then
 		builtFloor = true
-		block(lobby, "Floor", Vector3.new(120, 2, 120), CFrame.new(0, -1, 0), Color3.fromRGB(250, 225, 240))
+		block(lobby, "Floor", Vector3.new(120, 2, 120), CFrame.new(0, -1, 0), Color3.fromRGB(240, 236, 232), {
+			Material = Enum.Material.Marble,
+		})
 		local spawnPad = Instance.new("SpawnLocation")
 		spawnPad.Name = "SpawnPad"
 		spawnPad.Anchored = true
-		spawnPad.Size = Vector3.new(12, 1, 12)
-		spawnPad.CFrame = CFrame.new(0, 0.5, 0)
+		spawnPad.Size = Vector3.new(12, 0.4, 12)
+		spawnPad.CFrame = arrival
 		spawnPad.Color = Color3.fromRGB(255, 110, 180)
 		spawnPad.Duration = 0 -- no forcefield bubble
+		if imported then
+			-- Invisible: the hall's own floor is the welcome mat.
+			spawnPad.Transparency = 1
+			spawnPad.CanCollide = false
+		end
 		spawnPad.Parent = lobby
 	end
 	MapDecor.buildLobby(lobby, builtFloor)

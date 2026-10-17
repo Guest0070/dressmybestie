@@ -265,19 +265,19 @@ local function buildDanceFloor(parent: Instance)
 				floor,
 				"Tile",
 				Vector3.new(3.8, 0.3, 3.8),
-				CFrame.new(40 + x * 4, 0.35, -8 + z * 4),
+				CFrame.new(29 + x * 4, 0.35, 22 + z * 4),
 				PINK,
 				true
 			)
 			CollectionService:AddTag(tile, "DanceTile") -- the client cycles the colours
 		end
 	end
-	local sign = part(floor, "Sign", Vector3.new(20, 3, 0.6), CFrame.new(48, 9, -11), DARK)
+	local sign = part(floor, "Sign", Vector3.new(20, 3, 0.6), CFrame.new(37, 9, 19), DARK)
 	signText(sign, Enum.NormalId.Back, "DANCE FLOOR", PINK)
-	part(floor, "PoleL", Vector3.new(0.6, 8, 0.6), CFrame.new(38.5, 4, -11), WHITE)
-	part(floor, "PoleR", Vector3.new(0.6, 8, 0.6), CFrame.new(57.5, 4, -11), WHITE)
+	part(floor, "PoleL", Vector3.new(0.6, 8, 0.6), CFrame.new(27.5, 4, 19), WHITE)
+	part(floor, "PoleR", Vector3.new(0.6, 8, 0.6), CFrame.new(46.5, 4, 19), WHITE)
 	local ball =
-		part(floor, "DiscoBall", Vector3.new(3, 3, 3), CFrame.new(48, 12, 0), Color3.fromRGB(220, 220, 235))
+		part(floor, "DiscoBall", Vector3.new(3, 3, 3), CFrame.new(37, 12, 30), Color3.fromRGB(220, 220, 235))
 	ball.Shape = Enum.PartType.Ball
 	ball.Material = Enum.Material.Glass
 	ball.Reflectance = 0.6
@@ -290,7 +290,7 @@ local function buildDanceFloor(parent: Instance)
 end
 
 local function buildBouncePads(parent: Instance)
-	for _, position in { Vector3.new(-22, 0.3, 42), Vector3.new(22, 0.3, 42) } do
+	for _, position in { Vector3.new(-14, 0.3, 48), Vector3.new(14, 0.3, 48) } do
 		local pad = part(
 			parent,
 			"BouncePad",
@@ -305,8 +305,8 @@ local function buildBouncePads(parent: Instance)
 end
 
 local function buildLeaderboard(parent: Instance)
-	local board = part(parent, "Leaderboard", Vector3.new(1, 14, 20), CFrame.new(58, 8, -30), DARK)
-	part(parent, "LeaderboardGlow", Vector3.new(0.5, 15, 21), CFrame.new(58.6, 8, -30), PINK, true)
+	local board = part(parent, "Leaderboard", Vector3.new(1, 14, 20), CFrame.new(58, 8, 40), DARK)
+	part(parent, "LeaderboardGlow", Vector3.new(0.5, 15, 21), CFrame.new(58.6, 8, 40), PINK, true)
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Left -- faces -X, towards the plaza
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
@@ -371,16 +371,17 @@ function Activities.start()
 	Appearance.build(folder)
 	for _, position in
 		{
-			Vector3.new(-15, 3, 40),
-			Vector3.new(15, 3, 40),
-			Vector3.new(-40, 3, 30),
-			Vector3.new(40, 3, 30),
-			Vector3.new(-40, 3, -35),
-			Vector3.new(40, 3, -35),
-			Vector3.new(-18, 3, -12),
-			Vector3.new(18, 3, -12),
-			Vector3.new(0, 3, 36),
-			Vector3.new(48, 3, 0),
+			-- Around the Play Zone, clear of the minigame arenas.
+			Vector3.new(0, 3, -20),
+			Vector3.new(0, 3, -44),
+			Vector3.new(-16, 3, 4),
+			Vector3.new(16, 3, 4),
+			Vector3.new(0, 3, 30),
+			Vector3.new(-6, 3, 56),
+			Vector3.new(24, 3, 56),
+			Vector3.new(-50, 3, 4),
+			Vector3.new(50, 3, 6),
+			Vector3.new(-30, 3, 56),
 		}
 	do
 		makeGem(folder, position)
