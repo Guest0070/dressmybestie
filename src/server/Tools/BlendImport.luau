@@ -317,6 +317,7 @@ function BlendImport.apply(options: Options?)
 	local stashOld = if options and options.stashOld ~= nil then options.stashOld else true
 	local withLights = if options and options.lights ~= nil then options.lights else true
 	local runtime = options ~= nil and options.runtime == true
+	print("[BlendImport v3] starting (finds pieces by name, any model name)")
 	if RunService:IsRunning() and not runtime then
 		warn(
 			"[BlendImport] Stop the game first (red Stop button), then run this again. Changes made during Play are thrown away."
