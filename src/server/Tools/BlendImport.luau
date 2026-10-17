@@ -221,20 +221,69 @@ local function addLights(folder: Instance)
 	end
 end
 
+-- Studio may rename imported parts (case, spaces, "_1" suffixes...), so pieces are matched on a
+-- loose key: lower-case letters and digits only, trailing copy numbers ignored.
+local function looseKey(name: string): string
+	return string.lower((string.gsub(name, "[^%w]", "")))
+end
+local pieceByKey: { [string]: string } = {}
+for name in BlendPieces do
+	pieceByKey[looseKey(name)] = name
+end
+
+-- The Blender piece name this part is, or nil if it isn't part of the building.
+local function pieceName(part: BasePart): string?
+	local key = looseKey(part.Name)
+	local exact = pieceByKey[key]
+	if exact then
+		return exact
+	end
+	-- Drop a copy number Studio may have added ("...swatch07" + "1"), one digit at a time.
+	for _ = 1, 3 do
+		if not string.match(key, "%d$") then
+			break
+		end
+		key = string.sub(key, 1, -2)
+		local found = pieceByKey[key]
+		if found then
+			return found
+		end
+	end
+	return nil
+end
+
 -- Puts one imported piece exactly where it is in Blender (+ OFFSET), at its Blender size, and
 -- anchors it. Works however Studio imported it (anywhere, scaled, or already fallen over).
--- Returns false for parts that aren't pieces of the building.
-local function snap(part: BasePart): boolean
-	local data = BlendPieces[part.Name]
-	if not data then
-		return false
-	end
+local function snap(part: BasePart, name: string)
+	local data = BlendPieces[name]
 	part.Anchored = true
 	part.AssemblyLinearVelocity = Vector3.zero
 	part.AssemblyAngularVelocity = Vector3.zero
 	part.Size = Vector3.new(data[4], data[5], data[6])
 	part.CFrame = CFrame.new(Vector3.new(data[1], data[2], data[3]) + BlendImport.OFFSET)
-	return true
+end
+
+-- Top-level things in Workspace that can hold imported pieces (not the game's own map, players,
+-- terrain or camera).
+local function candidates(): { Instance }
+	local list = {}
+	for _, child in Workspace:GetChildren() do
+		if
+			child:IsA("Terrain")
+			or child:IsA("Camera")
+			or child.Name == "Map"
+			or (child:IsA("Model") and child:FindFirstChildOfClass("Humanoid"))
+		then
+			continue
+		end
+		table.insert(list, child)
+	end
+	local map = Workspace:FindFirstChild("Map")
+	local imported = if map then map:FindFirstChild("Imported") else nil
+	if imported then
+		table.insert(list, imported)
+	end
+	return list
 end
 
 local function kiosk(
@@ -290,39 +339,64 @@ function BlendImport.apply(options: Options?)
 		local map = getOrCreate(Workspace, "Map", "Model")
 		local imported = getOrCreate(map, "Imported", "Model")
 
-		-- 1. Find the imported models (anywhere in Workspace) and put them in place.
-		local found = 0
-		for groupName in BlendData.groups do
-			local model = Workspace:FindFirstChild(groupName, true)
-			if not model then
-				local template = ServerStorage:FindFirstChild("SMB_BoothTemplate")
-				if groupName == "SMB_DressingRoom" and template then
-					continue -- already set up on an earlier run
+		-- 1. Find every imported piece (anywhere in Workspace, however Studio named the models),
+		-- snap it into place and style it. The private dressing room's pieces (PMD_*) are gathered
+		-- into their own model; everything else goes under Map.Imported.
+		local room = Instance.new("Model")
+		room.Name = "SMB_DressingRoom"
+		local matched, loose, roomPieces = 0, 0, 0
+		local unknownNames: { string } = {}
+		local tops: { [Instance]: boolean } = {}
+		for _, holder in candidates() do
+			local parts = holder:GetDescendants()
+			table.insert(parts, holder) -- a part dropped straight into Workspace
+			for _, part in parts do
+				if not part:IsA("BasePart") then
+					continue
 				end
-				warn(`[BlendImport] {groupName} not found. Import assets/models/{groupName}.glb first.`)
-				continue
-			end
-			if not model:IsA("Model") then
-				warn(`[BlendImport] {model:GetFullName()} is not a Model, skipped`)
-				continue
-			end
-			found += 1
-			local snapped = 0
-			for _, descendant in model:GetDescendants() do
-				if descendant:IsA("BasePart") and snap(descendant) then
-					snapped += 1
-					local objectName, materialName = splitName(descendant.Name)
-					applyLook(descendant, objectName, materialName)
+				local name = pieceName(part)
+				if not name then
+					if not part.Anchored then
+						part.Anchored = true -- whatever it is, don't let it fall
+						loose += 1
+						if #unknownNames < 8 then
+							table.insert(unknownNames, part:GetFullName())
+						end
+					end
+					continue
+				end
+				matched += 1
+				snap(part, name)
+				local objectName, materialName = splitName(name)
+				applyLook(part, objectName, materialName)
+				if string.sub(name, 1, 4) == "PMD_" then
+					part.Parent = room
+					roomPieces += 1
+				elseif part == holder then
+					part.Parent = imported
+				elseif holder ~= imported then
+					tops[holder] = true
 				end
 			end
-			if snapped == 0 then
-				warn(
-					`[BlendImport] {groupName}: no parts matched by name. Re-import assets/models/{groupName}.glb.`
-				)
-			end
-			model.Parent = if groupName == "SMB_DressingRoom" then model.Parent else imported
 		end
-		print(`[BlendImport] placed and styled {found} model(s)`)
+		for holder in tops do
+			holder.Parent = imported
+		end
+		if roomPieces > 0 then
+			room.Parent = Workspace
+		end
+		print(`[BlendImport] matched {matched} of 765 building pieces ({roomPieces} in the dressing room)`)
+		if matched == 0 then
+			warn("[BlendImport] No building pieces found. Import the .glb files from assets/models first.")
+		end
+		if loose > 0 then
+			warn(
+				`[BlendImport] anchored {loose} other loose part(s) so they don't fall, e.g.: {table.concat(
+					unknownNames,
+					", "
+				)}`
+			)
+		end
 
 		-- 2. Lights.
 		if withLights then
@@ -432,8 +506,7 @@ function BlendImport.apply(options: Options?)
 		floor.Parent = lobby
 
 		-- 5. Private dressing room -> booth template (styling booths are copies of it).
-		local room = Workspace:FindFirstChild("SMB_DressingRoom", true)
-		if room and room:IsA("Model") then
+		if roomPieces > 0 then
 			local anchor = at("PMD_Avatar_Stand_Point")
 			local front = at("CAM_PMD_Front")
 			local mannequinPos = anchor + Vector3.new(0, 4, 0)
@@ -484,16 +557,30 @@ function BlendImport.apply(options: Options?)
 	end
 end
 
--- Called by the server at start. If imported SMB_* models are in Workspace but the setup was never
--- run (or not saved), do it now so nothing falls apart. Lasts for this server only.
+-- Called by the server at start. If imported building pieces sit loose in Workspace (the setup was
+-- never run in Studio, or not saved), set them up now so nothing falls apart. This server only.
 function BlendImport.autoSetup()
-	local imported = Workspace:FindFirstChild("Map")
-	imported = if imported then imported:FindFirstChild("Imported") else nil
-	for groupName in BlendData.groups do
-		local model = Workspace:FindFirstChild(groupName, true)
-		if model and not (imported and model:IsDescendantOf(imported)) then
-			BlendImport.apply({ runtime = true })
-			return
+	local map = Workspace:FindFirstChild("Map")
+	local imported = if map then map:FindFirstChild("Imported") else nil
+	for _, holder in candidates() do
+		if holder == imported then
+			continue
+		end
+		local parts = holder:GetDescendants()
+		table.insert(parts, holder)
+		for _, part in parts do
+			if part:IsA("BasePart") and pieceName(part) then
+				BlendImport.apply({ runtime = true })
+				return
+			end
+		end
+	end
+	-- Already set up: just make sure nothing in the building is unanchored.
+	if imported then
+		for _, part in imported:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.Anchored = true
+			end
 		end
 	end
 end
