@@ -18,16 +18,19 @@ local S = Arena.Sounds
 
 local SpinSweep = {}
 
-function SpinSweep.build(parent: Instance): Arena.Game
+-- arcade: on the arcade hall's round Spin Sweep platform (it has its own floor, edge and sign).
+function SpinSweep.build(parent: Instance, arcade: boolean?): Arena.Game
 	local ss = Config.Minigames.SpinSweep
+	local platform = if arcade then Arena.arcadeSpot("ARC_Spin_Sweep_Platform__MAT_ARC_LED_Cyan") else nil
+	local inArcade = platform ~= nil
 	local model = Instance.new("Model")
 	model.Name = "SpinSweep"
-	local center = ss.Center
-	local radius = ss.Radius
-	local top = 1
+	local center = if platform then Vector3.new(platform.X, 0, platform.Z) else ss.Center
+	local radius = if inArcade then 8.8 else ss.Radius
+	local top = if platform then platform.Y + 0.03 else 1
 
 	-- Platform: black marble, champagne rim, neon edge and radial LED spokes.
-	Arena.disc(
+	local floor = Arena.disc(
 		model,
 		"Platform",
 		1,
@@ -56,7 +59,12 @@ function SpinSweep.build(parent: Instance): Arena.Game
 		Enum.Material.Neon
 	)
 	edge.CanCollide = false
-	for k = 0, 7 do
+	if inArcade then
+		floor:Destroy() -- the hall's platform is the floor
+		rim:Destroy()
+		edge:Destroy()
+	end
+	for k = 0, if inArcade then -1 else 7 do
 		local angle = k * math.pi / 4
 		local dir = Vector3.new(math.cos(angle), 0, math.sin(angle))
 		Arena.glow(
@@ -166,7 +174,7 @@ function SpinSweep.build(parent: Instance): Arena.Game
 	motor.Parent = pivot
 
 	-- Corner light posts.
-	for k = 0, 3 do
+	for k = 0, if inArcade then -1 else 3 do
 		local angle = k * math.pi / 2 + math.pi / 4
 		Arena.pillar(
 			model,
@@ -175,12 +183,17 @@ function SpinSweep.build(parent: Instance): Arena.Game
 			false
 		)
 	end
-	local status, detail = Arena.sign(
-		model,
-		"SpinSweep",
-		CFrame.new(center + Vector3.new(radius + 7, 5, 0)) * CFrame.Angles(0, math.rad(-90), 0),
-		"SPIN SWEEP"
-	)
+	local status, detail
+	if inArcade then
+		status, detail = Arena.statusBoard(model, "SpinSweep", center + Vector3.new(0, 10, 0))
+	else
+		status, detail = Arena.sign(
+			model,
+			"SpinSweep",
+			CFrame.new(center + Vector3.new(radius + 7, 5, 0)) * CFrame.Angles(0, math.rad(-90), 0),
+			"SPIN SWEEP"
+		)
+	end
 	model.Parent = parent
 	-- The server owns the arm so everyone sees the same one. (Deferred: only works once the
 	-- folder is in the Workspace, which happens after everything is built.)

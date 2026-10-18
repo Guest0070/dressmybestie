@@ -5,7 +5,9 @@
 --   FreezeFrame  a paparazzi shoot: DANCE, then FREEZE or JUMP FOR THE CAMERA
 --   SpinSweep    jump the sparking arm or get flung off (REVERSE! SURGE! a second arm)
 --   RunwayDash   a timed course over a glowing pool: checkpoints, medals, global leaderboard
+--   CoverStar    (arcade hall only) face the edge the photographer calls, or jump, before the flash
 -- plus the Sky Obby (Lobby/Activities), listed so the Games panel can take you there.
+-- With the arcade hall imported, the round games live on its platforms.
 --
 -- Round games: step on to join. When someone's on, a countdown starts (3-2-1-GO on screen);
 -- everyone on it then plays. The server decides every elimination. Winners get fireworks, a
@@ -21,6 +23,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Arena = require(script.Arena)
 local Quests = require(script.Parent.Parent.Quests)
 local ColorRush = require(script.ColorRush)
+local CoverStar = require(script.CoverStar)
 local FreezeFrame = require(script.FreezeFrame)
 local RunwayDash = require(script.RunwayDash)
 local SpinSweep = require(script.SpinSweep)
@@ -147,13 +150,45 @@ local function runLoop(g: Arena.Game)
 	end
 end
 
--- PLAY ZONE CHAMPIONS: most minigame wins on this server, in front of the Hall of Fame.
-local function buildChampionsBoard(parent: Instance)
-	local cf = CFrame.new(0, 7, 58)
-	Arena.part(parent, "ChampionsFrame", Vector3.new(19, 11, 0.4), cf, C.Champagne, Enum.Material.Metal)
-	local board = Arena.part(parent, "Champions", Vector3.new(18, 10, 0.7), cf, C.Black, Enum.Material.Marble)
-	local gui = Arena.surface(board, Enum.NormalId.Front, 30) -- faces -Z, towards the plaza
-	Arena.label(gui, "PLAY ZONE CHAMPIONS", UDim2.fromScale(0.04, 0.04), UDim2.fromScale(0.92, 0.18), C.Pink)
+-- CHAMPIONS board: most minigame wins on this server. In the arcade it's shown on the hall's big
+-- leaderboard screen; otherwise it stands in front of the Hall of Fame.
+local function buildChampionsBoard(parent: Instance, arcade: boolean)
+	local screen = if arcade then Arena.arcadeSpot("ARC_Leaderboard_Wall__MAT_ARC_Screen") else nil
+	local board: Part
+	local gui: SurfaceGui
+	if screen then
+		-- A thin glowing panel just in front of the screen (it faces +X, into the hall).
+		board = Arena.part(
+			parent,
+			"Champions",
+			Vector3.new(0.05, 13, 16.5),
+			CFrame.new(screen + Vector3.new(0.14, 0, 0)),
+			C.Plum,
+			Enum.Material.SmoothPlastic
+		)
+		board.CanCollide = false
+		gui = Arena.surface(board, Enum.NormalId.Right, 30)
+	else
+		local cf = CFrame.new(0, 7, 58)
+		Arena.part(parent, "ChampionsFrame", Vector3.new(19, 11, 0.4), cf, C.Champagne, Enum.Material.Metal)
+		board = Arena.part(parent, "Champions", Vector3.new(18, 10, 0.7), cf, C.Black, Enum.Material.Marble)
+		gui = Arena.surface(board, Enum.NormalId.Front, 30) -- faces -Z, towards the plaza
+		Arena.part(
+			parent,
+			"ChampionsPost",
+			Vector3.new(1, 2, 1),
+			CFrame.new(0, 1, 58),
+			C.Black,
+			Enum.Material.Marble
+		)
+	end
+	Arena.label(
+		gui,
+		if screen then "ARCADE CHAMPIONS" else "PLAY ZONE CHAMPIONS",
+		UDim2.fromScale(0.04, 0.04),
+		UDim2.fromScale(0.92, 0.18),
+		C.Pink
+	)
 	local lines = {}
 	for i = 1, 5 do
 		local label = Arena.label(
@@ -166,14 +201,6 @@ local function buildChampionsBoard(parent: Instance)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(lines, label)
 	end
-	Arena.part(
-		parent,
-		"ChampionsPost",
-		Vector3.new(1, 2, 1),
-		CFrame.new(0, 1, 58),
-		C.Black,
-		Enum.Material.Marble
-	)
 	local function refresh()
 		local list = Arena.champions()
 		for i, label in lines do
@@ -217,9 +244,13 @@ function Minigames.start()
 	end
 	local folder = Instance.new("Folder")
 	folder.Name = "Minigames"
-	games.ColorRush = ColorRush.build(folder)
-	games.FreezeFrame = FreezeFrame.build(folder)
-	games.SpinSweep = SpinSweep.build(folder)
+	-- With the arcade hall imported (assets/models/SMB_ArcadeHall.glb), the round games run on its
+	-- platforms and Cover Star joins them; otherwise they stand in the Play Zone outside.
+	local arcade = Arena.arcadeImported() or Config.Minigames.ForceArcade == true
+	games.ColorRush = ColorRush.build(folder, arcade)
+	games.FreezeFrame = FreezeFrame.build(folder, arcade)
+	games.SpinSweep = SpinSweep.build(folder, arcade)
+	games.CoverStar = if arcade then CoverStar.build(folder) else nil
 	games.RunwayDash = RunwayDash.build(folder)
 	-- The Sky Obby lives in Lobby/Activities; listed here so the Games panel can take you there.
 	games.Obby = {
@@ -242,7 +273,7 @@ function Minigames.start()
 			return {}
 		end,
 	}
-	buildChampionsBoard(folder)
+	buildChampionsBoard(folder, arcade)
 	folder.Parent = lobby
 
 	Remotes.Events.MinigameGo.OnServerEvent:Connect(go)

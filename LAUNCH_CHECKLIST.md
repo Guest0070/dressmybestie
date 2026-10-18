@@ -12,6 +12,16 @@ Rojo syncs it into Studio, then **File > Save to Roblox**.
   The Blender building, Play Zone setup and booth template live in the place file, not in Git.
   If you skip this, the next server starts without them.
 
+## 1b. Import the arcade hall (once)
+
+- [ ] Studio (Rojo connected, `git pull` done): **File > Import 3D** > `assets/models/SMB_ArcadeHall.glb`.
+      Set the scale unit to **Stud**, then Import.
+- [ ] Make sure the game isn't running. **View > Command Bar**, paste, Enter:
+      `require(game.ServerScriptService.Server.Tools.BlendImport).apply()`
+- [ ] Play: walk through the west arch of the Customize/Team Up room. You should see four game
+      platforms (Color Rush, Freeze Frame, Spin Sweep, Cover Star) and the champions screen.
+- [ ] Stop, then **File > Save to Roblox**.
+
 ## 2. Game settings (Studio: Home > Game Settings)
 
 - [ ] **Avatar > Avatar Type: R15** > Save. (Layered clothing and body types need R15.)

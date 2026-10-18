@@ -7,6 +7,7 @@ GROUPS = {
     "SMB_VIPLounge": ["ROOM_VIP_LOUNGE"], "SMB_Shop": ["ROOM_SHOP"], "SMB_HallOfFame": ["ROOM_HALL_OF_FAME"],
     "SMB_CustomizeTeamUp": ["ROOM_CUSTOMIZATION_TEAMUP"], "SMB_RunwayStage": ["COMPACT_RUNWAY_STAGE"],
     "SMB_DressingRoom": ["PRIVATE_MATCH_DRESSING_ROOM"], "SMB_VIPRamp": ["VIP_RAMP_ASSET"],
+    "SMB_ArcadeHall": ["ARCADE_HALL"],
 }
 dg=bpy.context.evaluated_depsgraph_get()
 out={}

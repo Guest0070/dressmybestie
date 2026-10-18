@@ -14,6 +14,7 @@ GROUPS = {
     "SMB_RunwayStage": ["COMPACT_RUNWAY_STAGE"],
     "SMB_DressingRoom": ["PRIVATE_MATCH_DRESSING_ROOM"],
     "SMB_VIPRamp": ["VIP_RAMP_ASSET"],
+    "SMB_ArcadeHall": ["ARCADE_HALL"],
 }
 def allobjs(c):
     out = list(c.objects)
@@ -76,8 +77,13 @@ for o in bpy.data.objects:
         fwd = (o.matrix_world.to_3x3() @ Vector((0,0,-1))).normalized()
         markers.append({"name": o.name, "type": o.type, "pos": to_rbx(o.matrix_world.translation), "dir": to_rbx(fwd)})
 
+import os
+# ONLY=SMB_ArcadeHall exports just those groups (comma separated); the JSON data is always complete.
+ONLY = [g for g in os.environ.get("ONLY", "").split(",") if g]
 dg = bpy.context.evaluated_depsgraph_get()
 for gname, colls in GROUPS.items():
+    if ONLY and gname not in ONLY:
+        continue
     srcobjs = []
     for cn in colls: srcobjs += [o for o in allobjs(C[cn]) if o.type == 'MESH']
     bpy.ops.object.select_all(action='DESELECT')

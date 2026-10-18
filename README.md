@@ -169,13 +169,15 @@ mobile-first UI.
 ## Blender building (assets/models)
 
 `Style_My_Bestie_Final.blend` is exported to `assets/models/SMB_*.glb`, one file per area: Hall,
-Shop, VIP Lounge, Hall of Fame, Customize/Team Up, Runway Stage, Dressing Room, VIP Ramp. Meshes are
+Shop, VIP Lounge, Hall of Fame, Customize/Team Up, Runway Stage, Dressing Room, VIP Ramp.
+`Style_My_Bestie_Arcade_Hall_1.blend` adds the arcade hall as `SMB_ArcadeHall.glb`. Meshes are
 split by material (a Roblox mesh has one colour) and anything over 19k triangles was reduced (Roblox
 limit 20k). 1 Blender metre = 1 stud. The scripts that did this are in `tools/blender/`.
 
 **Put it in the game (once, in Studio):**
 1. Open the place, Rojo connected, `git pull` done.
-2. **File > Import 3D**, pick all 8 `.glb` files in `assets/models`. In the import window set the
+2. **File > Import 3D**, pick all 9 `.glb` files in `assets/models` (already imported the other 8?
+   then just `SMB_ArcadeHall.glb`). In the import window set the
    scale unit to **Stud**, then Import. (Where they land doesn't matter.)
 3. Press **Stop** if the game is running (the command does nothing during Play). **View > Command Bar**, paste, Enter:
    `require(game.ServerScriptService.Server.Tools.BlendImport).apply()`
@@ -185,7 +187,9 @@ limit 20k). 1 Blender metre = 1 stud. The scripts that did this are in `tools/bl
 colours, materials, glass, neon, collisions and the Blender lights, and wires the game to it:
 runway + podium on the stage, skin/body booths in the Customize capsules, shop kiosks in the shop bays,
 VIP kiosk in the lounge, Dressing Room kiosk at the Team Up console, and every styling booth becomes a
-copy of the private dressing room (`ServerStorage.SMB_BoothTemplate`). An old `Workspace.LobbyEnvironment`
+copy of the private dressing room (`ServerStorage.SMB_BoothTemplate`). The arcade hall sits west of the
+Customize/Team Up room (through its west arch). Once it's imported, Color Rush, Freeze Frame and Spin Sweep
+move onto its platforms, Cover Star opens on the fourth, and the champions board shows on its big screen. An old `Workspace.LobbyEnvironment`
 is moved to `ServerStorage.MapBackup` (not deleted). Ctrl+Z undoes the whole thing.
 Every piece is snapped to its exact Blender position and size and anchored, so it doesn't matter where
 Studio dropped the models. If you press Play before running the command, the server does the same setup

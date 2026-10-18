@@ -232,6 +232,56 @@ function Arena.sign(
 	return front[2], front[3]
 end
 
+-- Arcade version of a sign: the arcade hall has its own game signs, so only the live status
+-- (headline + detail) floats over the platform, readable from anywhere in the hall.
+function Arena.statusBoard(parent: Instance, name: string, position: Vector3): (TextLabel, TextLabel)
+	local anchor = Arena.part(parent, `{name}Status`, Vector3.new(1, 1, 1), CFrame.new(position), C.Plum)
+	anchor.Transparency = 1
+	anchor.CanCollide = false
+	anchor.CanQuery = false
+	anchor.CanTouch = false
+	local gui = Instance.new("BillboardGui")
+	gui.Size = UDim2.fromScale(12, 3.6) -- studs: scales with distance like a real sign
+	gui.LightInfluence = 0
+	gui.MaxDistance = 140
+	gui.Parent = anchor
+	local status = Arena.label(gui, "", UDim2.fromScale(0, 0), UDim2.fromScale(1, 0.62), Color3.new(1, 1, 1))
+	local detail = Arena.label(
+		gui,
+		"",
+		UDim2.fromScale(0.05, 0.64),
+		UDim2.fromScale(0.9, 0.34),
+		Color3.fromRGB(220, 210, 240)
+	)
+	return status, detail
+end
+
+-- Where the arcade hall's pieces are (Blender data + BlendImport's OFFSET), if it was imported into
+-- this place. Minigames move into the arcade when it's there.
+function Arena.arcadeSpot(piece: string): Vector3?
+	local BlendPieces = require(script.Parent.Parent.Parent.Tools.BlendPieces) :: any
+	local BlendImport = require(script.Parent.Parent.Parent.Tools.BlendImport) :: any
+	local data = BlendPieces[piece]
+	if not data then
+		return nil
+	end
+	return Vector3.new(data[1], data[2], data[3]) + BlendImport.OFFSET
+end
+
+function Arena.arcadeImported(): boolean
+	local map = Workspace:FindFirstChild("Map")
+	local imported = map and map:FindFirstChild("Imported")
+	if not imported then
+		return false
+	end
+	for _, d in imported:GetDescendants() do
+		if d:IsA("BasePart") and string.sub(d.Name, 1, 4) == "ARC_" then
+			return true
+		end
+	end
+	return false
+end
+
 ---------------------------------------------------------------------------------------------------
 -- Players
 ---------------------------------------------------------------------------------------------------

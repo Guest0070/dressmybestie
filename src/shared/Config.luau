@@ -1059,6 +1059,9 @@ Config.Minigames = {
 	CountdownSeconds = 8, -- after the first player steps on, before the game starts
 	ResultSeconds = 6, -- winner celebration before the next game can start
 	CelebrateRadius = 160, -- players this close see a win's fireworks and get the "X won!" toast
+	-- The round games move into the arcade hall automatically once SMB_ArcadeHall.glb is imported.
+	-- true = build them there anyway (for testing before the import).
+	ForceArcade = false,
 	ColorRush = {
 		Center = Vector3.new(36, 0, -30), -- north-east of the path; ramp on the south side
 		Grid = 7, -- 7x7 tiles
@@ -1094,6 +1097,14 @@ Config.Minigames = {
 		SecondArmAt = 22, -- seconds in: a second arm joins (a cross)
 		EventsFrom = 12, -- REVERSE! / SURGE! events start here
 		KnockSpeed = 75, -- how hard the arm flings you off
+	},
+	-- Cover Star (arcade hall only): face the edge that's called (or jump) before the camera flashes.
+	CoverStar = {
+		Rounds = 12,
+		FirstWindow = 3.2, -- seconds to get into position on the first shot...
+		LastWindow = 1.4, -- ...and on the last
+		JumpFromRound = 3,
+		JumpChance = 0.22,
 	},
 	RunwayDash = {
 		Start = Vector3.new(62, 0, 0), -- foot of the stairs on the plaza's east side

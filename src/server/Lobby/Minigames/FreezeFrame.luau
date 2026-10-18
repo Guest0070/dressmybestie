@@ -16,16 +16,28 @@ local S = Arena.Sounds
 
 local FreezeFrame = {}
 
-function FreezeFrame.build(parent: Instance): Arena.Game
+-- arcade: on the arcade hall's Freeze Frame platform (the hall has the stage, sign and lights;
+-- the disco ball and lights hang from its ceiling, the cameras stand closer).
+function FreezeFrame.build(parent: Instance, arcade: boolean?): Arena.Game
 	local ff = Config.Minigames.FreezeFrame
+	local platform = if arcade then Arena.arcadeSpot("ARC_Freeze_Frame_Platform__MAT_Silver_Metal") else nil
+	local inArcade = platform ~= nil
 	local model = Instance.new("Model")
 	model.Name = "FreezeFrame"
-	local center = ff.Center
-	local radius = ff.Radius
-	local top = 1
+	local center = if platform then Vector3.new(platform.X, 0, platform.Z) else ff.Center
+	local radius = if inArcade then 8 else ff.Radius
+	local top = if platform then platform.Y + 0.03 else 1
 
 	-- Stage: black marble disc, champagne rim, neon edge and a disco floor of square tiles.
-	Arena.disc(model, "Stage", 1, radius * 2, center + Vector3.new(0, 0.5, 0), C.Black, Enum.Material.Marble)
+	local stage = Arena.disc(
+		model,
+		"Stage",
+		1,
+		radius * 2,
+		center + Vector3.new(0, 0.5, 0),
+		C.Black,
+		Enum.Material.Marble
+	)
 	local rim = Arena.disc(
 		model,
 		"Rim",
@@ -46,6 +58,11 @@ function FreezeFrame.build(parent: Instance): Arena.Game
 		Enum.Material.Neon
 	)
 	edge.CanCollide = false
+	if inArcade then
+		stage:Destroy() -- the hall's platform is the stage
+		rim:Destroy()
+		edge:Destroy()
+	end
 	local tileSize = 3.6
 	local count = math.floor((radius - 1) * 2 / tileSize)
 	for i = 0, count - 1 do
@@ -69,19 +86,21 @@ function FreezeFrame.build(parent: Instance): Arena.Game
 	-- Rig: four pillars, a square truss, a disco ball and coloured spotlights.
 	local rigHeight = 18
 	local reach = radius + 3
-	for k = 0, 3 do
+	for k = 0, if inArcade then -1 else 3 do
 		local angle = k * math.pi / 2 + math.pi / 4
 		Arena.pillar(model, center + Vector3.new(math.cos(angle), 0, math.sin(angle)) * reach, rigHeight)
 	end
 	local side = reach * math.sqrt(2)
 	for _, spec in
-		{
-			{ Vector3.new(side, 1, 1), Vector3.new(0, rigHeight, reach / math.sqrt(2)) },
-			{ Vector3.new(side, 1, 1), Vector3.new(0, rigHeight, -reach / math.sqrt(2)) },
-			{ Vector3.new(1, 1, side), Vector3.new(reach / math.sqrt(2), rigHeight, 0) },
-			{ Vector3.new(1, 1, side), Vector3.new(-reach / math.sqrt(2), rigHeight, 0) },
-			{ Vector3.new(side, 0.6, 0.6), Vector3.new(0, rigHeight, 0) },
-		}
+		if inArcade
+			then {}
+			else {
+				{ Vector3.new(side, 1, 1), Vector3.new(0, rigHeight, reach / math.sqrt(2)) },
+				{ Vector3.new(side, 1, 1), Vector3.new(0, rigHeight, -reach / math.sqrt(2)) },
+				{ Vector3.new(1, 1, side), Vector3.new(reach / math.sqrt(2), rigHeight, 0) },
+				{ Vector3.new(1, 1, side), Vector3.new(-reach / math.sqrt(2), rigHeight, 0) },
+				{ Vector3.new(side, 0.6, 0.6), Vector3.new(0, rigHeight, 0) },
+			}
 	do
 		Arena.part(model, "Truss", spec[1], CFrame.new(center + spec[2]), C.Black, Enum.Material.Marble)
 	end
@@ -100,8 +119,8 @@ function FreezeFrame.build(parent: Instance): Arena.Game
 	Arena.part(
 		model,
 		"BallRod",
-		Vector3.new(0.3, 2, 0.3),
-		CFrame.new(center + Vector3.new(0, rigHeight - 1.5, 0)),
+		Vector3.new(0.3, if inArcade then 3.6 else 2, 0.3), -- reaches the hall's ceiling
+		CFrame.new(center + Vector3.new(0, rigHeight - (if inArcade then 0.7 else 1.5), 0)),
 		C.Champagne,
 		Enum.Material.Metal
 	)
@@ -125,7 +144,9 @@ function FreezeFrame.build(parent: Instance): Arena.Game
 	-- Paparazzi: six cameras on tripods around the stage, flashes ready.
 	for k = 0, 5 do
 		local angle = k * math.pi / 3 + math.pi / 6
-		local base = center + Vector3.new(math.cos(angle), 0, math.sin(angle)) * (radius + 5.5)
+		local base = center
+			+ Vector3.new(math.cos(angle), 0, math.sin(angle))
+				* (radius + (if inArcade then 3.5 else 5.5))
 		local facing = CFrame.lookAt(base + Vector3.new(0, 4.6, 0), center + Vector3.new(0, 3, 0))
 		for leg = 0, 2 do
 			local legAngle = leg * math.pi * 2 / 3
@@ -161,14 +182,31 @@ function FreezeFrame.build(parent: Instance): Arena.Game
 		flash:AddTag("PapFlash") -- the client fires these on FREEZE!
 	end
 
-	-- COVER STAR board (north side): the last winner, magazine-cover style.
+	-- COVER STAR board (north side): the last winner, magazine-cover style. (Not in the arcade:
+	-- Cover Star is its own game there.)
 	local coverCFrame = CFrame.new(center + Vector3.new(0, 9, -radius - 7))
-	Arena.part(model, "CoverFrame", Vector3.new(13, 17, 0.4), coverCFrame, C.Champagne, Enum.Material.Metal)
-	local cover =
-		Arena.part(model, "Cover", Vector3.new(12, 16, 0.7), coverCFrame, C.Plum, Enum.Material.SmoothPlastic)
 	local coverName: { TextLabel } = {}
-	for _, face in { Enum.NormalId.Back, Enum.NormalId.Front } do
-		local gui = Arena.surface(cover, face, 30)
+	for _, face in if inArcade then {} else { Enum.NormalId.Back, Enum.NormalId.Front } do
+		local cover = model:FindFirstChild("Cover") :: Part?
+		if not cover then
+			Arena.part(
+				model,
+				"CoverFrame",
+				Vector3.new(13, 17, 0.4),
+				coverCFrame,
+				C.Champagne,
+				Enum.Material.Metal
+			)
+			cover = Arena.part(
+				model,
+				"Cover",
+				Vector3.new(12, 16, 0.7),
+				coverCFrame,
+				C.Plum,
+				Enum.Material.SmoothPlastic
+			)
+		end
+		local gui = Arena.surface(cover :: Part, face, 30)
 		Arena.label(gui, "COVER STAR", UDim2.fromScale(0.05, 0.03), UDim2.fromScale(0.9, 0.16), C.Pink)
 		Arena.label(
 			gui,
@@ -190,12 +228,17 @@ function FreezeFrame.build(parent: Instance): Arena.Game
 		Arena.label(gui, "★ ★ ★", UDim2.fromScale(0.2, 0.72), UDim2.fromScale(0.6, 0.1), C.Gold)
 	end
 
-	local status, detail = Arena.sign(
-		model,
-		"FreezeFrame",
-		CFrame.new(center + Vector3.new(radius + 7, 5, 0)) * CFrame.Angles(0, math.rad(-90), 0),
-		"FREEZE FRAME"
-	)
+	local status, detail
+	if inArcade then
+		status, detail = Arena.statusBoard(model, "FreezeFrame", center + Vector3.new(0, 9.5, 0))
+	else
+		status, detail = Arena.sign(
+			model,
+			"FreezeFrame",
+			CFrame.new(center + Vector3.new(radius + 7, 5, 0)) * CFrame.Angles(0, math.rad(-90), 0),
+			"FREEZE FRAME"
+		)
+	end
 	model.Parent = parent
 
 	---------------------------------------------------------------------------------------------

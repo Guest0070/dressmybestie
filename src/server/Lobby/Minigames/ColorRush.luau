@@ -28,8 +28,20 @@ type Tile = { base: Part, glow: Part, ring: number, color: typeof(COLORS[1])?, r
 
 local ColorRush = {}
 
-function ColorRush.build(parent: Instance): Arena.Game
-	local cr = Config.Minigames.ColorRush
+-- arcade: build on the arcade hall's Color Rush platform instead of the Play Zone: a 5x5 field
+-- flush on the platform (the hall has its own frame, sign and lights). Dropping out is then
+-- detected by position: standing on a tile that dropped means you're out.
+function ColorRush.build(parent: Instance, arcade: boolean?): Arena.Game
+	local cr = table.clone(Config.Minigames.ColorRush)
+	local platform = if arcade then Arena.arcadeSpot("ARC_Color_Rush_Platform__MAT_Silver_Metal") else nil
+	if platform then
+		cr.Center = Vector3.new(platform.X, 0, platform.Z)
+		cr.Grid = 5
+		cr.TileSize = 3.6
+		cr.Height = platform.Y + 0.35 -- tile tops just above the platform surface
+		cr.ShrinkFromWave = math.huge -- a 5x5 field has no room to shrink
+	end
+	local flat = platform ~= nil
 	local model = Instance.new("Model")
 	model.Name = "ColorRush"
 	local center = cr.Center
@@ -68,23 +80,27 @@ function ColorRush.build(parent: Instance): Arena.Game
 		end
 	end
 	-- The "out" floor under the field: dark glass with a pink outline and OUT painted on it.
-	local pit = Arena.part(
-		model,
-		"Pit",
-		Vector3.new(half * 2, 0.2, half * 2),
-		CFrame.new(center + Vector3.new(0, 0.1, 0)),
-		C.Plum,
-		Enum.Material.Glass
-	)
-	pit.CanCollide = false
-	local pitGui = Arena.surface(pit, Enum.NormalId.Top, 8)
-	Arena.label(
-		pitGui,
-		"OUT",
-		UDim2.fromScale(0.1, 0.3),
-		UDim2.fromScale(0.8, 0.4),
-		Color3.fromRGB(90, 70, 120)
-	)
+	local pit = if flat
+		then nil
+		else Arena.part(
+			model,
+			"Pit",
+			Vector3.new(half * 2, 0.2, half * 2),
+			CFrame.new(center + Vector3.new(0, 0.1, 0)),
+			C.Plum,
+			Enum.Material.Glass
+		)
+	if pit then
+		pit.CanCollide = false
+		local pitGui = Arena.surface(pit, Enum.NormalId.Top, 8)
+		Arena.label(
+			pitGui,
+			"OUT",
+			UDim2.fromScale(0.1, 0.3),
+			UDim2.fromScale(0.8, 0.4),
+			Color3.fromRGB(90, 70, 120)
+		)
+	end
 	for _, spec in
 		{
 			{ Vector3.new(half * 2 + 1.2, 0.5, 0.5), Vector3.new(0, top - 0.75, half + 0.35) },
@@ -96,10 +112,18 @@ function ColorRush.build(parent: Instance): Arena.Game
 		Arena.glow(model, "Edge", spec[1], CFrame.new(center + spec[2]), C.Pink)
 	end
 
-	-- Frame: four pillars, a truss and a four-sided screen hanging over the middle.
-	local pillarHeight = top + 16
+	-- Frame: four pillars, a truss and a four-sided screen hanging over the middle. (In the arcade
+	-- the screen hangs from the hall's ceiling instead.)
+	local pillarHeight = if flat then 19.4 else top + 16
 	for _, corner in
-		{ Vector3.new(1, 0, 1), Vector3.new(-1, 0, 1), Vector3.new(1, 0, -1), Vector3.new(-1, 0, -1) }
+		if flat
+			then {}
+			else {
+				Vector3.new(1, 0, 1),
+				Vector3.new(-1, 0, 1),
+				Vector3.new(1, 0, -1),
+				Vector3.new(-1, 0, -1),
+			}
 	do
 		local base = center + corner * (half + 2.5)
 		Arena.pillar(model, base, pillarHeight)
@@ -120,17 +144,19 @@ function ColorRush.build(parent: Instance): Arena.Game
 		spot.Parent = lamp
 	end
 	for _, spec in
-		{
-			{ Vector3.new(half * 2 + 7, 1.4, 1.4), Vector3.new(0, pillarHeight, half + 2.5) },
-			{ Vector3.new(half * 2 + 7, 1.4, 1.4), Vector3.new(0, pillarHeight, -half - 2.5) },
-			{ Vector3.new(1.4, 1.4, half * 2 + 7), Vector3.new(half + 2.5, pillarHeight, 0) },
-			{ Vector3.new(1.4, 1.4, half * 2 + 7), Vector3.new(-half - 2.5, pillarHeight, 0) },
-			{ Vector3.new(half * 2 + 5, 1, 1), Vector3.new(0, pillarHeight, 0) },
-		}
+		if flat
+			then {}
+			else {
+				{ Vector3.new(half * 2 + 7, 1.4, 1.4), Vector3.new(0, pillarHeight, half + 2.5) },
+				{ Vector3.new(half * 2 + 7, 1.4, 1.4), Vector3.new(0, pillarHeight, -half - 2.5) },
+				{ Vector3.new(1.4, 1.4, half * 2 + 7), Vector3.new(half + 2.5, pillarHeight, 0) },
+				{ Vector3.new(1.4, 1.4, half * 2 + 7), Vector3.new(-half - 2.5, pillarHeight, 0) },
+				{ Vector3.new(half * 2 + 5, 1, 1), Vector3.new(0, pillarHeight, 0) },
+			}
 	do
 		Arena.part(model, "Truss", spec[1], CFrame.new(center + spec[2]), C.Black, Enum.Material.Marble)
 	end
-	local screenY = pillarHeight - 5
+	local screenY = if flat then 13 else pillarHeight - 5
 	Arena.part(
 		model,
 		"ScreenRod",
@@ -180,16 +206,19 @@ function ColorRush.build(parent: Instance): Arena.Game
 	end
 
 	-- Ramp up on the south side (towards the fountain). A wedge's low edge is its front (-Z).
-	local rampLength = top * 2.2
-	local rampCenter = Vector3.new(center.X, top / 2, center.Z + half + rampLength / 2)
-	local ramp = Instance.new("WedgePart")
-	ramp.Name = "Ramp"
-	ramp.Anchored = true
-	ramp.Size = Vector3.new(8, top, rampLength)
-	ramp.CFrame = CFrame.lookAt(rampCenter, rampCenter + Vector3.new(0, 0, 1))
-	ramp.Color = C.Black
-	ramp.Material = Enum.Material.Marble
-	ramp.Parent = model
+	-- The arcade field is at floor level: no ramp.
+	local rampLength = if flat then 0 else top * 2.2
+	if not flat then
+		local rampCenter = Vector3.new(center.X, top / 2, center.Z + half + rampLength / 2)
+		local ramp = Instance.new("WedgePart")
+		ramp.Name = "Ramp"
+		ramp.Anchored = true
+		ramp.Size = Vector3.new(8, top, rampLength)
+		ramp.CFrame = CFrame.lookAt(rampCenter, rampCenter + Vector3.new(0, 0, 1))
+		ramp.Color = C.Black
+		ramp.Material = Enum.Material.Marble
+		ramp.Parent = model
+	end
 	-- Closed while a game runs, so nobody walks onto the tiles mid-game.
 	local gate = Arena.glow(
 		model,
@@ -200,12 +229,17 @@ function ColorRush.build(parent: Instance): Arena.Game
 	)
 	gate.Transparency = 1
 
-	local status, detail = Arena.sign(
-		model,
-		"ColorRush",
-		CFrame.new(center + Vector3.new(-half - 4, top + 5, 0)) * CFrame.Angles(0, math.rad(90), 0),
-		"COLOR RUSH"
-	)
+	local status, detail
+	if flat then
+		status, detail = Arena.statusBoard(model, "ColorRush", center + Vector3.new(0, 8.5, 0))
+	else
+		status, detail = Arena.sign(
+			model,
+			"ColorRush",
+			CFrame.new(center + Vector3.new(-half - 4, top + 5, 0)) * CFrame.Angles(0, math.rad(90), 0),
+			"COLOR RUSH"
+		)
+	end
 	model.Parent = parent
 
 	---------------------------------------------------------------------------------------------
@@ -220,6 +254,24 @@ function ColorRush.build(parent: Instance): Arena.Game
 		local p = root.Position - center
 		return math.abs(p.X) <= half and math.abs(p.Z) <= half and p.Y > top + 0.5 and p.Y < top + 14
 	end
+
+	-- The tile under a player (by position), for the flat arcade field.
+	local function tileUnder(player: Player): Tile?
+		local root = Arena.rootOf(player)
+		if not root then
+			return nil
+		end
+		local p = root.Position - center
+		local i = math.floor((p.X + half) / cr.TileSize) + 1
+		local j = math.floor((p.Z + half) / cr.TileSize) + 1
+		if i < 1 or j < 1 or i > cr.Grid or j > cr.Grid then
+			return nil
+		end
+		return tiles[(i - 1) * cr.Grid + j]
+	end
+	-- Out spot beside the field (south side), facing it.
+	local outSpot =
+		CFrame.lookAt(Vector3.new(center.X, 3.5, center.Z + half + 4), Vector3.new(center.X, 3.5, center.Z))
 
 	local function paint(tile: Tile, pick: typeof(COLORS[1]))
 		tile.color = pick
@@ -261,10 +313,12 @@ function ColorRush.build(parent: Instance): Arena.Game
 		isOn = isOn,
 		joinSpot = function(playing: boolean): CFrame
 			if playing then
-				return CFrame.lookAt(
-					Vector3.new(center.X, 3, center.Z + half + rampLength + 4),
-					Vector3.new(center.X, 3, center.Z)
-				)
+				return if flat
+					then outSpot
+					else CFrame.lookAt(
+						Vector3.new(center.X, 3, center.Z + half + rampLength + 4),
+						Vector3.new(center.X, 3, center.Z)
+					)
 			end
 			return CFrame.new(center + Vector3.new(0, top + 3, 0))
 		end,
@@ -283,12 +337,19 @@ function ColorRush.build(parent: Instance): Arena.Game
 					task.wait(0.12)
 					local kept = {}
 					for _, player in alive do
-						if Arena.eligible(player) and isOn(player) then
+						-- Flat arcade field: standing on a dropped tile counts as falling.
+						local under = if flat then tileUnder(player) else nil
+						local dropped = under ~= nil and under.base:GetAttribute("Gone") == true
+						if Arena.eligible(player) and isOn(player) and not dropped then
 							table.insert(kept, player)
 						else
 							local root = Arena.rootOf(player)
 							if root then
 								Arena.fx(nil, { kind = "burst", position = root.Position, color = C.Pink })
+							end
+							local character = player.Character
+							if flat and character and isOn(player) then
+								character:PivotTo(outSpot)
 							end
 							Arena.sound(S.Out, nil, { player }, 0.8)
 							Arena.toast(player, `Out on wave {wave}! Step back on for the next game.`)

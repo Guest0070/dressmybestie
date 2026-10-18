@@ -45,6 +45,13 @@ local GAMES = {
 		hint = "Jump when the arm comes round",
 	},
 	{
+		id = "CoverStar",
+		name = "Cover Star",
+		icon = "📸",
+		blurb = "Face the colour the photographer calls before the flash!",
+		hint = "Turn to face the edge that's called (or jump!)",
+	},
+	{
 		id = "RunwayDash",
 		name = "Runway Dash",
 		icon = "⏱️",
@@ -71,7 +78,7 @@ local bannerDetail: TextLabel
 local barBack: Frame
 local barFill: Frame
 local panel: Frame
-local cards: { [string]: { status: TextLabel, button: Components.ButtonHandle } } = {}
+local cards: { [string]: { frame: Frame, status: TextLabel, button: Components.ButtonHandle } } = {}
 
 local wasIn: { [string]: boolean } = {}
 local shownId: string? = nil
@@ -248,6 +255,8 @@ end
 local function refreshPanel()
 	for id, card in cards do
 		local minigame = State.minigames[id]
+		-- A game this server doesn't have (e.g. Cover Star without the arcade hall) isn't listed.
+		card.frame.Visible = minigame ~= nil
 		if minigame then
 			card.status.Text = statusText(minigame)
 			card.status.TextColor3 = if minigame.phase == "Playing"
@@ -343,7 +352,7 @@ local function buildBanner(root: Frame)
 	banner = Components.panel({
 		Name = "MinigameBanner",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 70),
+		Position = UDim2.new(0.5, 0, 0, 92), -- below the event banner
 		Size = UDim2.fromOffset(360, 108),
 		Visible = false,
 		Parent = root,
@@ -498,7 +507,7 @@ local function buildPanel(root: Frame)
 			end,
 			Parent = card,
 		})
-		cards[info.id] = { status = status, button = button }
+		cards[info.id] = { frame = card, status = status, button = button }
 	end
 end
 

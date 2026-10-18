@@ -142,6 +142,10 @@ local function applyLook(part: BasePart, objectName: string, materialName: strin
 			part.CollisionFidelity = fidelity
 		end)
 	end
+	-- The Cover Star frame stands over its platform: players walk in through it.
+	if objectName == "ARC_Cover_Star_Frame" then
+		part.CanCollide = false
+	end
 	-- Entrance glass doors: let players walk through (they act like automatic doors).
 	if string.find(objectName, "DOOR_Entrance_Doors") then
 		part.CanCollide = false
@@ -347,7 +351,7 @@ function BlendImport.apply(options: Options?)
 	local stashOld = if options and options.stashOld ~= nil then options.stashOld else true
 	local withLights = if options and options.lights ~= nil then options.lights else true
 	local runtime = options ~= nil and options.runtime == true
-	print("[BlendImport v4] starting (finds pieces by name, also names Studio shortened)")
+	print("[BlendImport v5] starting (building + arcade hall)")
 	if RunService:IsRunning() and not runtime then
 		warn(
 			"[BlendImport] Stop the game first (red Stop button), then run this again. Changes made during Play are thrown away."
@@ -430,7 +434,13 @@ function BlendImport.apply(options: Options?)
 		if roomPieces > 0 then
 			room.Parent = Workspace
 		end
-		print(`[BlendImport] matched {matched} of 765 building pieces ({roomPieces} in the dressing room)`)
+		local total = 0
+		for _ in BlendPieces do
+			total += 1
+		end
+		print(
+			`[BlendImport] matched {matched} of {total} building pieces ({roomPieces} in the dressing room)`
+		)
 		if matched == 0 then
 			warn("[BlendImport] No building pieces found. Import the .glb files from assets/models first.")
 		end
