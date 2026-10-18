@@ -309,7 +309,7 @@ local function startLoops()
 			beatStep += 1
 			local near = r and stageCenter and (r.Position - stageCenter).Magnitude < 70
 			if dancing and near then
-				play(SOUNDS.Beat, nil, 0.35, if beatStep % 4 == 0 then 0.75 else 0.85)
+				play(SOUNDS.Beat, nil, 0.18, if beatStep % 4 == 0 then 0.75 else 0.85)
 			end
 			for _, tile in CollectionService:GetTagged("DiscoTile") do
 				if tile:IsA("BasePart") then
@@ -336,7 +336,7 @@ local function startLoops()
 		elseif dancing and beatClock >= beatLength / 2 and beatClock - dt < beatLength / 2 then
 			local near = r and stageCenter and (r.Position - stageCenter).Magnitude < 70
 			if near then
-				play(SOUNDS.HiHat, nil, 0.25, 1.1)
+				play(SOUNDS.HiHat, nil, 0.1, 1.1)
 			end
 		end
 		for _, ball in CollectionService:GetTagged("DiscoBall") do

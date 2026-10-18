@@ -171,10 +171,13 @@ local function refresh()
 			end
 		end)
 		local stylists = if #entry.stylistNames > 0 then table.concat(entry.stylistNames, " & ") else "?"
+		-- Average stars (one decimal), hearts, or nothing when nobody rated it (e.g. a solo test).
+		local score = if entry.average and entry.average > 0
+			then `  ★ {string.format("%.1f", entry.average)}`
+			elseif not entry.average and entry.hearts > 0 then `  ♥ {entry.hearts}`
+			else ""
 		Kit.label({
-			Text = `{PLACE_NAMES[entry.place]}  {entry.wearerName}  (styled by {stylists})  {if entry.average
-				then `★ {entry.average}`
-				else `♥ {entry.hearts}`}`,
+			Text = `{PLACE_NAMES[entry.place]}  {entry.wearerName}  (styled by {stylists}){score}`,
 			Size = UDim2.new(1, -16, 1, -8),
 			Position = UDim2.fromOffset(8, 4),
 			TextColor3 = Kit.Colors.Panel,

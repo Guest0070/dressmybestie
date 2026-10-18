@@ -6,9 +6,8 @@ local AvatarEditorService = game:GetService("AvatarEditorService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local DEBUG = RunService:IsStudio()
-
 local Config = require(ReplicatedStorage.Shared.Config)
+local DEBUG = RunService:IsStudio() and Config.DebugLogs
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
@@ -50,6 +49,23 @@ local itemButtons: { [number]: ImageButton } = {}
 local wornLabel: TextLabel
 local statusLabel: TextLabel
 local moreButton: TextButton
+local readyButton: TextButton
+local hideButton: TextButton
+local ready = false
+local collapsed = false
+
+-- READY button text: "READY" / "READY ✓ 1/2" (how many stylists are done).
+local function refreshReady()
+	if not readyButton then
+		return
+	end
+	local round = State.round
+	local count = if round.readyTotal and round.readyTotal > 1
+		then ` {round.readyCount or 0}/{round.readyTotal}`
+		else ""
+	readyButton.Text = if ready then `READY ✓{count}` else `READY{count}`
+	readyButton.BackgroundColor3 = if ready then Kit.Colors.Gold else Kit.Colors.Green
+end
 
 local function copyLook(source: Look): Look
 	return { assetIds = table.clone(source.assetIds), shoeBundleId = source.shoeBundleId }
@@ -281,9 +297,18 @@ local function refreshVisibility()
 	local stylingTarget = State.myTarget()
 	local styling = State.round.phase == "Styling" and stylingTarget ~= nil
 	local visible = styling or selfMode
-	panel.Visible = visible
+	if not visible then
+		collapsed = false
+	end
+	panel.Visible = visible and not collapsed
 	rotateBar.Visible = visible
 	selfBar.Visible = selfMode
+	readyButton.Visible = styling and not selfMode
+	hideButton.Text = if collapsed then "SHOW" else "HIDE"
+	if not styling and ready then
+		ready = false -- a new round starts not ready
+	end
+	refreshReady()
 	local target = if selfMode then State.player.UserId elseif styling then stylingTarget else nil
 	if target ~= currentTarget then
 		-- New round or a swap: start from an empty look (LookSync fills in a swapped look).
@@ -338,10 +363,11 @@ end
 function Catalog.start()
 	local _, root = Kit.screen("Catalog", 2)
 
+	-- Right 40% of the screen; the rest stays clear for the mannequin. HIDE slides it away.
 	panel = Kit.panel({
 		Name = "CatalogPanel",
-		Position = UDim2.new(0.5, 0, 0, 8),
-		Size = UDim2.new(0.5, -8, 1, -16),
+		Position = UDim2.new(0.6, 0, 0, 8),
+		Size = UDim2.new(0.4, -8, 1, -16),
 		Visible = false,
 		Parent = root,
 	})
@@ -350,7 +376,7 @@ function Catalog.start()
 	local tabs = Kit.new("ScrollingFrame", {
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(8, 8),
-		Size = UDim2.new(1, -16, 0, 52),
+		Size = UDim2.new(1, -16, 0, 44),
 		CanvasSize = UDim2.new(0, 0, 0, 0),
 		AutomaticCanvasSize = Enum.AutomaticSize.X,
 		ScrollingDirection = Enum.ScrollingDirection.X,
@@ -360,10 +386,10 @@ function Catalog.start()
 	for index, category in Config.CatalogCategories do
 		tabButtons[category.id] = Kit.button({
 			Text = category.id,
-			Size = UDim2.fromOffset(104, 44),
+			Size = UDim2.fromOffset(84, 36),
 			BackgroundColor3 = Kit.Colors.PanelLight,
 			LayoutOrder = index,
-			MaxTextSize = 20,
+			MaxTextSize = 16,
 			Parent = tabs,
 		}, function()
 			selectCategory(category)
@@ -373,8 +399,8 @@ function Catalog.start()
 	-- Item grid
 	grid = Kit.new("ScrollingFrame", {
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(8, 66),
-		Size = UDim2.new(1, -16, 1, -66 - Kit.ButtonHeight - 16),
+		Position = UDim2.fromOffset(8, 56),
+		Size = UDim2.new(1, -16, 1, -56 - 44 - 16),
 		CanvasSize = UDim2.new(0, 0, 0, 0),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		ScrollingDirection = Enum.ScrollingDirection.Y,
@@ -382,8 +408,8 @@ function Catalog.start()
 		Parent = panel,
 	}, {
 		Kit.new("UIGridLayout", {
-			CellSize = UDim2.fromOffset(92, 92),
-			CellPadding = UDim2.fromOffset(8, 8),
+			CellSize = UDim2.fromOffset(78, 78),
+			CellPadding = UDim2.fromOffset(6, 6),
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
 	})
@@ -410,67 +436,94 @@ function Catalog.start()
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.new(0, 8, 1, -8),
-		Size = UDim2.new(1, -16, 0, Kit.ButtonHeight),
+		Size = UDim2.new(1, -16, 0, 44),
 		Parent = panel,
 	}, { Kit.list(Enum.FillDirection.Horizontal, 8) })
 	Kit.button({
 		Text = "Undo",
-		Size = UDim2.fromOffset(110, Kit.ButtonHeight),
+		Size = UDim2.fromOffset(84, 44),
 		BackgroundColor3 = Kit.Colors.Blue,
 		LayoutOrder = 1,
 		Parent = bottom,
 	}, undo)
 	Kit.button({
 		Text = "Clear",
-		Size = UDim2.fromOffset(110, Kit.ButtonHeight),
+		Size = UDim2.fromOffset(84, 44),
 		BackgroundColor3 = Kit.Colors.Grey,
 		LayoutOrder = 2,
 		Parent = bottom,
 	}, clear)
 	wornLabel =
-		Kit.label({ Size = UDim2.fromOffset(140, 40), LayoutOrder = 3, Font = Kit.BodyFont, Parent = bottom })
+		Kit.label({ Size = UDim2.fromOffset(120, 32), LayoutOrder = 3, Font = Kit.BodyFont, Parent = bottom })
 
 	-- Rotate the mannequin view (bottom-left, over the 3D view)
 	rotateBar = Kit.new("Frame", {
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.new(0, 8, 1, -8),
-		Size = UDim2.fromOffset(2 * 72 + 8, Kit.ButtonHeight),
+		Size = UDim2.fromOffset(2 * 52 + 3 * 8 + 120 + 96, 44),
 		Visible = false,
 		Parent = root,
 	}, { Kit.list(Enum.FillDirection.Horizontal, 8) })
 	Kit.button(
-		{ Text = "<", Size = UDim2.fromOffset(72, Kit.ButtonHeight), LayoutOrder = 1, Parent = rotateBar },
+		{ Text = "<", Size = UDim2.fromOffset(52, 44), LayoutOrder = 1, Parent = rotateBar },
 		function()
 			Catalog.onRotate(-1)
 		end
 	)
 	Kit.button(
-		{ Text = ">", Size = UDim2.fromOffset(72, Kit.ButtonHeight), LayoutOrder = 2, Parent = rotateBar },
+		{ Text = ">", Size = UDim2.fromOffset(52, 44), LayoutOrder = 2, Parent = rotateBar },
 		function()
 			Catalog.onRotate(1)
 		end
 	)
+	-- READY: done styling. When every stylist is ready, the round moves on (no 4-minute wait).
+	readyButton = Kit.button({
+		Text = "READY",
+		Size = UDim2.fromOffset(120, 44),
+		BackgroundColor3 = Kit.Colors.Green,
+		LayoutOrder = 3,
+		MaxTextSize = 20,
+		Parent = rotateBar,
+	}, function()
+		ready = not ready
+		Remotes.Events.StylingReady:FireServer(ready)
+		refreshReady()
+	end)
+	-- HIDE / SHOW the catalog to see the whole mannequin.
+	hideButton = Kit.button({
+		Text = "HIDE",
+		Size = UDim2.fromOffset(96, 44),
+		BackgroundColor3 = Kit.Colors.PanelLight,
+		LayoutOrder = 4,
+		MaxTextSize = 18,
+		Parent = rotateBar,
+	}, function()
+		collapsed = not collapsed
+		refreshVisibility()
+	end)
 
 	-- Dressing Room buttons (above the rotate buttons).
 	selfBar = Kit.new("Frame", {
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.new(0, 8, 1, -16 - Kit.ButtonHeight),
-		Size = UDim2.fromOffset(4 * 120 + 24, Kit.ButtonHeight),
+		Position = UDim2.new(0, 8, 1, -16 - 44),
+		Size = UDim2.fromOffset(4 * 104 + 24, 44),
 		Visible = false,
 		Parent = root,
 	}, { Kit.list(Enum.FillDirection.Horizontal, 8) })
 	Kit.button({
 		Text = "Done",
-		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		Size = UDim2.fromOffset(104, 44),
+		MaxTextSize = 20,
 		BackgroundColor3 = Kit.Colors.Green,
 		LayoutOrder = 1,
 		Parent = selfBar,
 	}, Catalog.closeDressingRoom)
 	Kit.button({
 		Text = "Reset me",
-		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		Size = UDim2.fromOffset(104, 44),
+		MaxTextSize = 20,
 		BackgroundColor3 = Kit.Colors.Grey,
 		LayoutOrder = 2,
 		Parent = selfBar,
@@ -482,7 +535,8 @@ function Catalog.start()
 	end)
 	Kit.button({
 		Text = "Buy these",
-		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		Size = UDim2.fromOffset(104, 44),
+		MaxTextSize = 20,
 		BackgroundColor3 = Kit.Colors.Gold,
 		LayoutOrder = 3,
 		Parent = selfBar,
@@ -491,7 +545,8 @@ function Catalog.start()
 	end)
 	Kit.button({
 		Text = "Wardrobe",
-		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		Size = UDim2.fromOffset(104, 44),
+		MaxTextSize = 20,
 		BackgroundColor3 = Kit.Colors.Pink,
 		LayoutOrder = 4,
 		Parent = selfBar,

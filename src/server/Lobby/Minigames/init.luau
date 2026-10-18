@@ -93,7 +93,7 @@ local function runLoop(g: Arena.Game)
 			local left = math.ceil(startAt - Arena.now())
 			if left <= 3 and left < lastTick then
 				lastTick = left
-				Arena.sound(S.Tick, nil, onNow, 0.7, 1 + (3 - left) * 0.12)
+				Arena.sound(S.Tick, nil, onNow, 0.35, 1 + (3 - left) * 0.12)
 			end
 			task.wait(0.1)
 		end

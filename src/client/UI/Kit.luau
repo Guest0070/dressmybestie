@@ -124,7 +124,7 @@ function Kit.playSound(key: string)
 	local group = SoundService:FindFirstChild("SFX") -- Audio.luau; Settings mutes it
 	local sound = Kit.new("Sound", {
 		SoundId = soundId,
-		Volume = 0.6,
+		Volume = 0.35,
 		SoundGroup = if group and group:IsA("SoundGroup") then group else nil,
 		Parent = SoundService,
 	})
@@ -238,7 +238,8 @@ function Kit.screen(name: string, displayOrder: number?): (ScreenGui, Frame)
 			local camera = Workspace.CurrentCamera
 			size = if camera then camera.ViewportSize else Vector2.new(DESIGN_WIDTH, DESIGN_HEIGHT)
 		end
-		local s = math.clamp(math.min(size.X / DESIGN_WIDTH, size.Y / DESIGN_HEIGHT), 0.8, 1.6)
+		-- Capped at 1.2: on big monitors panels stay compact instead of covering the screen.
+		local s = math.clamp(math.min(size.X / DESIGN_WIDTH, size.Y / DESIGN_HEIGHT), 0.75, 1.2)
 		scale.Scale = s
 		-- Undo the scale on the root's own size so it still fills the screen exactly.
 		root.Size = UDim2.fromScale(1 / s, 1 / s)

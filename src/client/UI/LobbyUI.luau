@@ -344,9 +344,9 @@ local function buildActions(content: Frame)
 	actions.BackgroundTransparency = 1
 	actions.AnchorPoint = Vector2.new(0.5, 1)
 	actions.Position = UDim2.new(0.5, 0, 1, -12)
-	actions.Size = UDim2.fromScale(0.22, 0.2)
+	actions.Size = UDim2.fromScale(0.18, 0.17)
 	actions.Parent = content
-	Components.sizeLimit(Vector2.new(200, 80), Vector2.new(300, 120)).Parent = actions
+	Components.sizeLimit(Vector2.new(180, 72), Vector2.new(240, 96)).Parent = actions
 	Components.list(Enum.FillDirection.Vertical, 8).Parent = actions
 
 	Components.styleButton({
@@ -389,9 +389,9 @@ local function sideColumn(content: Frame, name: string, anchorX: number): Frame
 	column.BackgroundTransparency = 1
 	column.AnchorPoint = Vector2.new(anchorX, 0.5)
 	column.Position = UDim2.new(anchorX, if anchorX == 0 then 12 else -12, 0.56, 0)
-	column.Size = UDim2.fromScale(0.12, 0.5)
+	column.Size = UDim2.fromScale(0.1, 0.46)
 	column.Parent = content
-	Components.sizeLimit(Vector2.new(100, 0), Vector2.new(150, math.huge)).Parent = column
+	Components.sizeLimit(Vector2.new(96, 0), Vector2.new(128, math.huge)).Parent = column
 	Components.list(
 		Enum.FillDirection.Vertical,
 		6,
@@ -413,7 +413,7 @@ local function sideButton(
 		Name = name,
 		Text = text,
 		Variant = variant,
-		Size = UDim2.fromScale(1, 0.18),
+		Size = UDim2.fromScale(1, 0.15),
 		MaxTextSize = if (utf8.len(text) or #text) > 12 then 12 else 14,
 		LayoutOrder = order,
 		Visible = visible ~= false,
@@ -442,7 +442,7 @@ local function buildSideColumns(content: Frame)
 	sideButton(left, 5, "Admin", "🛠️ ADMIN", nil, false)
 
 	local right = sideColumn(content, "Right", 1)
-	sideButton(right, 1, "Games", "🎮 GAMES", "Special")
+	sideButton(right, 1, "Games", "🏆 GAMES", "Special")
 	sideButton(right, 2, "Invite", "💌 INVITE")
 	sideButton(right, 3, "HowToPlay", "❓ HOW TO PLAY")
 end

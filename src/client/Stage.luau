@@ -15,9 +15,9 @@ local State = require(script.Parent.State)
 
 local Stage = {}
 
-local ORBIT_DISTANCE = 10
--- Raise the camera (studs) so the mannequin sits low on screen, below the timer/banner panels.
-local CAMERA_RAISE = 3
+local ORBIT_DISTANCE = 12.5
+-- Camera height above the mannequin's middle (studs): a touch above, looking slightly down.
+local CAMERA_RAISE = 1.2
 local CAMERA_LERP = 0.15
 
 local orbitAngle = 0
@@ -85,6 +85,8 @@ local function setCharacterHidden(hidden: boolean)
 	for _, descendant in character:GetDescendants() do
 		if descendant:IsA("BasePart") or descendant:IsA("Decal") then
 			(descendant :: any).LocalTransparencyModifier = if hidden then 1 else 0
+		elseif descendant:IsA("BillboardGui") and descendant.Name == "Nametag" then
+			descendant.Enabled = not hidden -- your own tag would float over the mannequin
 		end
 	end
 end
@@ -144,11 +146,12 @@ local function updateCamera()
 			distance = math.max(hit.Distance - 1.5, 4)
 		end
 		local cameraPos = pivot.Position + dir * distance + raise
-		local level = CFrame.lookAt(cameraPos, cameraPos - dir)
+		-- Aim at the middle of the body so head to shoes are in view.
+		local level = CFrame.lookAt(cameraPos, pivot.Position + Vector3.new(0, 0.6, 0))
 		local viewport = camera.ViewportSize
 		local aspect = viewport.X / math.max(viewport.Y, 1)
 		local halfFov = math.rad(camera.FieldOfView) / 2
-		local yaw = math.atan(0.5 * math.tan(halfFov) * aspect)
+		local yaw = math.atan(0.4 * math.tan(halfFov) * aspect) -- centre of the left 60% (catalog is 40%)
 		camera.CFrame = camera.CFrame:Lerp(level * CFrame.Angles(0, -yaw, 0), CAMERA_LERP * 2)
 		return
 	end
@@ -162,13 +165,14 @@ local function updateCamera()
 			local dir = Vector3.new(look.X, 0, look.Z).Unit -- from mannequin toward camera, level
 			local cameraPos = pivot.Position + dir * ORBIT_DISTANCE + Vector3.new(0, CAMERA_RAISE, 0)
 			-- Look level (not down) so the raise pushes the mannequin lower on screen.
-			local level = CFrame.lookAt(cameraPos, cameraPos - dir)
+			-- Aim at the middle of the body so head to shoes are in view.
+			local level = CFrame.lookAt(cameraPos, pivot.Position + Vector3.new(0, 0.6, 0))
 			-- Turn the camera right so the mannequin appears centred in the LEFT half of the screen
 			-- (the catalog covers the right half). Turning instead of sliding keeps it inside the booth.
 			local viewport = camera.ViewportSize
 			local aspect = viewport.X / math.max(viewport.Y, 1)
 			local halfFov = math.rad(camera.FieldOfView) / 2
-			local yaw = math.atan(0.5 * math.tan(halfFov) * aspect)
+			local yaw = math.atan(0.4 * math.tan(halfFov) * aspect) -- centre of the left 60% (catalog is 40%)
 			local desired = level * CFrame.Angles(0, -yaw, 0)
 			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP * 2)
 			-- Roblox's camera scripts reset character transparency every frame, so re-apply it.

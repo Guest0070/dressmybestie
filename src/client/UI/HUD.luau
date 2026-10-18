@@ -121,26 +121,30 @@ local function applyLayout(styling: boolean)
 	photoButton.Visible = phase == "Runway" or phase == "Results" or State.dressingRoom
 	-- No timer in the lobby (LobbyUI shows the round status) or in the Dressing Room (nothing to time).
 	local dressingInLobby = State.dressingRoom and phase == "Lobby"
-	topPanel.Visible = not lobby and not dressingInLobby
+	-- Nothing to count down (e.g. between runway walkers): no empty "--" timer.
+	topPanel.Visible = not lobby and not dressingInLobby and State.round.endsAt ~= nil
 	if styling then
 		topPanel.AnchorPoint = Vector2.new(0, 0)
 		topPanel.Position = UDim2.fromOffset(8, 8)
+		-- One slim row: timer, then the banner beside it. The middle of the screen stays clear for
+		-- the mannequin; the catalog is on the right.
+		local left = if topPanel.Visible then 8 + 150 + 8 else 8
 		bannerFrame.AnchorPoint = Vector2.new(0, 0)
-		bannerFrame.Position = UDim2.fromOffset(8, if topPanel.Visible then 98 else 8)
-		bannerFrame.Size = UDim2.new(0.5, -16, 0, 62)
+		bannerFrame.Position = UDim2.fromOffset(left, 8)
+		bannerFrame.Size = UDim2.new(0, 420, 0, 56)
 		toastLabel.AnchorPoint = Vector2.new(0, 0)
-		toastLabel.Position = UDim2.fromOffset(8, if topPanel.Visible then 168 else 78)
-		toastLabel.Size = UDim2.new(0.5, -16, 0, 70)
+		toastLabel.Position = UDim2.fromOffset(8, 72)
+		toastLabel.Size = UDim2.new(0.6, -20, 0, 48)
 	else
 		topPanel.AnchorPoint = Vector2.new(0.5, 0)
 		topPanel.Position = UDim2.new(0.5, 0, 0, 8)
 		bannerFrame.AnchorPoint = Vector2.new(0.5, 0)
-		bannerFrame.Position = UDim2.new(0.5, 0, 0, 98)
-		bannerFrame.Size = UDim2.fromOffset(520, 62)
+		bannerFrame.Position = UDim2.new(0.5, 0, 0, 70)
+		bannerFrame.Size = UDim2.fromOffset(440, 52)
 		toastLabel.AnchorPoint = Vector2.new(0.5, 0)
 		-- In the lobby: between the round-status panel and the JOIN RANDOM buttons.
-		toastLabel.Position = if lobby then UDim2.fromScale(0.5, 0.5) else UDim2.new(0.5, 0, 0, 168)
-		toastLabel.Size = UDim2.fromOffset(520, 70)
+		toastLabel.Position = if lobby then UDim2.fromScale(0.5, 0.5) else UDim2.new(0.5, 0, 0, 128)
+		toastLabel.Size = UDim2.fromOffset(440, 52)
 	end
 end
 
@@ -171,10 +175,9 @@ local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPha
 		revealChaos.Text = if round.chaos
 			then `CHAOS ROUND: {round.chaos.displayName}\n{round.chaos.description}`
 			else ""
-		revealFrame.Size = UDim2.fromOffset(200, 80)
-		TweenService:Create(revealFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
-			Size = UDim2.fromOffset(560, 200),
-		}):Play()
+		local full = if round.chaos then UDim2.fromOffset(440, 150) else UDim2.fromOffset(440, 110)
+		revealFrame.Size = UDim2.fromOffset(200, 60)
+		TweenService:Create(revealFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), { Size = full }):Play()
 	end
 	if changedFrom then
 		Kit.playSound("PhaseChange")
@@ -278,19 +281,20 @@ function HUD.start()
 		Name = "Top",
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.new(0.5, 0, 0, 8),
-		Size = UDim2.fromOffset(260, 84),
+		Size = UDim2.fromOffset(150, 56),
 		Parent = root,
 	})
 	phaseLabel = Kit.label({
-		Size = UDim2.new(1, -16, 0, 26),
-		Position = UDim2.fromOffset(8, 4),
+		Size = UDim2.new(1, -12, 0, 18),
+		Position = UDim2.fromOffset(6, 3),
 		TextColor3 = Kit.Colors.Pink,
+		MaxTextSize = 16,
 		Parent = topPanel,
 	})
 	timerLabel = Kit.label({
-		Size = UDim2.new(1, -16, 0, 48),
-		Position = UDim2.fromOffset(8, 30),
-		MaxTextSize = 48,
+		Size = UDim2.new(1, -12, 0, 32),
+		Position = UDim2.fromOffset(6, 21),
+		MaxTextSize = 32,
 		Text = "",
 		Parent = topPanel,
 	})
@@ -299,18 +303,20 @@ function HUD.start()
 	bannerFrame = Kit.panel({
 		Name = "Banner",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 98),
-		Size = UDim2.fromOffset(520, 62),
+		Position = UDim2.new(0.5, 0, 0, 70),
+		Size = UDim2.fromOffset(440, 52),
 		Parent = root,
 	})
 	bannerLabel = Kit.label({
-		Size = UDim2.new(1, -20, 0, 34),
-		Position = UDim2.fromOffset(10, 4),
+		Size = UDim2.new(1, -16, 0, 28),
+		Position = UDim2.fromOffset(8, 3),
+		MaxTextSize = 26,
 		Parent = bannerFrame,
 	})
 	subLabel = Kit.label({
-		Size = UDim2.new(1, -20, 0, 20),
-		Position = UDim2.fromOffset(10, 38),
+		Size = UDim2.new(1, -16, 0, 16),
+		Position = UDim2.fromOffset(8, 32),
+		MaxTextSize = 15,
 		Font = Kit.BodyFont,
 		TextColor3 = Kit.Colors.Gold,
 		Parent = bannerFrame,
@@ -320,8 +326,9 @@ function HUD.start()
 	photoButton = Kit.button({
 		Text = "Photo",
 		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -8, 0, 96),
-		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		Position = UDim2.new(1, -8, 0, 70),
+		Size = UDim2.fromOffset(96, 40),
+		MaxTextSize = 18,
 		BackgroundColor3 = Kit.Colors.Blue,
 		Visible = false,
 		Parent = root,
@@ -344,29 +351,31 @@ function HUD.start()
 	-- Theme reveal card
 	revealFrame = Kit.panel({
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.55),
-		Size = UDim2.fromOffset(560, 200),
+		Position = UDim2.fromScale(0.5, 0.3),
+		Size = UDim2.fromOffset(440, 110),
 		Visible = false,
 		BackgroundColor3 = Kit.Colors.PinkDark,
 		Parent = root,
 	})
 	Kit.label({
 		Text = "THE THEME IS",
-		Size = UDim2.new(1, -20, 0, 30),
-		Position = UDim2.fromOffset(10, 10),
+		Size = UDim2.new(1, -20, 0, 20),
+		Position = UDim2.fromOffset(10, 8),
+		MaxTextSize = 18,
 		Parent = revealFrame,
 	})
 	revealTheme = Kit.label({
-		Size = UDim2.new(1, -20, 0, 70),
-		Position = UDim2.fromOffset(10, 44),
-		MaxTextSize = 64,
+		Size = UDim2.new(1, -20, 0, 54),
+		Position = UDim2.fromOffset(10, 32),
+		MaxTextSize = 44,
 		TextColor3 = Kit.Colors.Gold,
 		Parent = revealFrame,
 	})
 	revealChaos = Kit.label({
-		Size = UDim2.new(1, -20, 0, 60),
-		Position = UDim2.fromOffset(10, 124),
+		Size = UDim2.new(1, -20, 0, 40),
+		Position = UDim2.fromOffset(10, 96),
 		Font = Kit.BodyFont,
+		MaxTextSize = 18,
 		Parent = revealFrame,
 	})
 

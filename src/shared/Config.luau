@@ -9,13 +9,17 @@ Config.Timings = {
 	Lobby = 30,
 	Pairing = 3,
 	ThemeReveal = 5,
-	Styling = 240,
+	Styling = 240, -- the most styling can take; it ends early once every stylist taps READY
+	StylingMin = 20, -- READY can't end styling before this
 	SwapAt = 120, -- "Swap Mid-Round" chaos: seconds into styling when stylists swap
 	RunwayPerPlayer = 9,
 	Voting = 30,
 	Results = 15,
 	LobbyMoment = 30, -- length of a bought confetti/disco moment
 }
+
+-- Extra Output logs in Studio (catalog taps, look syncs). Off unless you're debugging.
+Config.DebugLogs = false
 
 Config.MinPlayersToStart = 2
 -- A stylist who picks nothing for this many rounds in a row is marked AFK (sits out until they
@@ -857,7 +861,7 @@ Config.Cosmetics = {
 -- Sound effect asset IDs from the Creator Store (Toolbox -> Audio). 0 = silent until picked.
 Config.Sounds = {
 	-- rbxasset://sounds/... ship with every Roblox client (no uploads needed).
-	Click = "rbxasset://sounds/electronicpingshort.wav",
+	Click = "rbxasset://sounds/clickfast.wav", -- soft tap, not a beep
 	PhaseChange = "rbxasset://sounds/switch.wav",
 	-- 0 = the built-in runway beat (Audio.luau); an audio ID plays that track instead.
 	RunwayMusic = 0,
@@ -866,7 +870,7 @@ Config.Sounds = {
 	Podium = "rbxasset://sounds/victory.wav",
 	LobbyMoment = "rbxasset://sounds/Launching rocket.wav",
 	Reaction = "rbxasset://sounds/snap.mp3",
-	Alert = "rbxasset://sounds/electronicpingshort.wav",
+	Alert = "rbxasset://sounds/switch.wav",
 } :: { [string]: number | string }
 
 -- Quests. stat names: rounds, heartsGiven, gems, obby, heartsReceived, podiums.

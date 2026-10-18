@@ -24,8 +24,8 @@ The server makes every decision. Clients only send requests, and the server chec
 
 ## Everything in the game
 
-**The round:** lobby → pairing (friends paired together, trio for odd numbers) → theme reveal → 4-minute
-styling in a private booth → runway (follow camera, camera flashes, name tags, entrance effects) → hearts-only
+**The round:** lobby → pairing (friends paired together, trio for odd numbers) → theme reveal → up to 4 minutes of
+styling in a private booth (everyone taps READY to finish early) → runway (follow camera, camera flashes, name tags, entrance effects) → hearts-only
 voting → results (podium reveal 3rd→1st, confetti, 1st/2nd/3rd tags, "Buy this look"). Chaos rounds: Worst
 Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme. AFK players sit out.
 

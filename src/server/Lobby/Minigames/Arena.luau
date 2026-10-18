@@ -35,7 +35,7 @@ local C = Arena.Colors
 
 -- Sounds that ship with every Roblox client (no uploads needed).
 Arena.Sounds = {
-	Tick = "rbxasset://sounds/electronicpingshort.wav",
+	Tick = "rbxasset://sounds/clickfast.wav", -- soft click (beeps got annoying)
 	Go = "rbxasset://sounds/bass.wav",
 	Drop = "rbxasset://sounds/glassbreak.wav",
 	Out = "rbxasset://sounds/uuhhh.mp3",

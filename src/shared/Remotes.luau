@@ -34,6 +34,7 @@ local EVENT_NAMES = {
 	"SetBodyType", -- (id: string) Body Type booth, "" = my own body
 	"MinigameGo", -- (gameId: string) take me to that minigame (lobby only)
 	"React", -- (emojiIndex: number) react to the look walking now (rate limited)
+	"StylingReady", -- (ready: boolean) done styling; when every stylist is ready, styling ends
 	"SaveOutfit", -- (slot: number) save what I'm wearing in the Dressing Room to a Wardrobe slot
 	"WearOutfit", -- (slot: number) put a saved outfit on (Dressing Room)
 	"DeleteOutfit", -- (slot: number) empty a Wardrobe slot

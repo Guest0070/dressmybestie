@@ -49,8 +49,26 @@ Minigames.start()
 
 -- Layered clothing needs R15 avatars. Rig type is a Studio setting (File -> Avatar Settings),
 -- so we can only warn loudly if it's wrong.
+-- Players walk through each other (no stacking on the runway, in booths or in a crowd).
+local PhysicsService = game:GetService("PhysicsService")
+pcall(PhysicsService.RegisterCollisionGroup, PhysicsService, "Players")
+PhysicsService:CollisionGroupSetCollidable("Players", "Players", false)
+local function noPlayerCollisions(character: Model)
+	for _, part in character:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.CollisionGroup = "Players"
+		end
+	end
+	character.DescendantAdded:Connect(function(part)
+		if part:IsA("BasePart") then
+			part.CollisionGroup = "Players"
+		end
+	end)
+end
+
 game:GetService("Players").PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(character)
+		noPlayerCollisions(character)
 		local humanoid = character:WaitForChild("Humanoid", 10)
 		if humanoid and humanoid:IsA("Humanoid") and humanoid.RigType ~= Enum.HumanoidRigType.R15 then
 			warn(
@@ -59,5 +77,12 @@ game:GetService("Players").PlayerAdded:Connect(function(player)
 		end
 	end)
 end)
+
+for _, player in game:GetService("Players"):GetPlayers() do
+	if player.Character then
+		noPlayerCollisions(player.Character)
+	end
+	player.CharacterAdded:Connect(noPlayerCollisions)
+end
 
 print("[StyleMyBestie] Server started")

@@ -458,16 +458,13 @@ function ColorRush.build(parent: Instance): Arena.Game
 					waitAndWatch(warnAt, wave)
 				end
 
-				-- Warn: wrong tiles blink, with ticks.
+				-- Warn: wrong tiles blink (silently; the drop has its own sound).
 				for _, tile in live do
 					if not isSafe(tile) then
 						tile.base:SetAttribute("Warn", true)
 					end
 				end
-				for k = 1, 3 do
-					Arena.sound(S.Tick, center, nil, 0.5, 1 + k * 0.15)
-					waitAndWatch(cr.WarnSeconds / 3, wave)
-				end
+				waitAndWatch(cr.WarnSeconds, wave)
 
 				-- Drop! (Memory waves show the real colours again as they go.)
 				for _, tile in live do

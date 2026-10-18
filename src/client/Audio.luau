@@ -140,12 +140,12 @@ local function startRunwayBeat()
 			clock -= stepLength
 			local beat = step % 8 -- eight eighth-notes = one bar
 			if beat % 2 == 0 then
-				hit(BEAT.Kick, 0.55, if beat == 0 then 0.75 else 0.8)
+				hit(BEAT.Kick, 0.3, if beat == 0 then 0.75 else 0.8)
 			else
-				hit(BEAT.HiHat, 0.25, 1.15)
+				hit(BEAT.HiHat, 0.1, 1.15)
 			end
 			if beat == 2 or beat == 6 then
-				hit(BEAT.Clap, 0.4, 0.9)
+				hit(BEAT.Clap, 0.2, 0.9)
 			end
 			step += 1
 		end

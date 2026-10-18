@@ -15,7 +15,7 @@ local STEPS = {
 	{ "1. Get paired", "You're secretly paired with someone. Style THEIR mannequin. They can't see it!" },
 	{
 		"2. Match the theme",
-		"Pick hair, clothes, shoes and more from the catalog. Follow the theme... or don't.",
+		"Pick hair, clothes, shoes and more. Done early? Tap READY.",
 	},
 	{ "3. Walk the runway", "Now you wear what YOUR stylist picked for you. Surprise!" },
 	if Config.VotingMode == "Stars"

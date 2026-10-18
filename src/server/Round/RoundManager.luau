@@ -58,6 +58,8 @@ local mannequinFolder: Folder
 
 -- AFK tracking: stylists who picked something this round, and idle rounds in a row.
 local activeStylists: { [Player]: boolean } = {}
+-- Stylists who tapped READY: when every stylist is ready, styling ends early.
+local readyStylists: { [Player]: boolean } = {}
 local idleRounds: { [Player]: number } = {}
 
 -- Admin controls (see Admin.luau).
@@ -379,7 +381,7 @@ end
 
 local function onSetLook(stylist: Player, raw: any)
 	local target = assignments[stylist]
-	if RunService:IsStudio() then
+	if RunService:IsStudio() and Config.DebugLogs then
 		local count = if type(raw) == "table" and type(raw.assetIds) == "table" then #raw.assetIds else -1
 		print(`[Round] {stylist.Name} sent a look with {count} item(s); phase={state.phase}, target={target}`)
 	end
@@ -577,7 +579,28 @@ local function styling()
 	local startedAt = os.clock()
 	local swapped = false
 	local modifier = chaos
+	readyStylists = {}
+	local lastReady = -1
 	waitFor(Config.Timings.Styling, function()
+		-- Everyone ready? Finish early (after a short minimum so nobody skips by accident).
+		local total, ready = 0, 0
+		for stylist in assignments do
+			if isHere(stylist) then
+				total += 1
+				if readyStylists[stylist] then
+					ready += 1
+				end
+			end
+		end
+		if ready ~= lastReady then
+			lastReady = ready
+			state.readyCount = ready
+			state.readyTotal = total
+			broadcast()
+		end
+		if total > 0 and ready >= total and os.clock() - startedAt >= Config.Timings.StylingMin then
+			return true
+		end
 		if
 			modifier
 			and modifier.swapMidRound
@@ -589,6 +612,9 @@ local function styling()
 		end
 		return noOneLeft()
 	end)
+	readyStylists = {}
+	state.readyCount = nil
+	state.readyTotal = nil
 
 	-- Anyone who didn't pick a single item N rounds in a row sits out until they come back.
 	for player in participants do
@@ -788,6 +814,8 @@ local function runway()
 		if restoreAnimations then
 			restoreAnimations()
 		end
+		-- Off the catwalk, so the next walker never lands on top of them.
+		teleport(player, Map.audienceCFrame())
 		if tookOver and root and root:IsA("BasePart") and root.Parent and isHere(player) then
 			pcall(root.SetNetworkOwner, root, player)
 		end
@@ -1077,7 +1105,16 @@ function RoundManager.adminForceChaos(id: string): string
 	return "Unknown chaos mode."
 end
 
+-- READY button while styling (toggles). Only stylists in the current round count.
+local function onReady(player: Player, ready: any)
+	if state.phase ~= "Styling" or not assignments[player] or type(ready) ~= "boolean" then
+		return
+	end
+	readyStylists[player] = if ready then true else nil
+end
+
 function RoundManager.start()
+	Remotes.Events.StylingReady.OnServerEvent:Connect(onReady)
 	mannequinFolder = Instance.new("Folder")
 	mannequinFolder.Name = "Mannequins"
 	mannequinFolder.Parent = Workspace

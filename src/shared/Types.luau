@@ -55,6 +55,9 @@ export type RoundState = {
 	runwayStylists: { string }?,
 	-- Stars mode: true while the audience can rate the current runway walker
 	rating: boolean?,
+	-- Styling: how many stylists tapped READY (styling ends early when all are)
+	readyCount: number?,
+	readyTotal: number?,
 	-- Voting: user IDs whose looks can receive hearts
 	candidates: { number }?,
 	-- Results
