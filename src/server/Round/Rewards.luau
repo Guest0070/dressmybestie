@@ -11,6 +11,7 @@ local PlayerData = require(script.Parent.Parent.Data.PlayerData)
 local Analytics = require(script.Parent.Parent.Analytics)
 local Quests = require(script.Parent.Parent.Quests)
 local Passes = require(script.Parent.Parent.Monetization.Passes)
+local Badges = require(script.Parent.Parent.Badges)
 
 local Rewards = {}
 
@@ -23,7 +24,12 @@ export type LookResult = {
 }
 
 -- participants: everyone who played this round (still in the server).
-function Rewards.grant(participants: { Player }, results: { LookResult })
+-- areFriends: cached friend check (RoundManager's), for the friend bonus.
+function Rewards.grant(
+	participants: { Player },
+	results: { LookResult },
+	areFriends: ((Player, Player) -> boolean)?
+)
 	local summaries: { [Player]: Types.RewardSummary } = {}
 	local podiums: { [Player]: number } = {}
 	local function summary(player: Player): Types.RewardSummary
@@ -70,14 +76,32 @@ function Rewards.grant(participants: { Player }, results: { LookResult })
 		if not data then
 			continue
 		end
-		-- Fixed, disclosed bonuses on round coins, both worked out from the base amount.
+		-- Fixed, disclosed bonuses on round coins, all worked out from the base amount.
 		local base = s.coins
+		local bonuses = {}
 		if Passes.owns(player, "DoubleCoins") then
 			s.coins += base * (Config.PassPerks.DoubleCoinsMultiplier - 1)
+			table.insert(bonuses, "2x Coins pass")
 		end
 		if player.MembershipType == Enum.MembershipType.Premium then
 			s.coins += math.floor(base * Config.Rewards.PremiumCoinBonus)
+			table.insert(bonuses, `Premium +{math.floor(Config.Rewards.PremiumCoinBonus * 100)}%`)
 		end
+		if areFriends then
+			for _, other in participants do
+				if other ~= player and areFriends(player, other) then
+					s.coins += math.floor(base * Config.Rewards.FriendCoinBonus)
+					table.insert(bonuses, `Friend bonus +{math.floor(Config.Rewards.FriendCoinBonus * 100)}%`)
+					break
+				end
+			end
+		end
+		local event = Config.activeEvent(os.time())
+		if event then
+			s.coins += base * (event.coinMultiplier - 1)
+			table.insert(bonuses, `{event.name} x{event.coinMultiplier}`)
+		end
+		s.bonuses = if #bonuses > 0 then bonuses else nil
 		local rankBefore = PlayerData.getRank(data.styleXp)
 		local ok = PlayerData.update(player, function(d)
 			d.coins += s.coins
@@ -91,6 +115,13 @@ function Rewards.grant(participants: { Player }, results: { LookResult })
 		local rankAfter = PlayerData.getRank(data.styleXp)
 		if rankAfter > rankBefore then
 			s.rankUp = rankAfter
+		end
+		Badges.award(player, "FirstRound")
+		if (podiums[player] or 0) > 0 then
+			Badges.award(player, "FirstPodium")
+		end
+		if rankAfter >= 5 then
+			Badges.award(player, "Rank5")
 		end
 		Quests.bump(player, "rounds", 1)
 		Quests.bump(player, "heartsReceived", s.heartsForYourStyling)

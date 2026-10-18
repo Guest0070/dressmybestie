@@ -10,6 +10,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Audio = require(script.Parent.Audio)
 local State = require(script.Parent.State)
 
 local Stage = {}
@@ -325,7 +326,7 @@ end
 local function flashLoop()
 	while true do
 		task.wait(0.12 + math.random() * 0.25)
-		if State.round.phase ~= "Runway" or not State.round.runwayWearer then
+		if State.round.phase ~= "Runway" or not State.round.runwayWearer or not Audio.flashesOn then
 			continue
 		end
 		local startPart = mapPart({ "Runway", "Start" })
@@ -335,6 +336,9 @@ local function flashLoop()
 		end
 		local along = startPart.Position:Lerp(endPart.Position, math.random())
 		local side = if math.random() < 0.5 then -1 else 1
+		-- Beside the catwalk, whichever way it runs.
+		local walk = endPart.Position - startPart.Position
+		local across = Vector3.new(walk.Z, 0, -walk.X).Unit
 		local flash = Instance.new("Part")
 		flash.Anchored = true
 		flash.CanCollide = false
@@ -342,7 +346,7 @@ local function flashLoop()
 		flash.CanTouch = false
 		flash.Transparency = 1
 		flash.Size = Vector3.new(0.5, 0.5, 0.5)
-		flash.Position = Vector3.new(along.X + side * 14, along.Y + 2 + math.random() * 3, along.Z)
+		flash.Position = along + across * side * 11 + Vector3.new(0, 2 + math.random() * 3, 0)
 		local light = Instance.new("PointLight")
 		light.Brightness = 6
 		light.Range = 16

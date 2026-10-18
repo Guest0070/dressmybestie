@@ -85,6 +85,14 @@ export type PlayerData = {
 	skinTone: number, -- index into Config.SkinTones, 0 = the player's own skin
 	bodyType: string, -- id in Config.BodyTypes, "" = the player's own body
 	passGrants: { [string]: boolean }, -- one-time pass rewards already given (e.g. Starter Pack coins)
+	savedOutfits: { [string]: Look }, -- Wardrobe: slot number (as a string) -> outfit
+	settings: Settings,
+}
+
+export type Settings = {
+	music: boolean,
+	sfx: boolean,
+	flashes: boolean, -- camera flashes and screen flashes (off for players sensitive to flashing)
 }
 
 export type QuestView = {
@@ -113,6 +121,9 @@ export type PublicData = {
 	quests: { QuestView },
 	skinTone: number,
 	bodyType: string,
+	outfits: { [string]: Look }, -- Wardrobe slots in use
+	outfitSlots: number, -- how many slots this player has (more with VIP)
+	settings: Settings,
 }
 
 -- A lobby minigame, broadcast to everyone whenever it changes.
@@ -133,6 +144,7 @@ export type RewardSummary = {
 	xp: number,
 	heartsForYourStyling: number,
 	rankUp: number?,
+	bonuses: { string }?, -- e.g. "Friend bonus +10%", "DOUBLE COINS WEEKEND x2"
 }
 
 return Types

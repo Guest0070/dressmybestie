@@ -12,6 +12,7 @@ local Types = require(ReplicatedStorage.Shared.Types)
 local Analytics = require(script.Parent.Parent.Parent.Analytics)
 local PlayerData = require(script.Parent.Parent.Parent.Data.PlayerData)
 local Quests = require(script.Parent.Parent.Parent.Quests)
+local Badges = require(script.Parent.Parent.Parent.Badges)
 local RoundManager = require(script.Parent.Parent.Parent.Round.RoundManager)
 
 local Arena = {}
@@ -353,6 +354,7 @@ end
 -- Coins for a win (capped per hour), quest progress, streaks and the champions board.
 function Arena.reward(player: Player, gameName: string)
 	Quests.bump(player, "minigameWins", 1)
+	Badges.award(player, "MinigameWin")
 	local row = winsThisServer[player.UserId] or { name = player.DisplayName, wins = 0 }
 	row.wins += 1
 	winsThisServer[player.UserId] = row

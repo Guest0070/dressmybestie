@@ -905,7 +905,7 @@ local function results(hearts: { [number]: number }, averages: { [number]: numbe
 	for player in participants do
 		table.insert(present, player)
 	end
-	Rewards.grant(present, lookResults)
+	Rewards.grant(present, lookResults, areFriends)
 
 	-- Put the top 3 on the podium with a big place tag. Teleport twice, half a second apart, in
 	-- case a character was still settling from the lineup and the first move got overridden.
@@ -1044,6 +1044,11 @@ local function playRound()
 end
 
 -- True while the player is part of a running round (their avatar belongs to the round).
+-- The user ID of the look on the runway right now, if any (for reactions).
+function RoundManager.currentWearer(): number?
+	return if state.phase == "Runway" then state.runwayWearer else nil
+end
+
 function RoundManager.isInRound(player: Player): boolean
 	return participants[player] ~= nil and state.phase ~= "Lobby"
 end

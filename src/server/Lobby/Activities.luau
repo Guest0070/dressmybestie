@@ -5,6 +5,7 @@
 -- Coin rewards are small and capped (Config.Lobby) so the lobby is fun, not a coin farm.
 
 local CollectionService = game:GetService("CollectionService")
+local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -402,6 +403,91 @@ local function buildLeaderboard(parent: Instance)
 	end
 end
 
+-- ALL-TIME TOP STYLISTS: style XP from every server (OrderedDataStore), next to this server's board.
+local globalLines: { TextLabel } = {}
+local xpStore: OrderedDataStore? = nil
+local names: { [number]: string } = {}
+
+local function buildGlobalBoard(parent: Instance)
+	local board = part(parent, "GlobalLeaderboard", Vector3.new(1, 14, 20), CFrame.new(58, 8, 18), DARK)
+	part(
+		parent,
+		"GlobalLeaderboardGlow",
+		Vector3.new(0.5, 15, 21),
+		CFrame.new(58.6, 8, 18),
+		Color3.fromRGB(255, 201, 74),
+		true
+	)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Left -- faces -X, towards the plaza
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.LightInfluence = 0
+	gui.Parent = board
+	local layout = Instance.new("UIListLayout")
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.Parent = gui
+	for i = 0, 8 do
+		local label = Instance.new("TextLabel")
+		label.LayoutOrder = i
+		label.BackgroundTransparency = 1
+		label.Size = UDim2.fromScale(0.95, if i == 0 then 0.16 else 0.1)
+		label.Font = Enum.Font.FredokaOne
+		label.TextScaled = true
+		label.TextColor3 = if i == 0 then Color3.fromRGB(255, 201, 74) else WHITE
+		label.Text = if i == 0 then "ALL-TIME TOP STYLISTS" else ""
+		label.Parent = gui
+		if i > 0 then
+			table.insert(globalLines, label)
+		end
+	end
+	pcall(function()
+		xpStore = DataStoreService:GetOrderedDataStore("StyleXP_v1")
+	end)
+end
+
+local function saveXp(player: Player)
+	local data = PlayerData.get(player)
+	local store = xpStore
+	if data and store and data.styleXp > 0 then
+		local xp = math.floor(data.styleXp)
+		pcall(function()
+			store:SetAsync(tostring(player.UserId), xp)
+		end)
+	end
+end
+
+local function refreshGlobalBoard()
+	local store = xpStore
+	if not store then
+		return
+	end
+	local ok, pages = pcall(function()
+		return store:GetSortedAsync(false, #globalLines)
+	end)
+	if not ok or not pages then
+		return
+	end
+	local entries = (pages :: DataStorePages):GetCurrentPage()
+	for i, label in globalLines do
+		local entry = entries[i]
+		if entry then
+			local userId = tonumber(entry.key) or 0
+			local name = names[userId]
+			if not name then
+				local okName, fetched = pcall(Players.GetNameFromUserIdAsync, Players, userId)
+				name = if okName then fetched else "?"
+				names[userId] = name
+			end
+			local rank = PlayerData.getRank(entry.value :: number)
+			label.Text = `{i}. {name}  ·  {Config.RankNames[rank] or "Stylist"}`
+		else
+			label.Text = ""
+		end
+	end
+end
+
 local function refreshLeaderboard()
 	local rows = {}
 	for _, player in Players:GetPlayers() do
@@ -436,6 +522,7 @@ function Activities.start()
 	buildDanceFloor(folder)
 	buildBouncePads(folder)
 	buildLeaderboard(folder)
+	buildGlobalBoard(folder)
 	HallOfFame.build(folder)
 	Appearance.build(folder)
 	for _, position in
@@ -468,6 +555,18 @@ function Activities.start()
 		while true do
 			refreshLeaderboard()
 			task.wait(Config.Lobby.LeaderboardRefreshSeconds)
+		end
+	end)
+	-- All-time board: everyone's XP is saved every few minutes and when they leave.
+	Players.PlayerRemoving:Connect(saveXp)
+	task.spawn(function()
+		task.wait(15) -- let everyone's data load first
+		while true do
+			for _, player in Players:GetPlayers() do
+				saveXp(player)
+			end
+			refreshGlobalBoard()
+			task.wait(180)
 		end
 	end)
 end

@@ -18,6 +18,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Audio = require(script.Parent.Audio)
 local State = require(script.Parent.State)
 
 local MinigameFx = {}
@@ -146,6 +147,9 @@ local function celebrate(position: Vector3, color: Color3)
 end
 
 local function screenFlash(color: Color3, strength: number)
+	if not Audio.flashesOn then
+		return -- Settings > Flashing effects
+	end
 	flashOverlay.BackgroundColor3 = color
 	flashOverlay.BackgroundTransparency = 1 - strength
 	TweenService
@@ -156,6 +160,9 @@ end
 -- Paparazzi: every camera flash near the point fires, with the bulb sound.
 local function paparazzi(position: Vector3, quiet: boolean?)
 	for _, flash in CollectionService:GetTagged("PapFlash") do
+		if not Audio.flashesOn then
+			break -- Settings > Flashing effects: the shutter sound only
+		end
 		if
 			flash:IsA("BasePart")
 			and (flash.Position - position).Magnitude < 60

@@ -66,6 +66,27 @@ Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme
   lighting (`Config.Environment`).
 - Top Stylists board, Hall of Fame statues of last round's top 3 (walk up → "Buy this look").
 
+**Social + extras:**
+- **Runway reactions:** while a look walks, everyone else gets ❤️🔥😍😂👑 buttons; reactions float
+  up over the model for the whole server (rate limited, nothing scored).
+- **Wardrobe:** in the Dressing Room, save what you're wearing to a slot (3, VIP 6) and wear it
+  again later. Saved items are re-checked by the server every time.
+- **Events:** `Config.Events` (default: DOUBLE COINS WEEKEND on Sat/Sun UTC) multiplies round coins
+  and shows a banner in the lobby.
+- **Friend bonus:** +10% round coins when a Roblox friend is in the round. The reward toast lists
+  every bonus that applied.
+- **Round warning:** 10 seconds before a round starts, a toast + ping (so minigame players aren't
+  surprised).
+- **ALL-TIME TOP STYLISTS** board (OrderedDataStore `StyleXP_v1`) next to this server's board.
+- **Badges:** `Config.Badges` (Welcome, FirstRound, FirstPodium, MinigameWin, DashGold, Rank5,
+  Wardrobe). Create them on the dashboard and paste the IDs; 0 = skipped.
+- **Settings are saved** to the profile: Music, Sound effects and **Flashing effects** (turns off
+  camera flashes and screen flashes for players sensitive to flashing light).
+- **Sound:** every slot in `Config.Sounds` now has a built-in Roblox sound, and the runway plays a
+  built-in beat (kick, hi-hat, clap) unless `RunwayMusic` has a track ID.
+- 5 new "getting started" achievements (try the Dressing Room, play a minigame, save an outfit,
+  win a Dash medal, send 25 reactions).
+
 **Progression:** coins + style XP, 10 ranks with free unlocks, daily login streak (50 → 200 coins),
 5 daily quests, 9 achievements, overhead name tag with title + rank, coins/rank in the player list,
 rank-up celebration.

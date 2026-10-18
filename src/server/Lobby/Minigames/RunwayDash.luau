@@ -17,6 +17,7 @@ local Arena = require(script.Parent.Arena)
 local Analytics = require(script.Parent.Parent.Parent.Analytics)
 local PlayerData = require(script.Parent.Parent.Parent.Data.PlayerData)
 local Quests = require(script.Parent.Parent.Parent.Quests)
+local Badges = require(script.Parent.Parent.Parent.Badges)
 
 local C = Arena.Colors
 local S = Arena.Sounds
@@ -577,6 +578,10 @@ function RunwayDash.build(parent: Instance): Arena.Game
 		if medal then
 			text ..= ` · {string.upper(medal)}!`
 			Quests.bump(player, "minigameWins", 1)
+			Quests.bump(player, "dashMedals", 1)
+			if medal == "Gold" then
+				Badges.award(player, "DashGold")
+			end
 			local waitLeft = (lastReward[player] or 0) + rd.CooldownSeconds - os.clock()
 			if waitLeft <= 0 then
 				lastReward[player] = os.clock()

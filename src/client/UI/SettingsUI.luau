@@ -1,5 +1,6 @@
 --!strict
--- Settings window: Music and Sound effects on/off (see Audio.luau).
+-- Settings window: Music, Sound effects and Flashing effects on/off (see Audio.luau). They're saved
+-- to the player's profile.
 -- Designable in Studio: a ScreenGui "SettingsUI" in StarterGui is used instead (see README).
 
 local GuiService = game:GetService("GuiService")
@@ -54,10 +55,10 @@ local function build(): ScreenGui
 		Name = "Window",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromScale(0.36, 0.5),
+		Size = UDim2.fromScale(0.36, 0.62),
 		Parent = root,
 	})
-	Components.sizeLimit(Vector2.new(300, 220), Vector2.new(460, 320)).Parent = window
+	Components.sizeLimit(Vector2.new(300, 260), Vector2.new(460, 380)).Parent = window
 	Components.padding(16, 16).Parent = window
 
 	Components.text({
@@ -82,29 +83,36 @@ local function build(): ScreenGui
 	local rows = Instance.new("Frame")
 	rows.Name = "Rows"
 	rows.BackgroundTransparency = 1
-	rows.Position = UDim2.fromScale(0, 0.3)
-	rows.Size = UDim2.fromScale(1, 0.7)
+	rows.Position = UDim2.fromScale(0, 0.24)
+	rows.Size = UDim2.fromScale(1, 0.76)
 	rows.Parent = window
 	Components.list(Enum.FillDirection.Vertical, 8, nil, Enum.VerticalAlignment.Top).Parent = rows
 	Components.styleToggle({
 		Name = "Music",
 		Text = "Music",
-		Size = UDim2.new(1, 0, 0.4, 0),
+		Size = UDim2.fromScale(1, 0.28),
 		LayoutOrder = 1,
 		Parent = rows,
 	})
 	Components.styleToggle({
 		Name = "SoundEffects",
 		Text = "Sound effects",
-		Size = UDim2.new(1, 0, 0.4, 0),
+		Size = UDim2.fromScale(1, 0.28),
 		LayoutOrder = 2,
+		Parent = rows,
+	})
+	Components.styleToggle({
+		Name = "Flashes",
+		Text = "Flashing effects",
+		Size = UDim2.fromScale(1, 0.28),
+		LayoutOrder = 3,
 		Parent = rows,
 	})
 	return root
 end
 
--- Needs: Close (TextButton), Music + SoundEffects (each with Switch > Knob). Optional: Backdrop
--- (a TextButton that closes the window when tapped).
+-- Needs: Close (TextButton), Music + SoundEffects (each with Switch > Knob). Optional: Flashes (with
+-- Switch > Knob) and Backdrop (a TextButton that closes the window when tapped).
 local function wire(root: ScreenGui): { string }
 	local missing: { string } = {}
 	local find = Components.finder(missing)
@@ -114,15 +122,27 @@ local function wire(root: ScreenGui): { string }
 	if #missing > 0 then
 		return missing
 	end
-	if not Components.attachToggle(music, Audio.musicOn, Audio.setMusic) then
+	local musicOk, setMusic = Components.attachToggle(music, Audio.musicOn, Audio.setMusic)
+	local sfxOk, setSfx = Components.attachToggle(sfx, Audio.sfxOn, Audio.setSfx)
+	if not musicOk then
 		table.insert(missing, "Music > Switch > Knob")
 	end
-	if not Components.attachToggle(sfx, Audio.sfxOn, Audio.setSfx) then
+	if not sfxOk then
 		table.insert(missing, "SoundEffects > Switch > Knob")
 	end
 	if #missing > 0 then
 		return missing
 	end
+	local flashes = root:FindFirstChild("Flashes", true)
+	local _, setFlashes =
+		if flashes then Components.attachToggle(flashes, Audio.flashesOn, Audio.setFlashes) else false,
+		function(_: boolean) end
+	-- Saved settings arrive after the window is built: move the switches to match.
+	Audio.Changed:Connect(function()
+		setMusic(Audio.musicOn)
+		setSfx(Audio.sfxOn)
+		setFlashes(Audio.flashesOn)
+	end)
 	closeButton = Components.attachButton(close, SettingsUI.close)
 	local backdrop = root:FindFirstChild("Backdrop")
 	if backdrop and backdrop:IsA("GuiButton") then

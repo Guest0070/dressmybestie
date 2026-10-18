@@ -19,6 +19,7 @@ local Workspace = game:GetService("Workspace")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Arena = require(script.Arena)
+local Quests = require(script.Parent.Parent.Quests)
 local ColorRush = require(script.ColorRush)
 local FreezeFrame = require(script.FreezeFrame)
 local RunwayDash = require(script.RunwayDash)
@@ -98,6 +99,9 @@ local function runLoop(g: Arena.Game)
 		end
 		if not cancelled then
 			Arena.sound(S.Go, nil, onNow, 0.9, 1.2)
+			for _, player in onNow do
+				Quests.bump(player, "minigamesPlayed", 1)
+			end
 			local ok, result = pcall(g.play, g, onNow)
 			local winners: { Player } = if ok then result else {}
 			if not ok then

@@ -17,6 +17,7 @@ local EVENT_NAMES = {
 	"LookSync", -- (targetUserId: number, look: Look, seq: number?) accepted look, sent to its stylist
 	"MinigameState", -- (state: MinigameState) a lobby minigame changed (everyone gets every game)
 	"MinigameFx", -- (fx: { kind: string, ... }) sounds, flashes, knockbacks, timers for minigames
+	"Reaction", -- (walkerUserId: number, emojiIndex: number) someone reacted to the look on the runway
 	-- Client -> server
 	"SetMannequinLook", -- (look: Look) stylist edits their target's mannequin
 	"CastHearts", -- ({ number }) user IDs, up to MaxHeartsPerVoter
@@ -32,6 +33,11 @@ local EVENT_NAMES = {
 	"SetSkinTone", -- (index: number) Skin Tone booth, 0 = my own skin
 	"SetBodyType", -- (id: string) Body Type booth, "" = my own body
 	"MinigameGo", -- (gameId: string) take me to that minigame (lobby only)
+	"React", -- (emojiIndex: number) react to the look walking now (rate limited)
+	"SaveOutfit", -- (slot: number) save what I'm wearing in the Dressing Room to a Wardrobe slot
+	"WearOutfit", -- (slot: number) put a saved outfit on (Dressing Room)
+	"DeleteOutfit", -- (slot: number) empty a Wardrobe slot
+	"SaveSettings", -- (settings: { music: boolean, sfx: boolean, flashes: boolean })
 }
 
 local FUNCTION_NAMES = {

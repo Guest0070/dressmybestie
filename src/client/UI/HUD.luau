@@ -257,6 +257,9 @@ local function showRewards(summary: Types.RewardSummary)
 		celebrateRankUp(summary.rankUp)
 	end
 	local lines = { `+{summary.coins} coins   +{summary.xp} XP` }
+	if summary.bonuses and #summary.bonuses > 0 then
+		table.insert(lines, `Bonus: {table.concat(summary.bonuses, ", ")}`)
+	end
 	if summary.heartsForYourStyling > 0 then
 		table.insert(lines, `Your styling got {summary.heartsForYourStyling} heart(s)!`)
 	end
@@ -382,6 +385,55 @@ function HUD.start()
 	})
 	Kit.corner(12).Parent = toastLabel
 
+	-- Event banner (Config.Events, e.g. DOUBLE COINS WEEKEND): in the lobby, under the top bar.
+	local eventBanner = Kit.label({
+		Name = "Event",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.62, 0, 0, 58),
+		Size = UDim2.fromOffset(330, 26),
+		BackgroundTransparency = 0.1,
+		BackgroundColor3 = Kit.Colors.Gold,
+		TextColor3 = Color3.fromRGB(40, 24, 10),
+		Font = Kit.BodyFont,
+		MaxTextSize = 16,
+		Visible = false,
+		Parent = root,
+	})
+	Kit.corner(13).Parent = eventBanner
+	local function refreshEvent()
+		local event = Config.activeEvent(os.time())
+		local lobby = State.canUseLobby() and not State.dressingRoom
+		eventBanner.Visible = event ~= nil and lobby
+		if event then
+			eventBanner.Text = `🎉 {event.name}: x{event.coinMultiplier} round coins!`
+		end
+	end
+	State.RoundChanged:Connect(refreshEvent)
+	State.DressingRoomChanged:Connect(refreshEvent)
+	task.spawn(function()
+		while true do
+			refreshEvent()
+			task.wait(30)
+		end
+	end)
+
+	-- Heads-up before a round pulls you out of whatever you're doing (minigames, shop...).
+	local warnedFor: number? = nil
+	local function roundAlert(remaining: number?)
+		local round = State.round
+		if round.phase ~= "Lobby" or not remaining or not round.endsAt then
+			return
+		end
+		if State.player:GetAttribute("Spectating") == true then
+			return
+		end
+		if remaining <= 10 and remaining > 9 and warnedFor ~= round.endsAt then
+			warnedFor = round.endsAt
+			HUD.toast("Round starts in 10 seconds! You'll be taken to your booth.", 4)
+			Kit.playSound("Alert")
+		end
+	end
+
 	-- Timer ticks locally from the server's end time.
 	local accumulator = 0
 	RunService.Heartbeat:Connect(function(dt)
@@ -392,6 +444,7 @@ function HUD.start()
 		accumulator = 0
 		local endsAt = State.round.endsAt
 		local remaining = if endsAt then endsAt - Workspace:GetServerTimeNow() else nil
+		roundAlert(remaining)
 		timerLabel.Text = if remaining then Kit.formatTime(remaining) else "--"
 		-- Last 10 seconds: the timer flashes red/white so nobody misses the deadline.
 		local urgent = remaining ~= nil and remaining <= 10 and remaining > 0

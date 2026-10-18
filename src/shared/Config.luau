@@ -77,6 +77,37 @@ Config.Rewards = {
 	DailyStreak = { 50, 60, 75, 90, 110, 130, 200 },
 	-- Roblox Premium members get this much extra on round coins (fixed, disclosed).
 	PremiumCoinBonus = 0.1,
+	-- Playing a round with a Roblox friend in it: this much extra on round coins (fixed, disclosed).
+	FriendCoinBonus = 0.1,
+}
+
+-- Scheduled events (UTC). While one is on, round coins are multiplied and the lobby shows a banner.
+-- days: 1 = Sunday ... 7 = Saturday. Add or remove events here; nothing else to change.
+Config.Events = {
+	{ name = "DOUBLE COINS WEEKEND", coinMultiplier = 2, days = { 1, 7 } },
+} :: { { name: string, coinMultiplier: number, days: { number } } }
+
+-- Badges (Creator Dashboard -> your game -> Badges). Paste each badge's ID; 0 = not awarded yet.
+Config.Badges = {
+	Welcome = 0, -- joined the game
+	FirstRound = 0, -- finished a round
+	FirstPodium = 0, -- styled a look that reached the podium
+	MinigameWin = 0, -- won a lobby minigame
+	DashGold = 0, -- Runway Dash under the gold time
+	Rank5 = 0, -- reached style rank 5
+	Wardrobe = 0, -- saved an outfit
+} :: { [string]: number }
+
+-- Wardrobe: outfits saved in the Dressing Room, ready to wear again.
+Config.Wardrobe = {
+	Slots = 3,
+	VipSlots = 6,
+}
+
+-- Runway reactions: the audience taps these while a look walks; they float up for everyone.
+Config.Reactions = {
+	Emojis = { "❤️", "🔥", "😍", "😂", "👑" },
+	PerSecond = 3, -- most reactions one player can send per second
 }
 
 -- Style rank thresholds: total XP needed to reach rank N is RankXp[N]. Rank 1 is the start.
@@ -825,13 +856,17 @@ Config.Cosmetics = {
 
 -- Sound effect asset IDs from the Creator Store (Toolbox -> Audio). 0 = silent until picked.
 Config.Sounds = {
-	Click = "rbxasset://sounds/electronicpingshort.wav", -- built into every Roblox client
-	PhaseChange = 0,
+	-- rbxasset://sounds/... ship with every Roblox client (no uploads needed).
+	Click = "rbxasset://sounds/electronicpingshort.wav",
+	PhaseChange = "rbxasset://sounds/switch.wav",
+	-- 0 = the built-in runway beat (Audio.luau); an audio ID plays that track instead.
 	RunwayMusic = 0,
-	LobbyMusic = 0, -- looping lobby track (Settings > Music mutes it)
-	Heart = 0,
-	Podium = 0,
-	LobbyMoment = 0,
+	LobbyMusic = 0, -- looping lobby track (Settings > Music mutes it); 0 = none
+	Heart = "rbxasset://sounds/snap.mp3",
+	Podium = "rbxasset://sounds/victory.wav",
+	LobbyMoment = "rbxasset://sounds/Launching rocket.wav",
+	Reaction = "rbxasset://sounds/snap.mp3",
+	Alert = "rbxasset://sounds/electronicpingshort.wav",
 } :: { [string]: number | string }
 
 -- Quests. stat names: rounds, heartsGiven, gems, obby, heartsReceived, podiums.
@@ -863,6 +898,30 @@ Config.DailyQuests = {
 Config.Achievements = {
 	{ id = "FirstRound", text = "Play your first round", stat = "rounds", target = 1, reward = 50 },
 	{ id = "Minigames10", text = "Win 10 lobby minigames", stat = "minigameWins", target = 10, reward = 200 },
+	-- Getting started: small first steps that show new players what there is to do.
+	{
+		id = "TryDressingRoom",
+		text = "Try on a look in the Dressing Room",
+		stat = "dressingRoom",
+		target = 1,
+		reward = 30,
+	},
+	{
+		id = "PlayMinigame",
+		text = "Play a lobby minigame",
+		stat = "minigamesPlayed",
+		target = 1,
+		reward = 30,
+	},
+	{
+		id = "SaveOutfit",
+		text = "Save an outfit to your Wardrobe",
+		stat = "outfitsSaved",
+		target = 1,
+		reward = 30,
+	},
+	{ id = "DashMedal", text = "Win a Runway Dash medal", stat = "dashMedals", target = 1, reward = 60 },
+	{ id = "React25", text = "Send 25 runway reactions", stat = "reactions", target = 25, reward = 60 },
 	{ id = "Rounds10", text = "Play 10 rounds", stat = "rounds", target = 10, reward = 200 },
 	{ id = "Rounds50", text = "Play 50 rounds", stat = "rounds", target = 50, reward = 800 },
 	{
@@ -1064,6 +1123,17 @@ Config.Data = {
 	-- Seconds ProcessReceipt waits for a confirmed save before asking Roblox to retry later.
 	ReceiptSaveTimeout = 15,
 }
+
+-- The event on at this time (os.time(), checked in UTC), if any.
+function Config.activeEvent(now: number): { name: string, coinMultiplier: number, days: { number } }?
+	local day = (os.date("!*t", now) :: any).wday
+	for _, event in Config.Events do
+		if table.find(event.days, day) then
+			return event
+		end
+	end
+	return nil
+end
 
 function Config.getCosmetic(id: string): Cosmetic?
 	for _, cosmetic in Config.Cosmetics do

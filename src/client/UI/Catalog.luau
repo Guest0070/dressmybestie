@@ -20,6 +20,8 @@ local Catalog = {}
 Catalog.onRotate = function(_direction: number) end
 -- Set by init.client: opens the "Buy these" panel for the Dressing Room outfit.
 Catalog.onBuyOutfit = function(_look: Types.Look) end
+-- Set by init.client: opens the Wardrobe (saved outfits) in the Dressing Room.
+Catalog.onWardrobe = function() end
 
 type Look = Types.Look
 type CatalogItem = { Id: number, Name: string, ItemType: string }
@@ -455,7 +457,7 @@ function Catalog.start()
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.new(0, 8, 1, -16 - Kit.ButtonHeight),
-		Size = UDim2.fromOffset(3 * 120 + 16, Kit.ButtonHeight),
+		Size = UDim2.fromOffset(4 * 120 + 24, Kit.ButtonHeight),
 		Visible = false,
 		Parent = root,
 	}, { Kit.list(Enum.FillDirection.Horizontal, 8) })
@@ -486,6 +488,15 @@ function Catalog.start()
 		Parent = selfBar,
 	}, function()
 		Catalog.onBuyOutfit(copyLook(look))
+	end)
+	Kit.button({
+		Text = "Wardrobe",
+		Size = UDim2.fromOffset(120, Kit.ButtonHeight),
+		BackgroundColor3 = Kit.Colors.Pink,
+		LayoutOrder = 4,
+		Parent = selfBar,
+	}, function()
+		Catalog.onWardrobe()
 	end)
 
 	selectCategory(currentCategory)

@@ -39,6 +39,8 @@ local TEMPLATE: PlayerData = {
 	skinTone = 0,
 	bodyType = "",
 	passGrants = {},
+	savedOutfits = {},
+	settings = { music = true, sfx = true, flashes = true },
 }
 
 local store = ProfileStore.New(Config.Data.StoreName, TEMPLATE)
@@ -181,7 +183,15 @@ local function toPublic(player: Player, data: PlayerData): PublicData
 		quests = questViews(data),
 		skinTone = data.skinTone,
 		bodyType = data.bodyType,
+		outfits = data.savedOutfits,
+		outfitSlots = PlayerData.outfitSlots(player),
+		settings = data.settings,
 	}
+end
+
+-- Wardrobe slots this player has (VIP gets more).
+function PlayerData.outfitSlots(player: Player): number
+	return if Passes.owns(player, "VIP") then Config.Wardrobe.VipSlots else Config.Wardrobe.Slots
 end
 
 function PlayerData.pushToClient(player: Player)
@@ -340,6 +350,21 @@ function PlayerData.start()
 		return if profile then toPublic(player, profile.Data) else nil
 	end
 	Remotes.Events.ClaimDailyReward.OnServerEvent:Connect(claimDaily)
+	-- Settings follow the player to every server. Only the three known on/off switches are kept.
+	Remotes.Events.SaveSettings.OnServerEvent:Connect(function(player, settings: any)
+		if type(settings) ~= "table" then
+			return
+		end
+		local data = PlayerData.get(player)
+		if not data then
+			return
+		end
+		for _, key in { "music", "sfx", "flashes" } do
+			if type(settings[key]) == "boolean" then
+				(data.settings :: any)[key] = settings[key]
+			end
+		end
+	end)
 	Passes.Changed:Connect(PlayerData.pushToClient)
 
 	-- Players who joined before this ran (possible in Studio).

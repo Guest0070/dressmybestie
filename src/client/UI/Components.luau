@@ -491,12 +491,17 @@ end
 
 -- Makes a toggle row work (built here or designed in Studio). Needs a TextButton "Switch" with a
 -- GuiObject "Knob" inside. The switch's current colour is the "off" colour; "on" is Theme Primary.
--- Returns false if the pieces are missing.
-function Components.attachToggle(row: Instance, value: boolean, onChanged: (boolean) -> ()): boolean
+-- Returns false if the pieces are missing; otherwise true and a setter that moves the switch
+-- without calling onChanged (e.g. when saved settings arrive).
+function Components.attachToggle(
+	row: Instance,
+	value: boolean,
+	onChanged: (boolean) -> ()
+): (boolean, (boolean) -> ())
 	local switch = row:FindFirstChild("Switch", true)
 	local knob = if switch then switch:FindFirstChild("Knob") else nil
 	if not (switch and switch:IsA("TextButton") and knob and knob:IsA("GuiObject")) then
-		return false
+		return false, function() end
 	end
 	local offColor = switch.BackgroundColor3
 	local knobY = knob.Position.Y
@@ -520,7 +525,13 @@ function Components.attachToggle(row: Instance, value: boolean, onChanged: (bool
 		onChanged(on)
 	end)
 	paint(false)
-	return true
+	return true,
+		function(newValue: boolean)
+			if newValue ~= on then
+				on = newValue
+				paint(true)
+			end
+		end
 end
 
 ---------------------------------------------------------------------------------------------------
