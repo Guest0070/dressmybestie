@@ -207,7 +207,8 @@ Config.LayerOrder = {
 
 -- Themes. Picked server-side; no free text anywhere. Add weekly packs by appending here.
 -- vip = true themes only show up in rounds where at least one VIP is playing.
-export type Theme = { name: string, vip: boolean? }
+-- stageLook: the runway stage look for this theme (Config.StageLooks); without one, a random look.
+export type Theme = { name: string, vip: boolean?, stageLook: string? }
 Config.Themes = {
 	{ name = "First Date" },
 	{ name = "Villain Era" },
@@ -215,7 +216,7 @@ Config.Themes = {
 	{ name = "Beach Day Gone Wrong" },
 	{ name = "Main Character Energy" },
 	{ name = "School Picture Day" },
-	{ name = "Space Tourist" },
+	{ name = "Space Tourist", stageLook = "GALAXY" },
 	{ name = "Pirate on Vacation" },
 	{ name = "Rainy Monday" },
 	{ name = "Wedding Guest (Uninvited)" },
@@ -227,43 +228,43 @@ Config.Themes = {
 	{ name = "Pop Star Airport Look" },
 	{ name = "Detective Undercover" },
 	{ name = "Farmer's Market Chic" },
-	{ name = "Retro Arcade Kid" },
+	{ name = "Retro Arcade Kid", stageLook = "NEON" },
 	{ name = "Dragon Tamer" },
 	{ name = "Chef in a Hurry" },
 	{ name = "Sleepover Legend" },
 	{ name = "Sports Day Champion" },
-	{ name = "Fairy Tale Remix" },
-	{ name = "Robot Learning Fashion" },
+	{ name = "Fairy Tale Remix", stageLook = "GARDEN" },
+	{ name = "Robot Learning Fashion", stageLook = "NEON" },
 	{ name = "Birthday Party Chaos" },
 	{ name = "Museum Night Guard" },
 	{ name = "Jungle Explorer" },
 	{ name = "Ice Cream Truck Driver" },
 	{ name = "Wizard Graduation" },
-	{ name = "Rock Band Reunion" },
+	{ name = "Rock Band Reunion", stageLook = "NEON" },
 	{ name = "Road Trip Snack Captain" },
-	{ name = "Red Carpet Royalty", vip = true },
+	{ name = "Red Carpet Royalty", vip = true, stageLook = "VIP" },
 	{ name = "Haunted Gala", vip = true },
-	{ name = "Billionaire on a Yacht", vip = true },
-	{ name = "Time Traveler From 1985" },
+	{ name = "Billionaire on a Yacht", vip = true, stageLook = "VIP" },
+	{ name = "Time Traveler From 1985", stageLook = "NEON" },
 	{ name = "Cowboy in the City" },
 	{ name = "Mermaid on Land" },
 	{ name = "Secret Agent at a Party" },
 	{ name = "Gym Class Hero" },
 	{ name = "Movie Night in Pajamas" },
 	{ name = "Knight Off Duty" },
-	{ name = "Alien Exchange Student" },
-	{ name = "Pastel Picnic" },
+	{ name = "Alien Exchange Student", stageLook = "GALAXY" },
+	{ name = "Pastel Picnic", stageLook = "GARDEN" },
 	{ name = "Skater Park Legend" },
 	{ name = "Snow Day Chaos" },
 	{ name = "Candy Land Royalty" },
 	{ name = "Lost at the Airport" },
 	{ name = "Artist With Paint Everywhere" },
 	{ name = "Science Fair Winner" },
-	{ name = "Music Festival Mud" },
+	{ name = "Music Festival Mud", stageLook = "NEON" },
 	{ name = "Ninja Tries Fashion" },
-	{ name = "Garden Party Glam" },
+	{ name = "Garden Party Glam", stageLook = "GARDEN" },
 	{ name = "Zombie Prom", vip = true },
-	{ name = "Galaxy Queen", vip = true },
+	{ name = "Galaxy Queen", vip = true, stageLook = "GALAXY" },
 } :: { Theme }
 -- Don't repeat any of the last N themes.
 Config.ThemeNoRepeat = 8
@@ -1123,6 +1124,7 @@ Config.Environment = {
 }
 
 -- Runway stage looks (ramp + backdrop from SMB_StageLooks.glb). One look is on the stage at a time.
+-- Each round shows its theme's stageLook (Config.Themes), else a random one (never twice in a row).
 -- Keys are the Blender name prefixes: VIP (crystal), GALAXY, GARDEN, NEON.
 Config.StageLooks = {
 	Default = "VIP", -- shown in Studio and whenever no look is picked

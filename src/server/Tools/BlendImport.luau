@@ -369,7 +369,9 @@ function BlendImport.showStageLook(look: string): boolean
 		return false
 	end
 	local old = imported:FindFirstChild("StageLook")
-	if old then
+	if old and old:GetAttribute("Look") == look then
+		return true -- already on the stage
+	elseif old then
 		old:Destroy()
 	end
 	local copy = source:Clone()

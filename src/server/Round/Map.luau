@@ -18,6 +18,7 @@
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
+local BlendImport = require(script.Parent.Parent.Tools.BlendImport)
 local MapDecor = require(script.Parent.MapDecor)
 
 local Map = {}
@@ -330,6 +331,12 @@ end
 -- Show text (the theme) on the runway backdrop, if the map has one.
 function Map.setBackdropText(text: string)
 	MapDecor.setBackdropText(root:FindFirstChild("Runway"), text)
+end
+
+-- Puts a stage look (ramp + backdrop, Config.StageLooks) on the imported stage. No-op on a map
+-- without the imported stage.
+function Map.setStageLook(look: string)
+	BlendImport.showStageLook(look)
 end
 
 function Map.podiumCFrame(place: number): CFrame?

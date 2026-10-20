@@ -253,6 +253,29 @@ local function pickTheme(anyVip: boolean): string
 	return name
 end
 
+-- The runway stage look for a theme: the theme's own stageLook, else a random one (not last round's).
+local lastStageLook: string? = nil
+local function pickStageLook(themeName: string): string
+	local look: string? = nil
+	for _, theme in Config.Themes do
+		if theme.name == themeName then
+			look = theme.stageLook
+			break
+		end
+	end
+	if not look then
+		local options = {}
+		for _, option in Config.StageLooks.All do
+			if option ~= lastStageLook then
+				table.insert(options, option)
+			end
+		end
+		look = if #options > 0 then options[math.random(1, #options)] else Config.StageLooks.Default
+	end
+	lastStageLook = look
+	return look :: string
+end
+
 local function randomChaos(roundNumber: number, playerCount: number): ChaosModifier?
 	if roundNumber % Config.ChaosEveryRounds ~= 0 or math.random() > Config.ChaosChance then
 		return nil
@@ -557,6 +580,7 @@ local function setupRound(): boolean
 	chaos, chaosInfo = pickChaos(state.roundNumber, #present)
 	state.theme = pickTheme(anyVip)
 	Map.setBackdropText(`Theme: {state.theme}`)
+	Map.setStageLook(pickStageLook(state.theme :: string))
 	state.chaos = chaosInfo
 	state.names = names
 	return true

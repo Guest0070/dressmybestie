@@ -179,7 +179,8 @@ limit 20k). 1 Blender metre = 1 stud. The scripts that did this are in `tools/bl
 from the stage toward the hall doors) and `SMB_StageLooks.glb` holds four ramp + backdrop looks:
 `VIP` (crystal), `GALAXY`, `GARDEN`, `NEON` (`Config.StageLooks`). `apply()` keeps the looks in
 `ServerStorage.SMB_StageLooks` and puts a copy of one on the stage (`Map.Imported.StageLook`);
-`BlendImport.showStageLook("GALAXY")` swaps it. The old compact stage's models are moved to
+`BlendImport.showStageLook("GALAXY")` swaps it. Each round shows its theme's look (`stageLook` in
+`Config.Themes`), or a random one that's different from last round's. The old compact stage's models are moved to
 `ServerStorage.MapBackup`. The FBX files from that export are not used: the importer matches the GLB
 piece names. The older "Review_Legacy" ramp/backdrop variants are left out on purpose.
 
