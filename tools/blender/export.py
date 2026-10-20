@@ -11,14 +11,18 @@ GROUPS = {
     "SMB_Shop": ["ROOM_SHOP"],
     "SMB_HallOfFame": ["ROOM_HALL_OF_FAME"],
     "SMB_CustomizeTeamUp": ["ROOM_CUSTOMIZATION_TEAMUP"],
-    "SMB_RunwayStage": ["COMPACT_RUNWAY_STAGE"],
+    "SMB_RunwayStage": ["CUSTOMIZABLE_RUNWAY_STAGE"],
+    "SMB_StageLooks": ["RUNWAY_COSMETICS"],
     "SMB_DressingRoom": ["PRIVATE_MATCH_DRESSING_ROOM"],
     "SMB_VIPRamp": ["VIP_RAMP_ASSET"],
     "SMB_ArcadeHall": ["ARCADE_HALL"],
 }
+# Legacy ramp/backdrop variants (hidden in the .blend); RUNWAY_COSMETICS replaced them.
+EXCLUDE = {"STAGE_RAMP_SLOT", "STAGE_BACKDROP_SLOT"}
 def allobjs(c):
     out = list(c.objects)
-    for ch in c.children: out += allobjs(ch)
+    for ch in c.children:
+        if ch.name not in EXCLUDE: out += allobjs(ch)
     return out
 
 def to_rbx(v):  # Blender Z-up (x,y,z) -> Roblox Y-up (x, z, -y)

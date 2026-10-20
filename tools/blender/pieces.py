@@ -1,6 +1,7 @@
 import sys, json, glob, os, bpy
+args = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else sys.argv[1:]
 out = {}
-for path in sorted(glob.glob(sys.argv[1] + "/SMB_*.glb")):
+for path in sorted(glob.glob(args[0] + "/SMB_*.glb")):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=path)
     group = os.path.basename(path)[:-4]
@@ -13,5 +14,5 @@ for path in sorted(glob.glob(sys.argv[1] + "/SMB_*.glb")):
         assert name not in out, name
         # Blender (x,y,z) -> Roblox (x, z, -y); sizes (sx, sz, sy)
         out[name] = {"g": group, "c": [round(c[0],3), round(c[2],3), round(-c[1],3)], "s": [round(max(s[0],0.05),3), round(max(s[2],0.05),3), round(max(s[1],0.05),3)]}
-json.dump(out, open(sys.argv[2], "w"))
+json.dump(out, open(args[1], "w"))
 print(len(out), "pieces")

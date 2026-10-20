@@ -1122,6 +1122,13 @@ Config.Environment = {
 	ClockTime = 17.75, -- 17.75 = dusk (neon pops); 18.2+ = night; 14 = midday
 }
 
+-- Runway stage looks (ramp + backdrop from SMB_StageLooks.glb). One look is on the stage at a time.
+-- Keys are the Blender name prefixes: VIP (crystal), GALAXY, GARDEN, NEON.
+Config.StageLooks = {
+	Default = "VIP", -- shown in Studio and whenever no look is picked
+	All = { "VIP", "GALAXY", "GARDEN", "NEON" },
+}
+
 -- Admins: the game owner is always an admin, and so is everyone in Studio playtests.
 -- Add friends' user IDs here (the number in their profile URL), e.g. { 12345678 }.
 Config.AdminUserIds = {} :: { number }

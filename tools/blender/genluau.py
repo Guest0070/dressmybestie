@@ -3,7 +3,7 @@ exp = sys.argv[1]
 d = json.load(open(f"{exp}/blend_data.json")); centers = json.load(open(f"{exp}/centers.json"))
 def v3(a): return f"Vector3.new({a[0]}, {a[1]}, {a[2]})"
 def c3(a): return f"Color3.new({a[0]}, {a[1]}, {a[2]})"
-L = ["--!strict", "-- GENERATED from Style_My_Bestie_Final.blend by the export script. Don't edit by hand.",
+L = ["--!strict", "-- GENERATED from the Style My Bestie .blend by tools/blender (see README). Don't edit by hand.",
      "-- Roblox coordinates (Blender X, Z, -Y), before BlendImport's OFFSET is applied.", "",
      "export type MaterialInfo = { color: Color3, metallic: number, roughness: number, alpha: number, emission: number }",
      "export type LightInfo = { name: string, kind: string, pos: Vector3, dir: Vector3, color: Color3, energy: number, angle: number? }",
@@ -23,3 +23,14 @@ for g, c in centers.items():
     L.append(f'\t{g} = {{ center = {v3(c["center"])}, size = {v3(c["size"])} }},')
 L += ["} :: { [string]: GroupInfo }", "", "return BlendData", ""]
 open(sys.argv[2], "w").write("\n".join(L))
+
+# Optional third argument: also write BlendPieces.luau from pieces.json (made by pieces.py).
+if len(sys.argv) > 3:
+    pieces = json.load(open(f"{exp}/pieces.json"))
+    P = ["--!strict", "-- GENERATED: every imported mesh piece's centre and size (Roblox studs, before OFFSET).",
+         "-- BlendImport snaps each MeshPart to this, so it works however Studio imported them.", "", "return {"]
+    for name in sorted(pieces):
+        p = pieces[name]
+        P.append(f'\t["{name}"] = {{ {", ".join(str(x) for x in p["c"] + p["s"])} }},')
+    P += ["} :: { [string]: { number } }", ""]
+    open(sys.argv[3], "w").write("\n".join(P))

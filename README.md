@@ -174,10 +174,31 @@ Shop, VIP Lounge, Hall of Fame, Customize/Team Up, Runway Stage, Dressing Room, 
 split by material (a Roblox mesh has one colour) and anything over 19k triangles was reduced (Roblox
 limit 20k). 1 Blender metre = 1 stud. The scripts that did this are in `tools/blender/`.
 
+**Customizable runway stage** (from `Style_My_Bestie_Editable.blend`, the Customizable Stage file):
+`SMB_RunwayStage.glb` is now the big auditorium stage (seats on both sides of a 42-stud ramp that runs
+from the stage toward the hall doors) and `SMB_StageLooks.glb` holds four ramp + backdrop looks:
+`VIP` (crystal), `GALAXY`, `GARDEN`, `NEON` (`Config.StageLooks`). `apply()` keeps the looks in
+`ServerStorage.SMB_StageLooks` and puts a copy of one on the stage (`Map.Imported.StageLook`);
+`BlendImport.showStageLook("GALAXY")` swaps it. The old compact stage's models are moved to
+`ServerStorage.MapBackup`. The FBX files from that export are not used: the importer matches the GLB
+piece names. The older "Review_Legacy" ramp/backdrop variants are left out on purpose.
+
+Regenerating (Windows, from the project folder; `$B` = path to `blender.exe`, `$X` = a temp folder,
+`$BLEND` = the .blend). `ONLY` limits which GLBs are rewritten; the data files are always complete:
+```
+$env:ONLY="SMB_RunwayStage,SMB_StageLooks"
+& $B -b --factory-startup --python tools/blender/export.py -- $BLEND $X
+copy $X\SMB_*.glb assets\models\
+& $B -b --factory-startup --python tools/blender/centers.py -- $BLEND $X\centers.json
+& $B -b --factory-startup --python tools/blender/pieces.py -- assets/models $X\pieces.json
+python tools/blender/genluau.py $X src/server/Tools/BlendData.luau src/server/Tools/BlendPieces.luau
+stylua src
+```
+
 **Put it in the game (once, in Studio):**
 1. Open the place, Rojo connected, `git pull` done.
-2. **File > Import 3D**, pick all 9 `.glb` files in `assets/models` (already imported the other 8?
-   then just `SMB_ArcadeHall.glb`). In the import window set the
+2. **File > Import 3D**, pick all 10 `.glb` files in `assets/models` (building already imported?
+   then just the new ones, e.g. `SMB_RunwayStage.glb` + `SMB_StageLooks.glb`). In the import window set the
    scale unit to **Stud**, then Import. (Where they land doesn't matter.)
 3. Press **Stop** if the game is running (the command does nothing during Play). **View > Command Bar**, paste, Enter:
    `require(game.ServerScriptService.Server.Tools.BlendImport).apply()`

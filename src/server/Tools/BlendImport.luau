@@ -17,13 +17,18 @@
 --     VIP kiosk in the VIP lounge, Dressing Room kiosk at the Team Up console
 --   * the private dressing room becomes ServerStorage.SMB_BoothTemplate: every styling booth is
 --     a copy of it
---   * moves an old Workspace.LobbyEnvironment to ServerStorage (not deleted) so it doesn't overlap
+--   * the stage looks (SMB_StageLooks: one ramp + backdrop per look) go to
+--     ServerStorage.SMB_StageLooks; a copy of Config.StageLooks.Default stands on the stage
+--   * imported models that no longer match any piece (e.g. the old compact runway stage) and an old
+--     Workspace.LobbyEnvironment move to ServerStorage.MapBackup (not deleted) so they don't overlap
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local BlendData = require(script.Parent.BlendData)
 local BlendPieces = require(script.Parent.BlendPieces)
 
@@ -46,9 +51,9 @@ local SOLID_PATTERNS = {
 	"Counter",
 	"Platform",
 	"Podium",
-	"STAGE_Walls",
-	"STAGE_Runway",
-	"STAGE_Seating",
+	"Base_Shell",
+	"Stage_Architecture",
+	"Seating",
 	"Ramp",
 	"Sofa",
 	"Armchair",
@@ -60,6 +65,8 @@ local SOLID_PATTERNS = {
 	"Step",
 }
 local FLAT_PATTERNS = { "^FLR_", "_Floor" } -- simple slabs: a box collider is exact and cheap
+-- Decoration on a solid piece (crystals, petals, glow strips on a ramp): walk-through.
+local DECOR_PATTERNS = { "_Details$" }
 
 local function matches(name: string, patterns: { string }): boolean
 	for _, pattern in patterns do
@@ -126,7 +133,7 @@ local function applyLook(part: BasePart, objectName: string, materialName: strin
 		end
 		part.CastShadow = part.Material ~= Enum.Material.Neon and part.Material ~= Enum.Material.Glass
 	end
-	local solid = matches(objectName, SOLID_PATTERNS)
+	local solid = matches(objectName, SOLID_PATTERNS) and not matches(objectName, DECOR_PATTERNS)
 	if runtimeMode and not matches(objectName, FLAT_PATTERNS) then
 		solid = false
 	end
@@ -345,13 +352,40 @@ local function inFrontOf(bay: Vector3, toward: Vector3, distance: number): Vecto
 	return Vector3.new(bay.X, 0, bay.Z) + flat.Unit * distance
 end
 
+-- "GALAXY_Ramp_Details__MAT_GAL_Orb" -> "GALAXY": the stage look this piece belongs to, or nil.
+local function stageLookOf(name: string): string?
+	local look = string.match(name, "^(%u+)_Ramp") or string.match(name, "^(%u+)_Backdrop")
+	return if look and table.find(Config.StageLooks.All, look) then look else nil
+end
+
+-- Puts a copy of one stage look (ramp + backdrop) on the runway stage as Map.Imported.StageLook,
+-- replacing the one there. Returns false if that look (or the imported building) is missing.
+function BlendImport.showStageLook(look: string): boolean
+	local looks = ServerStorage:FindFirstChild("SMB_StageLooks")
+	local source = if looks then looks:FindFirstChild(look) else nil
+	local map = Workspace:FindFirstChild("Map")
+	local imported = if map then map:FindFirstChild("Imported") else nil
+	if not source or not imported then
+		return false
+	end
+	local old = imported:FindFirstChild("StageLook")
+	if old then
+		old:Destroy()
+	end
+	local copy = source:Clone()
+	copy.Name = "StageLook"
+	copy:SetAttribute("Look", look)
+	copy.Parent = imported
+	return true
+end
+
 export type Options = { stashOld: boolean?, lights: boolean?, runtime: boolean? }
 
 function BlendImport.apply(options: Options?)
 	local stashOld = if options and options.stashOld ~= nil then options.stashOld else true
 	local withLights = if options and options.lights ~= nil then options.lights else true
 	local runtime = options ~= nil and options.runtime == true
-	print("[BlendImport v5] starting (building + arcade hall)")
+	print("[BlendImport v6] starting (building + arcade hall + customizable stage)")
 	if RunService:IsRunning() and not runtime then
 		warn(
 			"[BlendImport] Stop the game first (red Stop button), then run this again. Changes made during Play are thrown away."
@@ -373,13 +407,40 @@ function BlendImport.apply(options: Options?)
 	local ok, err = pcall(function()
 		local map = getOrCreate(Workspace, "Map", "Model")
 		local imported = getOrCreate(map, "Imported", "Model")
+		local backup = getOrCreate(ServerStorage, "MapBackup", "Folder")
+		-- The look on the stage is a copy of one in ServerStorage: drop it so its pieces aren't
+		-- gathered twice. Step 7 puts it back.
+		local shownLook = imported:FindFirstChild("StageLook")
+		local lookName = if shownLook then shownLook:GetAttribute("Look") else nil
+		if shownLook then
+			shownLook:Destroy()
+		end
 
 		-- 1. Find every imported piece (anywhere in Workspace, however Studio named the models),
 		-- snap it into place and style it. The private dressing room's pieces (PMD_*) are gathered
-		-- into their own model; everything else goes under Map.Imported.
+		-- into their own model, the stage looks' pieces into ServerStorage.SMB_StageLooks.<look>;
+		-- everything else goes under Map.Imported.
 		local room = Instance.new("Model")
 		room.Name = "SMB_DressingRoom"
-		local matched, loose, roomPieces = 0, 0, 0
+		local stageLooks = getOrCreate(ServerStorage, "SMB_StageLooks", "Folder")
+		local refreshed: { [string]: Model } = {} -- looks re-imported in this run
+		local function lookModel(look: string): Model
+			local model = refreshed[look]
+			if model then
+				return model
+			end
+			-- A fresh import of a look replaces the stored one (re-importing never doubles it up).
+			local old = stageLooks:FindFirstChild(look)
+			if old then
+				old:Destroy()
+			end
+			local fresh = Instance.new("Model")
+			fresh.Name = look
+			fresh.Parent = stageLooks
+			refreshed[look] = fresh
+			return fresh
+		end
+		local matched, loose, roomPieces, lookPieces = 0, 0, 0, 0
 		local unknownNames: { string } = {}
 		local tops: { [Instance]: boolean } = {}
 		local emptied: { [Instance]: boolean } = {} -- models the dressing room pieces came out of
@@ -405,7 +466,14 @@ function BlendImport.apply(options: Options?)
 				snap(part, name)
 				local objectName, materialName = splitName(name)
 				applyLook(part, objectName, materialName)
-				if string.sub(name, 1, 4) == "PMD_" then
+				local look = stageLookOf(name)
+				if look then
+					part.Parent = lookModel(look)
+					lookPieces += 1
+					if holder ~= part then
+						emptied[holder] = true
+					end
+				elseif string.sub(name, 1, 4) == "PMD_" then
 					part.Parent = room
 					roomPieces += 1
 					if holder ~= part then
@@ -439,7 +507,7 @@ function BlendImport.apply(options: Options?)
 			total += 1
 		end
 		print(
-			`[BlendImport] matched {matched} of {total} building pieces ({roomPieces} in the dressing room)`
+			`[BlendImport] matched {matched} of {total} building pieces ({roomPieces} in the dressing room, {lookPieces} in stage looks)`
 		)
 		if matched == 0 then
 			warn("[BlendImport] No building pieces found. Import the .glb files from assets/models first.")
@@ -452,6 +520,24 @@ function BlendImport.apply(options: Options?)
 				)}`
 			)
 		end
+		-- Imported models that no piece matches any more (the old compact runway stage after the
+		-- customizable stage replaced it): keep them, but out of the world.
+		for _, child in imported:GetChildren() do
+			if child.Name == "Lights" or not (child:IsA("Model") or child:IsA("BasePart")) then
+				continue
+			end
+			local known = child:IsA("BasePart") and pieceName(child :: BasePart) ~= nil
+			for _, descendant in child:GetDescendants() do
+				if known then
+					break
+				end
+				known = descendant:IsA("BasePart") and pieceName(descendant :: BasePart) ~= nil
+			end
+			if not known then
+				(child :: Instance).Parent = backup
+				print(`[BlendImport] moved {child.Name} (no longer in the .blend) to ServerStorage.MapBackup`)
+			end
+		end
 
 		-- 2. Lights.
 		if withLights then
@@ -461,52 +547,48 @@ function BlendImport.apply(options: Options?)
 			print(`[BlendImport] added {#BlendData.lights} lights`)
 		end
 
-		-- 3. Runway + podium on the stage. The catwalk runs west -> east at Blender Y 141.
-		local backup = getOrCreate(ServerStorage, "MapBackup", "Folder")
+		-- 3. Runway + podium on the customizable stage. Roblox coordinates before OFFSET: the deck
+		-- is at Y 2, X -24..24, Z -196..-178 (backdrop at Z -194); the ramp runs from the deck's front
+		-- edge toward the hall, Z -178..-136, also at Y 2. Walkers go south (+Z), toward the camera.
 		for _, name in { "Runway", "Podium" } do
 			local old = map:FindFirstChild(name)
 			if old and not old:FindFirstChild("ImportedMarker") then
 				old.Parent = backup
 			end
 		end
+		local O = BlendImport.OFFSET
 		local runway = getOrCreate(map, "Runway", "Model")
 		local podium = getOrCreate(map, "Podium", "Model")
-		marker(runway, "ImportedMarker", CFrame.new(at("STAGE_Performer_Spawn")))
-		marker(podium, "ImportedMarker", CFrame.new(at("STAGE_Performer_Spawn")))
-		local start = at("STAGE_Performer_Spawn") + Vector3.new(0, 3, 0)
-		local walkEnd = Vector3.new(20, start.Y, start.Z)
-		local east = Vector3.new(1, 0, 0)
-		marker(runway, "Start", CFrame.lookAt(start, start + east))
-		marker(runway, "End", CFrame.lookAt(walkEnd, walkEnd + east))
-		local cameraPos = Vector3.new(29, start.Y + 6, start.Z)
+		local south = Vector3.new(0, 0, 1)
+		local start = Vector3.new(0, 5, -190) + O
+		local walkEnd = Vector3.new(0, 5, -139) + O
+		marker(runway, "ImportedMarker", CFrame.new(start))
+		marker(podium, "ImportedMarker", CFrame.new(start))
+		marker(runway, "Start", CFrame.lookAt(start, start + south))
+		marker(runway, "End", CFrame.lookAt(walkEnd, walkEnd + south))
+		-- Camera above the open floor between the hall doors and the seats, looking up the ramp.
+		local cameraPos = Vector3.new(0, 10, -126) + O
 		marker(runway, "Camera", CFrame.lookAt(cameraPos, start))
-		-- Lineup and podium face the camera (east); players spread along Z.
-		local lineup = Vector3.new(16, start.Y, start.Z)
-		marker(runway, "Lineup", CFrame.lookAt(lineup, lineup + east))
-		local podiumX = 9
-		marker(
-			podium,
-			"First",
-			CFrame.lookAt(Vector3.new(podiumX, start.Y + 1, start.Z), Vector3.new(29, start.Y + 1, start.Z))
-		)
-		marker(
-			podium,
-			"Second",
-			CFrame.lookAt(Vector3.new(podiumX, start.Y, start.Z - 6), Vector3.new(29, start.Y, start.Z - 6))
-		)
-		marker(
-			podium,
-			"Third",
-			CFrame.lookAt(Vector3.new(podiumX, start.Y, start.Z + 6), Vector3.new(29, start.Y, start.Z + 6))
-		)
-		-- Audience: the floor by the spectator entrance (seats on both sides of the catwalk).
-		local spectators = at("STAGE_Spectator_Arrival")
-		marker(runway, "Audience", CFrame.new(spectators + Vector3.new(5, 0.5, -4)), Vector3.new(28, 1, 6))
+		-- Lineup across the front of the deck, facing the camera; players spread along X. Width tells
+		-- Map.lineupCFrame how much deck there is, so a big lineup is squeezed instead of falling off.
+		local lineup = Vector3.new(0, 5, -182) + O
+		marker(runway, "Lineup", CFrame.lookAt(lineup, lineup + south)):SetAttribute("Width", 44)
+		-- Podium behind the lineup, in front of the backdrop: 2nd on the camera's left, 3rd on its right.
+		local spots: { [string]: Vector3 } = {
+			First = Vector3.new(0, 6, -188),
+			Second = Vector3.new(-6, 5, -188),
+			Third = Vector3.new(6, 5, -188),
+		}
+		for name, spot in spots do
+			local position = spot + O
+			marker(podium, name, CFrame.lookAt(position, position + south))
+		end
+		-- Audience: the open floor between the hall doors (Z -116) and the first row of seats (Z -132).
+		marker(runway, "Audience", CFrame.new(Vector3.new(0, 0.5, -124) + O), Vector3.new(56, 1, 12))
 
 		-- 4. Lobby markers: booths, kiosks, approach floor.
 		local lobby = getOrCreate(map, "Lobby", "Model")
 		lobby:SetAttribute("ImportedMap", true)
-		local O = BlendImport.OFFSET
 		marker(lobby, "SkinToneBooth", CFrame.new(Vector3.new(-41.5, 0.2, -78.8) + O))
 		marker(lobby, "BodyTypeBooth", CFrame.new(Vector3.new(-52, 0.2, -78.8) + O))
 		local shopMiddle = Vector3.new(-46.6, 0, -51.5) + O
@@ -601,6 +683,20 @@ function BlendImport.apply(options: Options?)
 				old.Parent = backup
 				print("[BlendImport] moved Workspace.LobbyEnvironment to ServerStorage.MapBackup")
 			end
+		end
+
+		-- 7. One stage look on the stage: the one that was there, else the default.
+		local look = if typeof(lookName) == "string" then lookName else Config.StageLooks.Default
+		local shown = if BlendImport.showStageLook(look)
+			then look
+			elseif BlendImport.showStageLook(Config.StageLooks.Default) then Config.StageLooks.Default
+			else nil
+		if shown then
+			print(`[BlendImport] stage look on the stage: {shown}`)
+		elseif #stageLooks:GetChildren() == 0 then
+			warn(
+				"[BlendImport] No stage looks yet. Import assets/models/SMB_StageLooks.glb and run this again."
+			)
 		end
 	end)
 

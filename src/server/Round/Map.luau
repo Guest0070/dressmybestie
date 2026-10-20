@@ -318,7 +318,9 @@ end
 function Map.lineupCFrame(index: number, count: number): CFrame
 	local lineup = findPart({ "Runway", "Lineup" })
 	local center = if lineup then lineup.CFrame else Map.runwayEnd()
-	local spacing = 5
+	-- A "Width" attribute on Lineup (studs of stage) squeezes a big lineup so it stays on the stage.
+	local width = if lineup then lineup:GetAttribute("Width") else nil
+	local spacing = if typeof(width) == "number" and count > 1 then math.min(5, width / (count - 1)) else 5
 	local offset = (index - (count + 1) / 2) * spacing
 	local position = center.Position + center.RightVector * offset
 	local cameraPos = Map.runwayCamera().Position
