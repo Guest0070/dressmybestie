@@ -273,18 +273,38 @@ function Arena.arcadeSpot(piece: string): Vector3?
 	return Vector3.new(data[1], data[2], data[3]) + BlendImport.OFFSET
 end
 
+-- True only when the hall's geometry is really there: its floor and all four game platforms.
+-- (BlendImport.apply makes the ARC_LGT_ light markers from data even when the .glb was never
+-- imported, so "any ARC_ part" moved the games onto platforms that didn't exist.)
+local ARCADE_REQUIRED = {
+	"ARC_Floor",
+	"ARC_Color_Rush_Platform",
+	"ARC_Freeze_Frame_Platform",
+	"ARC_Spin_Sweep_Platform",
+	"ARC_Cover_Star_Platform",
+}
 function Arena.arcadeImported(): boolean
 	local map = Workspace:FindFirstChild("Map")
 	local imported = map and map:FindFirstChild("Imported")
 	if not imported then
 		return false
 	end
+	local found: { [string]: boolean } = {}
 	for _, d in imported:GetDescendants() do
 		if d:IsA("BasePart") and string.sub(d.Name, 1, 4) == "ARC_" then
-			return true
+			for _, prefix in ARCADE_REQUIRED do
+				if string.sub(d.Name, 1, #prefix + 2) == prefix .. "__" then
+					found[prefix] = true
+				end
+			end
 		end
 	end
-	return false
+	for _, prefix in ARCADE_REQUIRED do
+		if not found[prefix] then
+			return false
+		end
+	end
+	return true
 end
 
 ---------------------------------------------------------------------------------------------------
