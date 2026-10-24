@@ -37,8 +37,8 @@
       },
       "sha256": "4bb314f65b94e1dcc19e307573be58dbcff8c133413efd3913015a2ab1098120",
       "builtin_fallback": "rbxasset://textures/particles/sparkles_main.dds",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 103355658408453,
+      "upload_status": "uploaded"
     },
     {
       "name": "Heart",
@@ -73,8 +73,8 @@
       },
       "sha256": "879fa54f83fe77b327d9a4e6920e3267389121577b1e39f7c1800421d292cf7c",
       "builtin_fallback": "rbxasset://textures/particles/sparkles_main.dds",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 117765711379644,
+      "upload_status": "uploaded"
     },
     {
       "name": "Star",
@@ -109,8 +109,8 @@
       },
       "sha256": "5d39bd530a0ad206490b2dbd5b35c35df0a21d00579ff55003f5a2ace4e79c53",
       "builtin_fallback": "rbxasset://textures/particles/sparkles_main.dds",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 102342304868706,
+      "upload_status": "uploaded"
     },
     {
       "name": "Confetti",
@@ -145,8 +145,8 @@
       },
       "sha256": "8b09c53cbfc2fdd6afb88a06ac7981ba44a2b846706988492dadefcfc0103eba",
       "builtin_fallback": "rbxasset://textures/particles/sparkles_main.dds",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 98287289806961,
+      "upload_status": "uploaded"
     },
     {
       "name": "Glow",
@@ -181,8 +181,8 @@
       },
       "sha256": "ac999be58917afff7a12a3fafc84ef232e578d146afc087dbe152a9f7c4db41d",
       "builtin_fallback": "rbxasset://textures/particles/forcefield_glow_main.dds",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 101111495335315,
+      "upload_status": "uploaded"
     }
   ],
   "verified_builtin_textures": [

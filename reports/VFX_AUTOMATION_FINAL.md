@@ -64,9 +64,7 @@ Not changed: the paid runway entrance cosmetics, the auras, lobby moment purchas
 - **Not verified in Studio:** partner reveal (needs 2 players; solo styling skips it by design), READY sparkle, vote and star bursts (need a real button press), reaction burst, coin fly-in, the 10-second countdown pulse, VIP visuals (needs the VIP pass), Disco preset (needs a bought moment), the low-quality path on a phone, and the reduced-motion path. These were code-reviewed and lint-checked only. **No visual screenshot review was done**, so look and feel still needs your eye.
 
 ## Remaining manual actions
-1. **Upload the 5 textures** in `assets/vfx/processed/` (listed in `assets/vfx/manifests/upload_manifest.csv`): Studio > Asset Manager > Bulk Import, or Creator Hub > Creations > Decals, as the account or group that owns the game. Copy each Image asset ID, then run:
-   `python tools/vfx/vfx_pipeline.py --set Sparkle=<id> Heart=<id> Star=<id> Confetti=<id> Glow=<id>`
-   (Upload a Decal and you may get a Decal ID instead of an Image ID; use the Image ID, which Studio shows when you insert the decal.) Until then, every effect runs on the built-in sparkle and glow textures.
+1. ~~Upload the 5 textures~~ **Done (2026-10-25).** All five were uploaded as Image assets by the group that owns the place (454988084) and recorded in `Config.Vfx.Textures` and the manifest. In a playtest, every effect's emitter used the new ID, and every image loaded successfully.
 2. **Two-player test in Studio** (Test > Clients and Servers, 2 players): check the partner reveal, READY sparkle, hearts/stars, reactions and the countdown pulse.
 3. **Phone check:** Studio's device emulator, or a real phone, to look at the low-quality path.
 4. **Comfort check:** turn on Reduced Motion in the Roblox settings and turn off Flashing effects in game settings, then play one round.

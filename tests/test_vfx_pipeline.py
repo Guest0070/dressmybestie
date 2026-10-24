@@ -1,6 +1,7 @@
 """Tests for the VFX texture pipeline (tools/vfx). Run:  python -m unittest discover -s tests -p "test_*.py" """
 
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -64,10 +65,11 @@ class SetIds(unittest.TestCase):
             manifest = Path(tmp) / "vfx_manifest.json"
             config.write_bytes((ROOT / "src" / "shared" / "Config.luau").read_bytes())
             manifest.write_bytes(V.MANIFEST.read_bytes())
+            star_before = re.search(r"		Star = \d+,", config.read_text(encoding="utf-8")).group(0)
             self.assertEqual(V.set_ids(["Heart=123456"], config, manifest), 0)
             text = config.read_text(encoding="utf-8")
             self.assertIn("		Heart = 123456,", text)
-            self.assertIn("		Star = 0,", text)
+            self.assertIn(star_before, text)  # other keys untouched
             entry = next(t for t in json.loads(manifest.read_text())["textures"] if t["name"] == "Heart")
             self.assertEqual(entry["roblox_asset_id"], 123456)
             self.assertEqual(V.set_ids(["Nope=1"], config, manifest), 1)

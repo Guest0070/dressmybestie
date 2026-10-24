@@ -928,11 +928,11 @@ end
 -- textures in assets/vfx/processed (tools/vfx/vfx_pipeline.py); 0 = use the built-in fallback.
 Config.Vfx = {
 	Textures = {
-		Sparkle = 0,
-		Heart = 0,
-		Star = 0,
-		Confetti = 0,
-		Glow = 0,
+		Sparkle = 103355658408453,
+		Heart = 117765711379644,
+		Star = 102342304868706,
+		Confetti = 98287289806961,
+		Glow = 101111495335315,
 	} :: { [string]: number },
 	-- Built-in particle textures (checked loading in Studio) used until an upload ID is set.
 	Fallbacks = {
