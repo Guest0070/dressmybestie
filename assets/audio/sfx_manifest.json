@@ -1,0 +1,1826 @@
+{
+  "schema_version": 1,
+  "game": "Style My Bestie",
+  "generated_by": "tools/audio/process_sfx.py",
+  "config_file": "src/shared/Config.luau (Config.Sounds)",
+  "processed_root": "assets/audio/processed",
+  "categories": [
+    "UI",
+    "Gameplay",
+    "Runway",
+    "Results",
+    "Rewards",
+    "Music"
+  ],
+  "assets": [
+    {
+      "id": "ui_click",
+      "category": "UI",
+      "config_keys": [
+        "Click"
+      ],
+      "gameplay_events": [
+        "Any button or toggle pressed (Kit.button, Components)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.25,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/ui_click.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "ui_click",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/UI/ui_click.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (49 ms)",
+        "normalised -4.8 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.068,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -7.85,
+      "rms_dbfs": -20.05,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "003bb1f8ca80f883334a4b6bdf975a150c39794b31ec93868df08d7201524ebe",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "ui_phase_change",
+      "category": "UI",
+      "config_keys": [
+        "PhaseChange"
+      ],
+      "gameplay_events": [
+        "Round phase changes (HUD.refreshRound)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.0,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/ui_phase_change.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "ui_phase_change",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/UI/ui_phase_change.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -3.4 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.947,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -6.46,
+      "rms_dbfs": -19.97,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "f65074763245f063f89a1a2555b1b5c25708917e42cc4eef7225e09374bf976c",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "ui_alert",
+      "category": "UI",
+      "config_keys": [
+        "Alert"
+      ],
+      "gameplay_events": [
+        "Lobby: round starts in 10 seconds (HUD.roundAlert)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.0,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/ui_alert.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "ui_alert",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/UI/ui_alert.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -4.8 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.947,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -7.99,
+      "rms_dbfs": -18.73,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "d1ffcdacef925f0d80171f2cede981909d804869419c6fd27c810eb683f655b8",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "ui_time_warning",
+      "category": "UI",
+      "config_keys": [
+        "TimeWarning"
+      ],
+      "gameplay_events": [
+        "Styling or voting timer reaches 10 seconds (HUD.timeWarning)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.0,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/ui_time_warning.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "ui_time_warning",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/UI/ui_time_warning.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (300 ms)",
+        "normalised -6.3 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.497,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -9.37,
+      "rms_dbfs": -18.97,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "e0be7b0af42ce3cfe482ad59d607f5621d2346d8dbf3aaf814644137b25f520e",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "ui_ready",
+      "category": "UI",
+      "config_keys": [
+        "Ready"
+      ],
+      "gameplay_events": [
+        "Stylist taps READY (Catalog)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.8,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/ui_ready.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "ui_ready",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/UI/ui_ready.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -3.1 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.747,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -6.27,
+      "rms_dbfs": -19.71,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "a8715fe34a4b5c681df28d2d2dccdb87cfb67b896b6e418a49ed0d80156202a7",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_theme_reveal",
+      "category": "Gameplay",
+      "config_keys": [
+        "ThemeReveal"
+      ],
+      "gameplay_events": [
+        "Theme reveal card appears (HUD.refreshRound, ThemeReveal phase)"
+      ],
+      "loop": false,
+      "max_duration_s": 2.0,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/gp_theme_reveal.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_theme_reveal",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_theme_reveal.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (82 ms)",
+        "normalised +1.7 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.818,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -1.5,
+      "rms_dbfs": -19.12,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "bb9e27d534fd44fef0bf7f7c0b3b9525a9a792791b21c8fa69b5a96c4c612ad1",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_heart",
+      "category": "Gameplay",
+      "config_keys": [
+        "Heart"
+      ],
+      "gameplay_events": [
+        "Player gives a heart (VotingUI) or a star rating (StarsUI)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.6,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/gp_heart.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_heart",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_heart.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -4.6 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.472,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -7.79,
+      "rms_dbfs": -19.97,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "53e65f5ae4f03ac72612ce2dff1e4df39fab93c2514a0f55623ea07f241c4097",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_pop",
+      "category": "Gameplay",
+      "config_keys": [
+        "Reaction",
+        "MinigamePop",
+        "MinigameSnap"
+      ],
+      "gameplay_events": [
+        "Emoji reaction sent (ReactionsUI)",
+        "Runway Dash split (MinigameFx)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.4,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/gp_pop.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_pop",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_pop.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (120 ms)",
+        "normalised -3.4 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.077,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -6.44,
+      "rms_dbfs": -19.98,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "f2188fb415669a315aa21120428d79d5697db6440ccdaa9a9ebb6b64f6b33b23",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_tick",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameTick"
+      ],
+      "gameplay_events": [
+        "Minigame 3-2-1 countdown (Minigames/init)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.25,
+      "target_rms_dbfs": -21,
+      "file_source": "assets/audio/source/generated/gp_tick.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_tick",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_tick.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (20 ms)",
+        "normalised -1.5 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.097,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -4.6,
+      "rms_dbfs": -20.97,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "e5fa13b1a070850aa2b726fc2ad4030f92957584b569db54810e71a83d174da6",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_go",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameGo"
+      ],
+      "gameplay_events": [
+        "Minigame GO, Color Rush waves, Spin Sweep start"
+      ],
+      "loop": false,
+      "max_duration_s": 1.0,
+      "target_rms_dbfs": -18,
+      "file_source": "assets/audio/source/generated/gp_go.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_go",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_go.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised +0.6 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.922,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -2.49,
+      "rms_dbfs": -17.94,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "6bb5acc6e556489dc11c67ae92f86774eae78c494c5a23d65623744528b2bc62",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_drop",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameDrop"
+      ],
+      "gameplay_events": [
+        "Color Rush tiles drop"
+      ],
+      "loop": false,
+      "max_duration_s": 1.2,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/gp_drop.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_drop",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_drop.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (501 ms)",
+        "normalised -1.8 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.496,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -4.89,
+      "rms_dbfs": -18.98,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "9d3ece086b561c17550a47d607096e06826a8367e22c1f464029dbf3d9de8a13",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_out",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameOut"
+      ],
+      "gameplay_events": [
+        "Player knocked out of a minigame (sent to that player only)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.2,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/gp_out.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_out",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_out.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (60 ms)",
+        "normalised -7.2 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.04,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -10.16,
+      "rms_dbfs": -18.93,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "4507556a129fa7fe9d26b0eee85fe4243b4bf6b9dcea6b50c3cff9b06e996696",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_hit",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameHit"
+      ],
+      "gameplay_events": [
+        "Runway Dash / Spin Sweep player hit"
+      ],
+      "loop": false,
+      "max_duration_s": 0.5,
+      "target_rms_dbfs": -18,
+      "file_source": "assets/audio/source/generated/gp_hit.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_hit",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_hit.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (80 ms)",
+        "normalised -4.7 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.341,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -7.73,
+      "rms_dbfs": -17.94,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "550fd189930fba0f4eb591c0df1612ebfda2183d4db92b4559c79f6fed0b3af9",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_whoosh",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameWhoosh"
+      ],
+      "gameplay_events": [
+        "Spin Sweep arm passes near the player (MinigameFx)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.8,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/gp_whoosh.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_whoosh",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_whoosh.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (10 ms)",
+        "normalised -3.1 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.587,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -6.15,
+      "rms_dbfs": -20.17,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "d1498f3c6365637dcd0f9595a39d55c33cf613988a6a6851172b89961c6635b3",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_launch",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameLaunch",
+        "LobbyMoment"
+      ],
+      "gameplay_events": [
+        "Spin Sweep launch pads",
+        "Bought lobby moment (confetti/disco)"
+      ],
+      "loop": false,
+      "max_duration_s": 2.0,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/gp_launch.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_launch",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_launch.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (1 ms)",
+        "normalised -0.4 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.599,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -3.4,
+      "rms_dbfs": -19.05,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "532ff09a78977eefffcb33c83bd69635e9ecf8c9c58479366f8b00bc5112a5c4",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_switch",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameSwitch"
+      ],
+      "gameplay_events": [
+        "Color Rush colour switch, Cover Star round, Runway Dash checkpoint"
+      ],
+      "loop": false,
+      "max_duration_s": 0.6,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/gp_switch.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_switch",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_switch.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (190 ms)",
+        "normalised -7.7 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.157,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -10.82,
+      "rms_dbfs": -19.99,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "66015cdaf8f2dd8b0686f694c929f46714768cf0b6ecb75bc567c8c7cd701bc9",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "gp_camera_flash",
+      "category": "Gameplay",
+      "config_keys": [
+        "MinigameFlash"
+      ],
+      "gameplay_events": [
+        "Freeze Frame photo / paparazzi flashes (MinigameFx)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.8,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/gp_camera_flash.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "gp_camera_flash",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Gameplay/gp_camera_flash.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (20 ms)",
+        "normalised +2.1 dB (peak-limited)",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.577,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -0.99,
+      "rms_dbfs": -26.13,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "291dbd5e3fe154a0cc928073d1b9d1617901cc254d2029bb562f163c7c19cee7",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_entrance",
+      "category": "Runway",
+      "config_keys": [
+        "RunwayEntrance"
+      ],
+      "gameplay_events": [
+        "A look starts its runway walk (RunwayEffect remote, Stage)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.6,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/rw_entrance.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_entrance",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Runway/rw_entrance.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (42 ms)",
+        "normalised -2.0 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.358,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -5.24,
+      "rms_dbfs": -19.96,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "a5e47b9b07bb63302e9ac93f434cc72532146631a41f816e9728254e16d99df4",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_vip_entrance",
+      "category": "Runway",
+      "config_keys": [
+        "VipEntrance"
+      ],
+      "gameplay_events": [
+        "A VIP's look starts its runway walk (RunwayEffect remote, Stage)"
+      ],
+      "loop": false,
+      "max_duration_s": 2.2,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/rw_vip_entrance.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_vip_entrance",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Runway/rw_vip_entrance.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (77 ms)",
+        "normalised +0.3 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.923,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -2.86,
+      "rms_dbfs": -18.99,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "37b24ff01ab533568b1565c7b395dcab60256738ba3d96fe9d998d95827fd433",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_beat_kick",
+      "category": "Runway",
+      "config_keys": [
+        "BeatKick"
+      ],
+      "gameplay_events": [
+        "Built-in runway beat and Freeze Frame dance beat (Audio, MinigameFx)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.5,
+      "target_rms_dbfs": -16,
+      "file_source": "assets/audio/source/generated/rw_beat_kick.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_beat_kick",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Runway/rw_beat_kick.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -4.3 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.377,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -7.4,
+      "rms_dbfs": -15.93,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "fb2f18dfcafd8442cd2917935b7d2f0f909c576e16f82ff1262a92ced800f692",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_beat_hihat",
+      "category": "Runway",
+      "config_keys": [
+        "BeatHiHat"
+      ],
+      "gameplay_events": [
+        "Built-in runway beat and Freeze Frame dance beat (Audio, MinigameFx)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.2,
+      "target_rms_dbfs": -22,
+      "file_source": "assets/audio/source/generated/rw_beat_hihat.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_beat_hihat",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Runway/rw_beat_hihat.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -2.8 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.077,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -5.87,
+      "rms_dbfs": -22.09,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "c149ff690ac2ba213347ba61bfcfc24dd76ff53e5af6149068a54f3c97bcdeca",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_beat_clap",
+      "category": "Runway",
+      "config_keys": [
+        "BeatClap"
+      ],
+      "gameplay_events": [
+        "Built-in runway beat (Audio)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.4,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/rw_beat_clap.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_beat_clap",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Runway/rw_beat_clap.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised +2.1 dB (peak-limited)",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.297,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -1.05,
+      "rms_dbfs": -20.21,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "d5e0d3234ecb98cbda1bb20f0bd8744652fc4ef3d1252cdd1dfa999e172975c0",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rs_podium",
+      "category": "Results",
+      "config_keys": [
+        "Podium"
+      ],
+      "gameplay_events": [
+        "3rd and 2nd place rows appear (ResultsUI)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.5,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/rs_podium.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rs_podium",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Results/rs_podium.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -1.7 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.3,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -4.77,
+      "rms_dbfs": -18.61,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "a25675c1ab831db9b6a05581d3118c0c5dfd585f95a0b552288af62b50457d04",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rs_winner",
+      "category": "Results",
+      "config_keys": [
+        "Winner",
+        "MinigameWin"
+      ],
+      "gameplay_events": [
+        "1st place row appears (ResultsUI)",
+        "Minigame winner (Minigames/init, Runway Dash)"
+      ],
+      "loop": false,
+      "max_duration_s": 3.0,
+      "target_rms_dbfs": -18,
+      "file_source": "assets/audio/source/generated/rs_winner.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rs_winner",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Results/rs_winner.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised +1.4 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 2.8,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -1.71,
+      "rms_dbfs": -18.05,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "a21f3b8eab2d056d396f0bedca9a2da40e01112246ce9ee1f9c7cf76b9a6839d",
+      "upload_priority": 2,
+      "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rs_rank_up",
+      "category": "Results",
+      "config_keys": [
+        "RankUp"
+      ],
+      "gameplay_events": [
+        "Reward summary with a rank up (HUD.showRewards)"
+      ],
+      "loop": false,
+      "max_duration_s": 2.5,
+      "target_rms_dbfs": -18,
+      "file_source": "assets/audio/source/generated/rs_rank_up.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rs_rank_up",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Results/rs_rank_up.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -1.1 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 2.3,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -4.14,
+      "rms_dbfs": -17.98,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "5708ec24a9f7b1dcfab23caa60ab3f47f4ca693a4f44dc41bfb7a6956c140057",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_coins",
+      "category": "Rewards",
+      "config_keys": [
+        "Coins"
+      ],
+      "gameplay_events": [
+        "Round reward summary arrives (HUD.showRewards)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.2,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/rw_coins.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_coins",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Rewards/rw_coins.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (36 ms)",
+        "normalised -2.7 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.064,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -5.69,
+      "rms_dbfs": -18.98,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "97e6801f8e3a56d7a2a31a2831620b1c78f35ad9f2b51caa19eab788108b4f48",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_claim",
+      "category": "Rewards",
+      "config_keys": [
+        "QuestClaim",
+        "DailyReward"
+      ],
+      "gameplay_events": [
+        "Quest reward claimed (QuestsUI)",
+        "Daily reward claimed (LobbyUI)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.4,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/rw_claim.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_claim",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Rewards/rw_claim.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -0.1 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.3,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -3.34,
+      "rms_dbfs": -19.0,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "6b9dcef55d3b733ce1745f7e0c2804775de66e36a9c7f54408d8ebbffe43c021",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_purchase",
+      "category": "Rewards",
+      "config_keys": [
+        "Purchase"
+      ],
+      "gameplay_events": [
+        "Cosmetic bought with coins (ShopUI)"
+      ],
+      "loop": false,
+      "max_duration_s": 1.2,
+      "target_rms_dbfs": -19,
+      "file_source": "assets/audio/source/generated/rw_purchase.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_purchase",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Rewards/rw_purchase.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (0 ms)",
+        "normalised -0.2 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 1.1,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -3.06,
+      "rms_dbfs": -18.98,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "6790459708605ff98ddc7716458d42f6e7c645505b5eb2e3d62cda421231dae8",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "rw_equip",
+      "category": "Rewards",
+      "config_keys": [
+        "Equip",
+        "OutfitSaved"
+      ],
+      "gameplay_events": [
+        "Cosmetic equipped (ShopUI)",
+        "Outfit saved to the Wardrobe (WardrobeUI)"
+      ],
+      "loop": false,
+      "max_duration_s": 0.8,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/rw_equip.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "rw_equip",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Rewards/rw_equip.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "silence trimmed (1 ms)",
+        "normalised -2.3 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 0.696,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -5.53,
+      "rms_dbfs": -20.03,
+      "loop_check": null,
+      "flags": [],
+      "sha256": "60c58a83e355d396d8e6e1fe66c015cc2a330dab63a401a35723bd4683142ef6",
+      "upload_priority": 1,
+      "upload_priority_reason": "fills an event that is silent today",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "mu_lobby_loop",
+      "category": "Music",
+      "config_keys": [
+        "LobbyMusic"
+      ],
+      "gameplay_events": [
+        "Lobby phase background music (Audio.startLobbyMusic)"
+      ],
+      "loop": true,
+      "max_duration_s": 60,
+      "target_rms_dbfs": -21,
+      "file_source": "assets/audio/source/generated/mu_lobby_loop.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "mu_lobby_loop",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Music/mu_lobby_loop.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "loop tail folded onto start",
+        "normalised -3.7 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 19.2,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -6.73,
+      "rms_dbfs": -20.96,
+      "loop_check": {
+        "seam_sample_jump": 0.0024,
+        "typical_step_p99": 0.0223,
+        "seamless": true
+      },
+      "flags": [],
+      "sha256": "b44853ca4d95b7ad7d24f858f9f152ca2284215d96d56608c84ef9e17da061f6",
+      "upload_priority": 3,
+      "upload_priority_reason": "fallback only: a verified Creator Store track already fills this",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "id": "mu_runway_loop",
+      "category": "Music",
+      "config_keys": [
+        "RunwayMusic"
+      ],
+      "gameplay_events": [
+        "Runway and voting phases (Audio.startRunwayBeat)"
+      ],
+      "loop": true,
+      "max_duration_s": 60,
+      "target_rms_dbfs": -20,
+      "file_source": "assets/audio/source/generated/mu_runway_loop.wav",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/audio/generate_sfx.py",
+        "recipe": "mu_runway_loop",
+        "generator_version": 1
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+      },
+      "file_processed": "assets/audio/processed/Music/mu_runway_loop.ogg",
+      "processing_status": "processed",
+      "processing_steps": [
+        "decoded mono 44.1 kHz",
+        "loop tail folded onto start",
+        "normalised -5.8 dB",
+        "encoded OGG Vorbis q6"
+      ],
+      "duration_s": 16.271,
+      "sample_rate": 44100,
+      "channels": 1,
+      "format": "ogg/vorbis",
+      "peak_dbfs": -8.84,
+      "rms_dbfs": -19.95,
+      "loop_check": {
+        "seam_sample_jump": 0.0009,
+        "typical_step_p99": 0.0526,
+        "seamless": true
+      },
+      "flags": [],
+      "sha256": "4383cdd71617cb3c32581e9682a2bafc01105ab1c2854a6c414698c8fed0cf3d",
+      "upload_priority": 3,
+      "upload_priority_reason": "fallback only: a verified Creator Store track already fills this",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    }
+  ],
+  "store_audio": [
+    {
+      "config_key": "RunwayMusic",
+      "roblox_asset_id": 1839940316,
+      "name": "Jump Up",
+      "creator": "APMOfficial",
+      "duration_s": 60.4,
+      "url": "https://create.roblox.com/store/asset/1839940316",
+      "notes": "Disco-infused electro synth bed, 60 s version. Juice Music, album Upbeat Beds. Courtesy of APM Music.",
+      "source": {
+        "type": "roblox_creator_store",
+        "url": "https://create.roblox.com/store/asset/1839940316"
+      },
+      "licence": {
+        "name": "Roblox Creator Store: APM Music partner library",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Published free on the Creator Store by APMOfficial, Roblox's licensed music partner, for use in Roblox experiences (including monetised ones). Licence covers use inside Roblox only: do not reuse the track in trailers or videos off the platform without your own licence."
+      },
+      "verification": "loaded in Roblox Studio (IsLoaded, TimeLength)"
+    },
+    {
+      "config_key": "LobbyMusic",
+      "roblox_asset_id": 1846743916,
+      "name": "It's Party Time (B)",
+      "creator": "APMOfficial",
+      "duration_s": 141.5,
+      "url": "https://create.roblox.com/store/asset/1846743916",
+      "notes": "Instrumental kids' party groove, pop. Sonoton Music, album Beats For Kids. Courtesy of APM Music.",
+      "source": {
+        "type": "roblox_creator_store",
+        "url": "https://create.roblox.com/store/asset/1846743916"
+      },
+      "licence": {
+        "name": "Roblox Creator Store: APM Music partner library",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Published free on the Creator Store by APMOfficial, Roblox's licensed music partner, for use in Roblox experiences (including monetised ones). Licence covers use inside Roblox only: do not reuse the track in trailers or videos off the platform without your own licence."
+      },
+      "verification": "loaded in Roblox Studio (IsLoaded, TimeLength)"
+    }
+  ],
+  "config_keys": {
+    "Click": {
+      "current_value": "rbxasset://sounds/clickfast.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "ui_click",
+      "builtin_duration_s": 0.288
+    },
+    "PhaseChange": {
+      "current_value": "rbxasset://sounds/switch.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "ui_phase_change",
+      "builtin_duration_s": 0.235
+    },
+    "Alert": {
+      "current_value": "rbxasset://sounds/switch.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "ui_alert",
+      "builtin_duration_s": 0.235
+    },
+    "TimeWarning": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "ui_time_warning"
+    },
+    "Ready": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "ui_ready"
+    },
+    "ThemeReveal": {
+      "current_value": "rbxasset://sounds/switch.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_theme_reveal",
+      "builtin_duration_s": 0.235
+    },
+    "Heart": {
+      "current_value": "rbxasset://sounds/snap.mp3",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_heart",
+      "builtin_duration_s": 0.418
+    },
+    "Reaction": {
+      "current_value": "rbxasset://sounds/snap.mp3",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_pop",
+      "builtin_duration_s": 0.418
+    },
+    "MinigameTick": {
+      "current_value": "rbxasset://sounds/clickfast.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_tick",
+      "builtin_duration_s": 0.288
+    },
+    "MinigameGo": {
+      "current_value": "rbxasset://sounds/bass.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_go",
+      "builtin_duration_s": 1.008
+    },
+    "MinigameDrop": {
+      "current_value": "rbxasset://sounds/glassbreak.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_drop",
+      "builtin_duration_s": 1.578
+    },
+    "MinigameOut": {
+      "current_value": "rbxasset://sounds/uuhhh.mp3",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_out",
+      "builtin_duration_s": 0.332
+    },
+    "MinigameHit": {
+      "current_value": "rbxasset://sounds/hit.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_hit",
+      "builtin_duration_s": 0.836
+    },
+    "MinigameWhoosh": {
+      "current_value": "rbxasset://sounds/swordslash.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_whoosh",
+      "builtin_duration_s": 0.653
+    },
+    "MinigameLaunch": {
+      "current_value": "rbxasset://sounds/Launching rocket.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_launch",
+      "builtin_duration_s": 1.817
+    },
+    "MinigameSwitch": {
+      "current_value": "rbxasset://sounds/switch.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_switch",
+      "builtin_duration_s": 0.235
+    },
+    "MinigameBoom": {
+      "current_value": "rbxasset://sounds/impact_explosion_03.mp3",
+      "current_status": "verified_builtin",
+      "prepared_file": null,
+      "note": "keeps its working built-in sound; no file prepared",
+      "builtin_duration_s": 2.586
+    },
+    "MinigameSplash": {
+      "current_value": "rbxasset://sounds/impact_water.mp3",
+      "current_status": "verified_builtin",
+      "prepared_file": null,
+      "note": "keeps its working built-in sound; no file prepared",
+      "builtin_duration_s": 2.377
+    },
+    "MinigamePop": {
+      "current_value": "rbxasset://sounds/snap.mp3",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_pop",
+      "builtin_duration_s": 0.418
+    },
+    "MinigameSnap": {
+      "current_value": "rbxasset://sounds/snap.mp3",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_pop",
+      "builtin_duration_s": 0.418
+    },
+    "MinigameFlash": {
+      "current_value": "rbxasset://sounds/flashbulb.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_camera_flash",
+      "builtin_duration_s": 0.36
+    },
+    "RunwayEntrance": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rw_entrance"
+    },
+    "VipEntrance": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rw_vip_entrance"
+    },
+    "RunwayMusic": {
+      "current_value": 1839940316,
+      "current_status": "verified_store_audio",
+      "prepared_file": "mu_runway_loop"
+    },
+    "BeatKick": {
+      "current_value": "rbxasset://sounds/bass.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "rw_beat_kick",
+      "builtin_duration_s": 1.008
+    },
+    "BeatHiHat": {
+      "current_value": "rbxasset://sounds/clickfast.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "rw_beat_hihat",
+      "builtin_duration_s": 0.288
+    },
+    "BeatClap": {
+      "current_value": "rbxasset://sounds/snap.mp3",
+      "current_status": "verified_builtin",
+      "prepared_file": "rw_beat_clap",
+      "builtin_duration_s": 0.418
+    },
+    "Podium": {
+      "current_value": "rbxasset://sounds/victory.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "rs_podium",
+      "builtin_duration_s": 1.306
+    },
+    "Winner": {
+      "current_value": "rbxasset://sounds/victory.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "rs_winner",
+      "builtin_duration_s": 1.306
+    },
+    "MinigameWin": {
+      "current_value": "rbxasset://sounds/victory.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "rs_winner",
+      "builtin_duration_s": 1.306
+    },
+    "RankUp": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rs_rank_up"
+    },
+    "Coins": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rw_coins"
+    },
+    "QuestClaim": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rw_claim"
+    },
+    "DailyReward": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rw_claim"
+    },
+    "Purchase": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rw_purchase"
+    },
+    "Equip": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rw_equip"
+    },
+    "OutfitSaved": {
+      "current_value": 0,
+      "current_status": "silent",
+      "prepared_file": "rw_equip"
+    },
+    "LobbyMoment": {
+      "current_value": "rbxasset://sounds/Launching rocket.wav",
+      "current_status": "verified_builtin",
+      "prepared_file": "gp_launch",
+      "builtin_duration_s": 1.817
+    },
+    "LobbyMusic": {
+      "current_value": 1846743916,
+      "current_status": "verified_store_audio",
+      "prepared_file": "mu_lobby_loop"
+    }
+  },
+  "rejected_candidates": [
+    {
+      "candidate": "User-uploaded Creator Store sound effects (coin, level-up, cash-register searches)",
+      "examples": [
+        "93529351909119",
+        "108161825312558",
+        "101396758527961",
+        "86311747395907"
+      ],
+      "reason": "Uploaded by individual users with no stated licence; several name another game ('From CSGO', 'cod zombies') or a third-party source needing credit ('credits to LilMati on freesound'), or say 'for personal use'. Rights unclear for a monetised experience."
+    },
+    {
+      "candidate": "DistrokidOfficial music (e.g. 113679381925802 'Runway Model (Fashion Walk)')",
+      "examples": [
+        "113679381925802",
+        "114469753084061"
+      ],
+      "reason": "Not rejected on licence grounds (DistroKid tracks are distributed to Roblox for use in experiences), but APMOfficial tracks were preferred: Roblox's long-standing licensed library with full metadata. Kept as alternatives.",
+      "status": "alternative"
+    }
+  ],
+  "summary": {
+    "files": 31,
+    "processed": 31,
+    "flagged": [],
+    "upload_priority_counts": {
+      "1": 9,
+      "2": 20,
+      "3": 2
+    },
+    "uploaded": 0,
+    "problems": []
+  }
+}

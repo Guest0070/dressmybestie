@@ -487,6 +487,9 @@ function Catalog.start()
 		Parent = rotateBar,
 	}, function()
 		ready = not ready
+		if ready then
+			Kit.playSound("Ready")
+		end
 		Remotes.Events.StylingReady:FireServer(ready)
 		refreshReady()
 	end)

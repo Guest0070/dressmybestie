@@ -115,16 +115,15 @@ function Kit.label(props: Props): TextLabel
 	return label
 end
 
-function Kit.playSound(key: string)
-	local id = Config.Sounds[key]
-	if not id or id == 0 then
+function Kit.playSound(key: string, volume: number?)
+	local soundId = Config.soundId(key)
+	if not soundId then
 		return
 	end
-	local soundId = if type(id) == "string" then id else `rbxassetid://{id}`
 	local group = SoundService:FindFirstChild("SFX") -- Audio.luau; Settings mutes it
 	local sound = Kit.new("Sound", {
 		SoundId = soundId,
-		Volume = 0.35,
+		Volume = volume or 0.35,
 		SoundGroup = if group and group:IsA("SoundGroup") then group else nil,
 		Parent = SoundService,
 	})

@@ -119,13 +119,15 @@ free ones each day.
 - [ ] You (the game owner) are already an admin. To add friends, put their user IDs (the number in
       their profile URL) in `Config.AdminUserIds`, e.g. `{ 12345678, 87654321 }`.
 
-## 7. Music (optional)
+## 7. Sounds and music
 
-The game already has sound effects and a built-in runway beat. To add real music:
-- [ ] Studio: **Toolbox > Audio**, find a track you're allowed to use (Roblox-provided or your own
-      upload), copy its ID.
-- [ ] `Config.Sounds.LobbyMusic = 1234567890` for lobby music.
-- [ ] `Config.Sounds.RunwayMusic = 1234567890` to replace the built-in runway beat.
+Lobby and runway music are set (APM tracks from the Creator Store). Eleven newer events (rewards,
+READY, runway entrance, timer warning...) stay silent until their sounds are uploaded:
+- [ ] Upload the 9 priority-1 files listed in `assets/audio/upload_manifest.csv` (Studio: **Asset
+      Manager > Bulk Import**, as the account/group that owns the game).
+- [ ] `python tools/audio/sync_ids.py --set <file id>=<asset id> ...` then
+      `python tools/audio/validate_sfx.py`. Full steps: `reports/SFX_AUTOMATION_FINAL.md`.
+- [ ] Don't like a track? Change `Config.Sounds.LobbyMusic` / `RunwayMusic` (0 = built-in beat).
 
 ## 8. Test before publishing
 

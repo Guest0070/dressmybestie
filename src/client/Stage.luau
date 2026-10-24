@@ -12,6 +12,7 @@ local Workspace = game:GetService("Workspace")
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Audio = require(script.Parent.Audio)
 local State = require(script.Parent.State)
+local Kit = require(script.Parent.UI.Kit)
 
 local Stage = {}
 
@@ -441,6 +442,7 @@ function Stage.start()
 	State.DressingRoomChanged:Connect(onRoundChanged)
 	Remotes.Events.RunwayEffect.OnClientEvent:Connect(
 		function(userId: number, isVip: boolean, poseId: number?)
+			Kit.playSound(if isVip then "VipEntrance" else "RunwayEntrance", 0.5)
 			if isVip then
 				vipGlow()
 			end

@@ -859,20 +859,70 @@ Config.Cosmetics = {
 	},
 } :: { Cosmetic }
 
--- Sound effect asset IDs from the Creator Store (Toolbox -> Audio). 0 = silent until picked.
+-- Every sound in the game, by event. A number is an uploaded audio asset ID, a string is a
+-- rbxasset:// path, 0 = silent. Kit.playSound, MinigameFx, Audio and the lobby minigames all read
+-- this table (through Config.soundId), so it is the only place sound IDs live.
+-- The audio pipeline (tools/audio, assets/audio/sfx_manifest.json) prepares a file for every key;
+-- tools/audio/sync_ids.py writes uploaded IDs into the lines below. rbxasset://sounds/ paths ship
+-- with Roblox (checked loading in Studio) and stay unless a replacement is chosen on purpose.
 Config.Sounds = {
-	-- rbxasset://sounds/... ship with every Roblox client (no uploads needed).
+	-- UI
 	Click = "rbxasset://sounds/clickfast.wav", -- soft tap, not a beep
 	PhaseChange = "rbxasset://sounds/switch.wav",
-	-- 0 = the built-in runway beat (Audio.luau); an audio ID plays that track instead.
-	RunwayMusic = 0,
-	LobbyMusic = 0, -- looping lobby track (Settings > Music mutes it); 0 = none
+	Alert = "rbxasset://sounds/switch.wav", -- "round starts in 10 seconds"
+	TimeWarning = 0, -- styling/voting timer reaches 10 seconds
+	Ready = 0, -- stylist taps READY
+	-- Gameplay
+	ThemeReveal = "rbxasset://sounds/switch.wav",
 	Heart = "rbxasset://sounds/snap.mp3",
-	Podium = "rbxasset://sounds/victory.wav",
-	LobbyMoment = "rbxasset://sounds/Launching rocket.wav",
 	Reaction = "rbxasset://sounds/snap.mp3",
-	Alert = "rbxasset://sounds/switch.wav",
+	MinigameTick = "rbxasset://sounds/clickfast.wav",
+	MinigameGo = "rbxasset://sounds/bass.wav",
+	MinigameDrop = "rbxasset://sounds/glassbreak.wav",
+	MinigameOut = "rbxasset://sounds/uuhhh.mp3",
+	MinigameHit = "rbxasset://sounds/hit.wav",
+	MinigameWhoosh = "rbxasset://sounds/swordslash.wav",
+	MinigameLaunch = "rbxasset://sounds/Launching rocket.wav",
+	MinigameSwitch = "rbxasset://sounds/switch.wav",
+	MinigameBoom = "rbxasset://sounds/impact_explosion_03.mp3",
+	MinigameSplash = "rbxasset://sounds/impact_water.mp3",
+	MinigamePop = "rbxasset://sounds/snap.mp3",
+	MinigameSnap = "rbxasset://sounds/snap.mp3",
+	MinigameFlash = "rbxasset://sounds/flashbulb.wav",
+	-- Runway
+	RunwayEntrance = 0, -- each look starts its walk
+	VipEntrance = 0, -- a VIP's look starts its walk
+	-- 0 = the built-in runway beat (Audio.luau, from the three Beat sounds); an ID plays that track.
+	RunwayMusic = 1839940316, -- "Jump Up", APMOfficial (Creator Store, Roblox music partner)
+	BeatKick = "rbxasset://sounds/bass.wav",
+	BeatHiHat = "rbxasset://sounds/clickfast.wav",
+	BeatClap = "rbxasset://sounds/snap.mp3",
+	-- Results
+	Podium = "rbxasset://sounds/victory.wav", -- 3rd and 2nd place appear
+	Winner = "rbxasset://sounds/victory.wav", -- 1st place appears
+	MinigameWin = "rbxasset://sounds/victory.wav",
+	RankUp = 0,
+	-- Rewards
+	Coins = 0, -- the round's coin/XP summary
+	QuestClaim = 0,
+	DailyReward = 0,
+	Purchase = 0, -- buy a cosmetic with coins
+	Equip = 0,
+	OutfitSaved = 0,
+	LobbyMoment = "rbxasset://sounds/Launching rocket.wav",
+	-- Music
+	-- Looping lobby track (Settings > Music mutes it); 0 = none.
+	LobbyMusic = 1846743916, -- "It's Party Time (B)", APMOfficial (Creator Store)
 } :: { [string]: number | string }
+
+-- The playable SoundId for a Config.Sounds key, or nil when the key is silent (0) or unknown.
+function Config.soundId(key: string): string?
+	local id = Config.Sounds[key]
+	if id == nil or id == 0 or id == "" then
+		return nil
+	end
+	return if type(id) == "string" then id else `rbxassetid://{id}`
+end
 
 -- Quests. stat names: rounds, heartsGiven, gems, obby, heartsReceived, podiums.
 export type Quest = { id: string, text: string, stat: string, target: number, reward: number }

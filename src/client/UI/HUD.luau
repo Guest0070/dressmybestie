@@ -180,7 +180,7 @@ local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPha
 		TweenService:Create(revealFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), { Size = full }):Play()
 	end
 	if changedFrom then
-		Kit.playSound("PhaseChange")
+		Kit.playSound(if round.phase == "ThemeReveal" then "ThemeReveal" else "PhaseChange")
 	end
 end
 
@@ -256,6 +256,7 @@ local function celebrateRankUp(rank: number)
 end
 
 local function showRewards(summary: Types.RewardSummary)
+	Kit.playSound(if summary.rankUp then "RankUp" else "Coins", 0.5)
 	if summary.rankUp then
 		celebrateRankUp(summary.rankUp)
 	end
@@ -443,6 +444,19 @@ function HUD.start()
 		end
 	end
 
+	-- Styling and voting: one warning sound when the timer reaches 10 seconds.
+	local timeWarnedFor: number? = nil
+	local function timeWarning(remaining: number?)
+		local round = State.round
+		if round.phase ~= "Styling" and round.phase ~= "Voting" then
+			return
+		end
+		if remaining and remaining <= 10 and remaining > 9 and timeWarnedFor ~= round.endsAt then
+			timeWarnedFor = round.endsAt
+			Kit.playSound("TimeWarning", 0.5)
+		end
+	end
+
 	-- Timer ticks locally from the server's end time.
 	local accumulator = 0
 	RunService.Heartbeat:Connect(function(dt)
@@ -454,6 +468,7 @@ function HUD.start()
 		local endsAt = State.round.endsAt
 		local remaining = if endsAt then endsAt - Workspace:GetServerTimeNow() else nil
 		roundAlert(remaining)
+		timeWarning(remaining)
 		timerLabel.Text = if remaining then Kit.formatTime(remaining) else "--"
 		-- Last 10 seconds: the timer flashes red/white so nobody misses the deadline.
 		local urgent = remaining ~= nil and remaining <= 10 and remaining > 0

@@ -545,6 +545,7 @@ local function wire(root: ScreenGui): { string }
 		LobbyUI.onOpenQuests()
 	end)
 	dailyButton = Components.attachButton(buttons.daily, function()
+		Kit.playSound("DailyReward")
 		Remotes.Events.ClaimDailyReward:FireServer()
 	end)
 	looksButton = Components.attachButton(buttons.looks, function()

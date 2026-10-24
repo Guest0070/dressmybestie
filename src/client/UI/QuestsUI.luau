@@ -93,6 +93,7 @@ local function row(quest: Types.QuestView, order: number)
 		},
 		if clickable
 			then function()
+				Kit.playSound("QuestClaim")
 				Remotes.Events.ClaimQuest:FireServer(quest.kind, quest.id)
 			end
 			else nil

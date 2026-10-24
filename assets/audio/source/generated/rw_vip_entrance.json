@@ -1,0 +1,16 @@
+{
+  "id": "rw_vip_entrance",
+  "source": {
+    "type": "procedural",
+    "tool": "tools/audio/generate_sfx.py",
+    "recipe": "rw_vip_entrance",
+    "generator_version": 1
+  },
+  "licence": {
+    "name": "Original work (procedurally generated for this project)",
+    "commercial_use": true,
+    "attribution_required": false,
+    "verified": true,
+    "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+  }
+}

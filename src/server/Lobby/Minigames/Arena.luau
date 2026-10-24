@@ -33,22 +33,27 @@ Arena.Colors = {
 }
 local C = Arena.Colors
 
--- Sounds that ship with every Roblox client (no uploads needed).
-Arena.Sounds = {
-	Tick = "rbxasset://sounds/clickfast.wav", -- soft click (beeps got annoying)
-	Go = "rbxasset://sounds/bass.wav",
-	Drop = "rbxasset://sounds/glassbreak.wav",
-	Out = "rbxasset://sounds/uuhhh.mp3",
-	Win = "rbxasset://sounds/victory.wav",
-	Flash = "rbxasset://sounds/flashbulb.wav",
-	Hit = "rbxasset://sounds/hit.wav",
-	Whoosh = "rbxasset://sounds/swordslash.wav",
-	Launch = "rbxasset://sounds/Launching rocket.wav",
-	Snap = "rbxasset://sounds/snap.mp3",
-	Switch = "rbxasset://sounds/switch.wav",
-	Boom = "rbxasset://sounds/impact_explosion_03.mp3",
-	Splash = "rbxasset://sounds/impact_water.mp3",
-}
+-- Minigame sounds, from Config.Sounds ("Minigame" .. name). "" = silent.
+Arena.Sounds = {} :: { [string]: string }
+for _, name in
+	{
+		"Tick",
+		"Go",
+		"Drop",
+		"Out",
+		"Win",
+		"Flash",
+		"Hit",
+		"Whoosh",
+		"Launch",
+		"Snap",
+		"Switch",
+		"Boom",
+		"Splash",
+	}
+do
+	Arena.Sounds[name] = Config.soundId("Minigame" .. name) or ""
+end
 
 export type Game = {
 	state: Types.MinigameState,
@@ -378,6 +383,9 @@ end
 
 -- A sound at a point (everyone hears it, quieter with distance) or only for `to`.
 function Arena.sound(id: string, position: Vector3?, to: { Player }?, volume: number?, pitch: number?)
+	if id == "" then
+		return
+	end
 	Arena.fx(to, { kind = "sound", id = id, position = position, volume = volume, pitch = pitch })
 end
 

@@ -1,0 +1,16 @@
+{
+  "id": "gp_launch",
+  "source": {
+    "type": "procedural",
+    "tool": "tools/audio/generate_sfx.py",
+    "recipe": "gp_launch",
+    "generator_version": 1
+  },
+  "licence": {
+    "name": "Original work (procedurally generated for this project)",
+    "commercial_use": true,
+    "attribution_required": false,
+    "verified": true,
+    "notes": "Synthesised from oscillators and seeded noise by this repository's script; no samples or third-party material."
+  }
+}

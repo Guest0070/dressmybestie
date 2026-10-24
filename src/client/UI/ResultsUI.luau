@@ -167,7 +167,7 @@ local function refresh()
 			if row.Parent then
 				row.Visible = true
 				TweenService:Create(scale, TweenInfo.new(0.45, Enum.EasingStyle.Back), { Scale = 1 }):Play()
-				Kit.playSound("Podium")
+				Kit.playSound(if entry.place == 1 then "Winner" else "Podium")
 			end
 		end)
 		local stylists = if #entry.stylistNames > 0 then table.concat(entry.stylistNames, " & ") else "?"

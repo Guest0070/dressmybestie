@@ -309,6 +309,9 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 			state = if equipped then "Active" else "Normal",
 			highlight = equipped,
 			onClick = function()
+				if not equipped then
+					Kit.playSound("Equip")
+				end
 				Remotes.Events.EquipCosmetic:FireServer(cosmetic.slot, if equipped then nil else cosmetic.id)
 			end,
 		}))
@@ -322,6 +325,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 				if short > 0 then
 					ShopUI.open("Coins") -- not enough yet: show the ways to get more
 				else
+					Kit.playSound("Purchase")
 					Remotes.Events.BuyWithCoins:FireServer(cosmetic.id)
 				end
 			end,

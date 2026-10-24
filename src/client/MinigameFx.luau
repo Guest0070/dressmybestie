@@ -17,6 +17,7 @@ local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Audio = require(script.Parent.Audio)
 local State = require(script.Parent.State)
@@ -26,14 +27,15 @@ local MinigameFx = {}
 -- Set by init.client: Runway Dash timer events go to the minigame banner.
 MinigameFx.onDash = function(_fx: { [string]: any }) end
 
+-- From Config.Sounds (nil = silent).
 local SOUNDS = {
-	Beat = "rbxasset://sounds/bass.wav",
-	HiHat = "rbxasset://sounds/clickfast.wav",
-	Whoosh = "rbxasset://sounds/swordslash.wav",
-	Launch = "rbxasset://sounds/Launching rocket.wav",
-	Flash = "rbxasset://sounds/flashbulb.wav",
-	Boom = "rbxasset://sounds/impact_explosion_03.mp3",
-	Pop = "rbxasset://sounds/snap.mp3",
+	Beat = Config.soundId("BeatKick"),
+	HiHat = Config.soundId("BeatHiHat"),
+	Whoosh = Config.soundId("MinigameWhoosh"),
+	Launch = Config.soundId("MinigameLaunch"),
+	Flash = Config.soundId("MinigameFlash"),
+	Boom = Config.soundId("MinigameBoom"),
+	Pop = Config.soundId("MinigamePop"),
 }
 local PARTY = {
 	Color3.fromRGB(255, 79, 163),
@@ -64,7 +66,10 @@ local function sfxGroup(): SoundGroup?
 end
 
 -- A one-shot sound, at a point in the world (3D) or flat (2D).
-local function play(id: string, position: Vector3?, volume: number?, pitch: number?)
+local function play(id: string?, position: Vector3?, volume: number?, pitch: number?)
+	if not id or id == "" then
+		return
+	end
 	local sound = Instance.new("Sound")
 	sound.SoundId = id
 	sound.Volume = volume or 0.6

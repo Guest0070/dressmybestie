@@ -2,8 +2,8 @@
 -- Client-side sound mixing and the player's saved settings.
 --   * Two SoundGroups (Music, SFX) that the Settings switches mute. Kit.playSound routes every
 --     UI/game sound through SFX.
---   * Music: the runway gets a beat while looks walk (kick, hi-hat, clap, built from sounds that
---     ship with Roblox) unless Config.Sounds.RunwayMusic has a track ID. Lobby music plays once
+--   * Music: the runway gets a beat while looks walk (kick, hi-hat, clap: Config.Sounds.Beat*)
+--     unless Config.Sounds.RunwayMusic has a track ID. Lobby music plays once
 --     Config.Sounds.LobbyMusic has an ID.
 --   * Settings (music, sound effects, flashing effects) are saved to the player's profile, so
 --     they follow them to every server.
@@ -22,10 +22,10 @@ local Audio = {}
 
 local MUSIC_VOLUME = 0.5
 local SFX_VOLUME = 1
-local BEAT = {
-	Kick = "rbxasset://sounds/bass.wav",
-	HiHat = "rbxasset://sounds/clickfast.wav",
-	Clap = "rbxasset://sounds/snap.mp3",
+local BEAT = { -- Config.Sounds; nil = that part of the beat is silent
+	Kick = Config.soundId("BeatKick"),
+	HiHat = Config.soundId("BeatHiHat"),
+	Clap = Config.soundId("BeatClap"),
 }
 local BPM = 118
 
@@ -91,7 +91,10 @@ function Audio.setFlashes(on: boolean)
 	Audio.Changed:Fire()
 end
 
-local function hit(id: string, volume: number, pitch: number)
+local function hit(id: string?, volume: number, pitch: number)
+	if not id then
+		return
+	end
 	local sound = Instance.new("Sound")
 	sound.SoundId = id
 	sound.Volume = volume
@@ -107,11 +110,11 @@ end
 -- The runway beat: a simple four-on-the-floor groove while looks walk and get rated.
 local function startRunwayBeat()
 	local track: Sound? = nil
-	local id = Config.Sounds.RunwayMusic
-	if id and id ~= 0 then
+	local id = Config.soundId("RunwayMusic")
+	if id then
 		local sound = Instance.new("Sound")
 		sound.Name = "RunwayMusic"
-		sound.SoundId = if type(id) == "string" then id else `rbxassetid://{id}`
+		sound.SoundId = id
 		sound.Looped = true
 		sound.SoundGroup = Audio.music
 		sound.Parent = SoundService
@@ -153,13 +156,13 @@ local function startRunwayBeat()
 end
 
 local function startLobbyMusic()
-	local id = Config.Sounds.LobbyMusic
-	if not id or id == 0 then
+	local id = Config.soundId("LobbyMusic")
+	if not id then
 		return
 	end
 	local music = Instance.new("Sound")
 	music.Name = "LobbyMusic"
-	music.SoundId = if type(id) == "string" then id else `rbxassetid://{id}`
+	music.SoundId = id
 	music.Looped = true
 	music.SoundGroup = Audio.music
 	music.Parent = SoundService

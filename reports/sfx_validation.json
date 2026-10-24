@@ -1,0 +1,225 @@
+{
+  "errors": [],
+  "warnings": [],
+  "silent_keys_waiting_for_upload": [
+    "Coins",
+    "DailyReward",
+    "Equip",
+    "OutfitSaved",
+    "Purchase",
+    "QuestClaim",
+    "RankUp",
+    "Ready",
+    "RunwayEntrance",
+    "TimeWarning",
+    "VipEntrance"
+  ],
+  "key_status": {
+    "Click": "verified_builtin",
+    "PhaseChange": "verified_builtin",
+    "Alert": "verified_builtin",
+    "TimeWarning": "silent",
+    "Ready": "silent",
+    "ThemeReveal": "verified_builtin",
+    "Heart": "verified_builtin",
+    "Reaction": "verified_builtin",
+    "MinigameTick": "verified_builtin",
+    "MinigameGo": "verified_builtin",
+    "MinigameDrop": "verified_builtin",
+    "MinigameOut": "verified_builtin",
+    "MinigameHit": "verified_builtin",
+    "MinigameWhoosh": "verified_builtin",
+    "MinigameLaunch": "verified_builtin",
+    "MinigameSwitch": "verified_builtin",
+    "MinigameBoom": "verified_builtin",
+    "MinigameSplash": "verified_builtin",
+    "MinigamePop": "verified_builtin",
+    "MinigameSnap": "verified_builtin",
+    "MinigameFlash": "verified_builtin",
+    "RunwayEntrance": "silent",
+    "VipEntrance": "silent",
+    "RunwayMusic": "verified_store_audio",
+    "BeatKick": "verified_builtin",
+    "BeatHiHat": "verified_builtin",
+    "BeatClap": "verified_builtin",
+    "Podium": "verified_builtin",
+    "Winner": "verified_builtin",
+    "MinigameWin": "verified_builtin",
+    "RankUp": "silent",
+    "Coins": "silent",
+    "QuestClaim": "silent",
+    "DailyReward": "silent",
+    "Purchase": "silent",
+    "Equip": "silent",
+    "OutfitSaved": "silent",
+    "LobbyMoment": "verified_builtin",
+    "LobbyMusic": "verified_store_audio"
+  },
+  "played_keys": {
+    "Alert": [
+      "src/client/UI/HUD.luau:443"
+    ],
+    "BeatClap": [
+      "src/client/Audio.luau:28"
+    ],
+    "BeatHiHat": [
+      "src/client/Audio.luau:27",
+      "src/client/MinigameFx.luau:33"
+    ],
+    "BeatKick": [
+      "src/client/Audio.luau:26",
+      "src/client/MinigameFx.luau:32"
+    ],
+    "Click": [
+      "src/client/UI/BoothsUI.luau:133",
+      "src/client/UI/Catalog.luau:179",
+      "src/client/UI/Components.luau:300",
+      "src/client/UI/Components.luau:524",
+      "src/client/UI/Kit.luau:187",
+      "src/client/UI/ShopUI.luau:771",
+      "src/client/UI/ShopUI.luau:774"
+    ],
+    "Coins": [
+      "src/client/UI/HUD.luau:259"
+    ],
+    "DailyReward": [
+      "src/client/UI/LobbyUI.luau:548"
+    ],
+    "Equip": [
+      "src/client/UI/ShopUI.luau:313"
+    ],
+    "Heart": [
+      "src/client/UI/StarsUI.luau:127",
+      "src/client/UI/VotingUI.luau:102"
+    ],
+    "LobbyMoment": [
+      "src/client/Moments.luau:116"
+    ],
+    "LobbyMusic": [
+      "src/client/Audio.luau:159"
+    ],
+    "MinigameBoom": [
+      "src/client/MinigameFx.luau:37",
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameDrop": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameFlash": [
+      "src/client/MinigameFx.luau:36",
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameGo": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameHit": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameLaunch": [
+      "src/client/MinigameFx.luau:35",
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameOut": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigamePop": [
+      "src/client/MinigameFx.luau:38"
+    ],
+    "MinigameSnap": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameSplash": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameSwitch": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameTick": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameWhoosh": [
+      "src/client/MinigameFx.luau:34",
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "MinigameWin": [
+      "src/server/Lobby/Minigames/Arena.luau"
+    ],
+    "OutfitSaved": [
+      "src/client/UI/WardrobeUI.luau:98"
+    ],
+    "PhaseChange": [
+      "src/client/UI/HUD.luau:183"
+    ],
+    "Podium": [
+      "src/client/UI/ResultsUI.luau:170"
+    ],
+    "Purchase": [
+      "src/client/UI/ShopUI.luau:328"
+    ],
+    "QuestClaim": [
+      "src/client/UI/QuestsUI.luau:96"
+    ],
+    "RankUp": [
+      "src/client/UI/HUD.luau:259"
+    ],
+    "Reaction": [
+      "src/client/UI/ReactionsUI.luau:106"
+    ],
+    "Ready": [
+      "src/client/UI/Catalog.luau:491"
+    ],
+    "RunwayEntrance": [
+      "src/client/Stage.luau:445"
+    ],
+    "RunwayMusic": [
+      "src/client/Audio.luau:113"
+    ],
+    "ThemeReveal": [
+      "src/client/UI/HUD.luau:183"
+    ],
+    "TimeWarning": [
+      "src/client/UI/HUD.luau:456"
+    ],
+    "VipEntrance": [
+      "src/client/Stage.luau:445"
+    ],
+    "Winner": [
+      "src/client/UI/ResultsUI.luau:170"
+    ]
+  },
+  "unused_keys": [],
+  "shared_sounds": {
+    "rbxasset://sounds/clickfast.wav": [
+      "Click",
+      "MinigameTick",
+      "BeatHiHat"
+    ],
+    "rbxasset://sounds/switch.wav": [
+      "PhaseChange",
+      "Alert",
+      "ThemeReveal",
+      "MinigameSwitch"
+    ],
+    "rbxasset://sounds/snap.mp3": [
+      "Heart",
+      "Reaction",
+      "MinigamePop",
+      "MinigameSnap",
+      "BeatClap"
+    ],
+    "rbxasset://sounds/bass.wav": [
+      "MinigameGo",
+      "BeatKick"
+    ],
+    "rbxasset://sounds/Launching rocket.wav": [
+      "MinigameLaunch",
+      "LobbyMoment"
+    ],
+    "rbxasset://sounds/victory.wav": [
+      "Podium",
+      "Winner",
+      "MinigameWin"
+    ]
+  },
+  "files_checked": 31
+}

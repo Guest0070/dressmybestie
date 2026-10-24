@@ -95,6 +95,7 @@ local function rebuild()
 			Size = UDim2.new(1, if saved then -44 else -16, 0, if saved then 36 else 40),
 			MaxTextSize = 12,
 			onClick = function()
+				Kit.playSound("OutfitSaved")
 				Remotes.Events.SaveOutfit:FireServer(slot)
 			end,
 			Parent = card,
