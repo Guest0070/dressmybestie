@@ -9,6 +9,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local State = require(script.Parent.Parent.State)
 local Kit = require(script.Parent.Kit)
+local Vfx = require(script.Parent.Parent.Vfx)
 
 local VotingUI = {}
 
@@ -100,6 +101,7 @@ local function buildCards()
 			else
 				table.insert(picks, userId)
 				Kit.playSound("Heart")
+				Vfx.uiBurst(heart, "Heart", 8) -- vote confirmed
 			end
 			local selected = table.find(picks, userId) ~= nil
 			heart.Text = heartText(selected)

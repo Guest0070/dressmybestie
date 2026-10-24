@@ -13,6 +13,7 @@ local State = require(script.Parent.Parent.State)
 local Components = require(script.Parent.Components)
 local Kit = require(script.Parent.Kit)
 local Theme = require(script.Parent.Theme)
+local Vfx = require(script.Parent.Parent.Vfx)
 
 local ReactionsUI = {}
 
@@ -27,6 +28,7 @@ local function refresh()
 end
 
 -- One emoji rising over the walker's head.
+local lastBurst: { [number]: number } = {}
 local function float(walkerUserId: number, emoji: string)
 	local walker = Players:GetPlayerByUserId(walkerUserId)
 	local character = if walker then walker.Character else nil
@@ -38,6 +40,18 @@ local function float(walkerUserId: number, emoji: string)
 		return
 	end
 	floating[walkerUserId] = (floating[walkerUserId] or 0) + 1
+	-- Audience reaction burst in the world (throttled: busy audiences don't stack particles).
+	local now = os.clock()
+	if now - (lastBurst[walkerUserId] or 0) > 0.3 then
+		lastBurst[walkerUserId] = now
+		Vfx.burst(
+			head.Position + Vector3.new(0, 1, 0),
+			"Heart",
+			5,
+			Vfx.Colors.Pink,
+			{ Speed = NumberRange.new(4, 8) }
+		)
+	end
 	local billboard = Instance.new("BillboardGui")
 	billboard.Size = UDim2.fromOffset(46, 46)
 	billboard.StudsOffset = Vector3.new((math.random() - 0.5) * 3, 1.5, 0)

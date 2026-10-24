@@ -1,0 +1,6 @@
+name,file,asset_type,config_key,roblox_asset_id
+Sparkle,assets/vfx/processed/sparkle.png,Decal/Image,Config.Vfx.Textures.Sparkle,
+Heart,assets/vfx/processed/heart.png,Decal/Image,Config.Vfx.Textures.Heart,
+Star,assets/vfx/processed/star.png,Decal/Image,Config.Vfx.Textures.Star,
+Confetti,assets/vfx/processed/confetti.png,Decal/Image,Config.Vfx.Textures.Confetti,
+Glow,assets/vfx/processed/glow.png,Decal/Image,Config.Vfx.Textures.Glow,

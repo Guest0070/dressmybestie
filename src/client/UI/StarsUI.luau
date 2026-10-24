@@ -11,6 +11,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local State = require(script.Parent.Parent.State)
 local Kit = require(script.Parent.Kit)
+local Vfx = require(script.Parent.Parent.Vfx)
 
 local StarsUI = {}
 
@@ -125,6 +126,7 @@ function StarsUI.start()
 			paint(i, true)
 			thanksLabel.Visible = true
 			Kit.playSound("Heart")
+			Vfx.uiBurst(star, "Star", 4 + i) -- rating confirmed; more stars, more sparkle
 			Remotes.Events.RateLook:FireServer(currentWearer, i)
 		end)
 		stars[i] = star

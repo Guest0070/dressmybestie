@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "game": "Style My Bestie",
+  "generated_by": "tools/vfx/vfx_pipeline.py",
+  "config": "src/shared/Config.luau (Config.Vfx.Textures)",
+  "textures": [
+    {
+      "name": "Sparkle",
+      "config_key": "Config.Vfx.Textures.Sparkle",
+      "use": "Sparkle bursts, READY sparkle, runway sparkle trail, rewards",
+      "file_source": "assets/vfx/source/sparkle.png",
+      "file_processed": "assets/vfx/processed/sparkle.png",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/vfx/vfx_pipeline.py",
+        "shape": "sparkle"
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Drawn from mathematical shapes by tools/vfx/vfx_pipeline.py; no third-party material."
+      },
+      "processing": [
+        "1024 px master drawn from a signed-distance shape",
+        "box-downsampled to 256 px",
+        "RGB forced to white, straight alpha"
+      ],
+      "checks": {
+        "width": 256,
+        "height": 256,
+        "coverage": 0.1118,
+        "corner_alpha_max": 0,
+        "border_alpha_max": 0,
+        "rgb_white": true
+      },
+      "sha256": "4bb314f65b94e1dcc19e307573be58dbcff8c133413efd3913015a2ab1098120",
+      "builtin_fallback": "rbxasset://textures/particles/sparkles_main.dds",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "name": "Heart",
+      "config_key": "Config.Vfx.Textures.Heart",
+      "use": "Vote confirmation, audience reactions, heart rain",
+      "file_source": "assets/vfx/source/heart.png",
+      "file_processed": "assets/vfx/processed/heart.png",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/vfx/vfx_pipeline.py",
+        "shape": "heart"
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Drawn from mathematical shapes by tools/vfx/vfx_pipeline.py; no third-party material."
+      },
+      "processing": [
+        "1024 px master drawn from a signed-distance shape",
+        "box-downsampled to 256 px",
+        "RGB forced to white, straight alpha"
+      ],
+      "checks": {
+        "width": 256,
+        "height": 256,
+        "coverage": 0.4354,
+        "corner_alpha_max": 0,
+        "border_alpha_max": 0,
+        "rgb_white": true
+      },
+      "sha256": "879fa54f83fe77b327d9a4e6920e3267389121577b1e39f7c1800421d292cf7c",
+      "builtin_fallback": "rbxasset://textures/particles/sparkles_main.dds",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "name": "Star",
+      "config_key": "Config.Vfx.Textures.Star",
+      "use": "Star ratings, winner reveal, rank up",
+      "file_source": "assets/vfx/source/star.png",
+      "file_processed": "assets/vfx/processed/star.png",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/vfx/vfx_pipeline.py",
+        "shape": "star"
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Drawn from mathematical shapes by tools/vfx/vfx_pipeline.py; no third-party material."
+      },
+      "processing": [
+        "1024 px master drawn from a signed-distance shape",
+        "box-downsampled to 256 px",
+        "RGB forced to white, straight alpha"
+      ],
+      "checks": {
+        "width": 256,
+        "height": 256,
+        "coverage": 0.3042,
+        "corner_alpha_max": 0,
+        "border_alpha_max": 0,
+        "rgb_white": true
+      },
+      "sha256": "5d39bd530a0ad206490b2dbd5b35c35df0a21d00579ff55003f5a2ace4e79c53",
+      "builtin_fallback": "rbxasset://textures/particles/sparkles_main.dds",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "name": "Confetti",
+      "config_key": "Config.Vfx.Textures.Confetti",
+      "use": "Confetti celebrations (podium, lobby moments)",
+      "file_source": "assets/vfx/source/confetti.png",
+      "file_processed": "assets/vfx/processed/confetti.png",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/vfx/vfx_pipeline.py",
+        "shape": "confetti"
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Drawn from mathematical shapes by tools/vfx/vfx_pipeline.py; no third-party material."
+      },
+      "processing": [
+        "1024 px master drawn from a signed-distance shape",
+        "box-downsampled to 256 px",
+        "RGB forced to white, straight alpha"
+      ],
+      "checks": {
+        "width": 256,
+        "height": 256,
+        "coverage": 0.2795,
+        "corner_alpha_max": 0,
+        "border_alpha_max": 0,
+        "rgb_white": true
+      },
+      "sha256": "8b09c53cbfc2fdd6afb88a06ac7981ba44a2b846706988492dadefcfc0103eba",
+      "builtin_fallback": "rbxasset://textures/particles/sparkles_main.dds",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    },
+    {
+      "name": "Glow",
+      "config_key": "Config.Vfx.Textures.Glow",
+      "use": "Soft radial glow: spotlight pools, auras, beam ends",
+      "file_source": "assets/vfx/source/glow.png",
+      "file_processed": "assets/vfx/processed/glow.png",
+      "source": {
+        "type": "procedural",
+        "tool": "tools/vfx/vfx_pipeline.py",
+        "shape": "glow"
+      },
+      "licence": {
+        "name": "Original work (procedurally generated for this project)",
+        "commercial_use": true,
+        "attribution_required": false,
+        "verified": true,
+        "notes": "Drawn from mathematical shapes by tools/vfx/vfx_pipeline.py; no third-party material."
+      },
+      "processing": [
+        "1024 px master drawn from a signed-distance shape",
+        "box-downsampled to 256 px",
+        "RGB forced to white, straight alpha"
+      ],
+      "checks": {
+        "width": 256,
+        "height": 256,
+        "coverage": 0.1357,
+        "corner_alpha_max": 0,
+        "border_alpha_max": 0,
+        "rgb_white": true
+      },
+      "sha256": "ac999be58917afff7a12a3fafc84ef232e578d146afc087dbe152a9f7c4db41d",
+      "builtin_fallback": "rbxasset://textures/particles/forcefield_glow_main.dds",
+      "roblox_asset_id": null,
+      "upload_status": "pending_manual_upload"
+    }
+  ],
+  "verified_builtin_textures": [
+    "rbxasset://textures/particles/sparkles_main.dds",
+    "rbxasset://textures/particles/fire_main.dds",
+    "rbxasset://textures/particles/smoke_main.dds",
+    "rbxasset://textures/particles/fire_sparks_main.dds",
+    "rbxasset://textures/particles/explosion01_core_main.dds",
+    "rbxasset://textures/particles/explosion01_shockwave_main.dds",
+    "rbxasset://textures/particles/explosion01_implosion_main.dds",
+    "rbxasset://textures/particles/forcefield_glow_main.dds",
+    "rbxasset://textures/particles/forcefield_vortex_main.dds"
+  ],
+  "effects": [
+    {
+      "effect": "Button press feedback",
+      "handler": "existing: Kit.button / Components (scale tween)",
+      "verification": "existing"
+    },
+    {
+      "effect": "Player matching shuffle + partner reveal",
+      "handler": "HUD.partnerReveal (Pairing phase)",
+      "verification": "static (needs 2 players)"
+    },
+    {
+      "effect": "Teleport transition",
+      "handler": "HUD.phaseEffects: Lobby->Pairing, Results->Lobby",
+      "verification": "studio"
+    },
+    {
+      "effect": "Theme reveal burst + shimmer",
+      "handler": "HUD.refreshRound (ThemeReveal)",
+      "verification": "studio"
+    },
+    {
+      "effect": "Reward collection (coins fly to counter)",
+      "handler": "LobbyUI.coinPop (coins increase)",
+      "verification": "static"
+    },
+    {
+      "effect": "Rank-up star burst",
+      "handler": "HUD.showRewards (rankUp)",
+      "verification": "static"
+    },
+    {
+      "effect": "Outfit completion sparkle",
+      "handler": "Catalog READY button",
+      "verification": "static (button press)"
+    },
+    {
+      "effect": "Countdown warning pulse (last 10 s)",
+      "handler": "HUD timer tick (Styling/Voting)",
+      "verification": "static"
+    },
+    {
+      "effect": "Time-up edge glow",
+      "handler": "HUD.phaseEffects (leaving Styling)",
+      "verification": "studio"
+    },
+    {
+      "effect": "Runway spotlight sweep + fake volumetric beams",
+      "handler": "Stage.runwayEntrance (RunwayEffect remote)",
+      "verification": "studio"
+    },
+    {
+      "effect": "Runway walker sparkle trail + light pool",
+      "handler": "Stage.runwayEntrance",
+      "verification": "studio"
+    },
+    {
+      "effect": "VIP entrance: gold beams + chrome shimmer highlight",
+      "handler": "Stage.runwayEntrance (isVip)",
+      "verification": "static"
+    },
+    {
+      "effect": "Camera flashes",
+      "handler": "existing: Stage.flashLoop (respects Flashing effects)",
+      "verification": "existing"
+    },
+    {
+      "effect": "Vote confirmation",
+      "handler": "VotingUI heart / StarsUI rating",
+      "verification": "static (button press)"
+    },
+    {
+      "effect": "Audience reaction burst",
+      "handler": "ReactionsUI.float (Reaction remote)",
+      "verification": "static"
+    },
+    {
+      "effect": "Top-three podium highlights",
+      "handler": "Stage.podiumReveal (Results)",
+      "verification": "studio"
+    },
+    {
+      "effect": "Winner reveal: light shaft, star burst, victory aura",
+      "handler": "Stage.podiumReveal (1st place)",
+      "verification": "studio"
+    },
+    {
+      "effect": "Results row bursts + winner confetti on screen",
+      "handler": "ResultsUI.refresh",
+      "verification": "studio"
+    },
+    {
+      "effect": "Podium confetti (world)",
+      "handler": "existing: server Effects.burst",
+      "verification": "existing"
+    },
+    {
+      "effect": "Disco Mode lighting preset",
+      "handler": "Moments.disco + Stage.setDisco",
+      "verification": "static (needs a bought moment)"
+    },
+    {
+      "effect": "Textured heart/confetti rain",
+      "handler": "Moments.rain",
+      "verification": "static"
+    },
+    {
+      "effect": "Minigame bursts on the shared budget",
+      "handler": "MinigameFx.burst -> Vfx.emit",
+      "verification": "static"
+    }
+  ],
+  "problems": []
+}

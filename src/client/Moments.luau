@@ -2,6 +2,7 @@
 -- Draws bought "lobby moments" for everyone (confetti, hearts, snow or coin rain, disco mode),
 -- with the buyer's name.
 
+local CollectionService = game:GetService("CollectionService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -10,6 +11,8 @@ local Workspace = game:GetService("Workspace")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Kit = require(script.Parent.UI.Kit)
+local Stage = require(script.Parent.Stage)
+local Vfx = require(script.Parent.Vfx)
 
 local Moments = {}
 
@@ -23,16 +26,19 @@ type RainStyle = {
 	speed: number?, -- how fast it falls
 	spin: boolean?,
 	lightEmission: number?,
+	texture: string?, -- Config.Vfx.Textures key
 }
 
 local CONFETTI: RainStyle = {
 	colors = { Color3.fromRGB(255, 90, 160), Color3.fromRGB(90, 200, 255), Color3.fromRGB(255, 220, 80) },
+	texture = "Confetti",
 }
 local HEARTS: RainStyle = {
 	colors = { Color3.fromRGB(255, 70, 130), Color3.fromRGB(255, 150, 200), Color3.fromRGB(255, 40, 90) },
 	size = 0.6,
 	rate = 90,
 	lightEmission = 0.4,
+	texture = "Heart",
 }
 local SNOW: RainStyle =
 	{ colors = { Color3.new(1, 1, 1), Color3.fromRGB(220, 240, 255) }, size = 0.3, speed = 0.4, spin = false }
@@ -57,7 +63,10 @@ local function rain(duration: number, style: RainStyle)
 
 	local speed = style.speed or 1
 	local particles = Instance.new("ParticleEmitter")
-	particles.Rate = style.rate or 150
+	particles.Rate = Vfx.count(style.rate or 150)
+	if style.texture then
+		particles.Texture = Config.textureId(style.texture)
+	end
 	particles.Lifetime = NumberRange.new(4 / speed, 6 / speed)
 	particles.Speed = NumberRange.new(2 * speed, 5 * speed)
 	particles.EmissionDirection = Enum.NormalId.Bottom
@@ -93,10 +102,42 @@ local function rain(duration: number, style: RainStyle)
 	end)
 end
 
+-- Disco Mode lighting preset: a slow colour wash, party-coloured light beams turning under the
+-- disco ball, and the runway spotlights in party colours (Stage.setDisco). Reduced motion keeps
+-- the beams still; low quality draws two beams instead of four.
+local function discoBeams(): ({ Attachment }, () -> ())
+	local ball = CollectionService:GetTagged("DiscoBall")[1]
+	if not ball or not ball:IsA("BasePart") then
+		return {}, function() end
+	end
+	local party = { Vfx.Colors.Pink, Vfx.Colors.Cyan, Vfx.Colors.Violet, Vfx.Colors.Gold }
+	local targets: { Attachment } = {}
+	local stops: { () -> () } = {}
+	for i = 1, if Vfx.isLowQuality() then 2 else 4 do
+		local target = Instance.new("Attachment")
+		target.Parent = Workspace.Terrain
+		table.insert(targets, target)
+		local _, stop = Vfx.lightBeam(ball.Position, target, party[i], 9)
+		table.insert(stops, stop)
+		table.insert(stops, function()
+			target:Destroy()
+		end)
+	end
+	return targets, function()
+		for _, stop in stops do
+			stop()
+		end
+	end
+end
+
 local function disco(duration: number)
 	local effect = Instance.new("ColorCorrectionEffect")
 	effect.Saturation = 0.4
 	effect.Parent = Lighting
+	Stage.setDisco(duration)
+	local targets, stopBeams = discoBeams()
+	local ball = CollectionService:GetTagged("DiscoBall")[1]
+	local still = Vfx.reducedMotion()
 	local started = os.clock()
 	local connection
 	connection = RunService.RenderStepped:Connect(function()
@@ -104,9 +145,17 @@ local function disco(duration: number)
 		if t > duration then
 			connection:Disconnect()
 			effect:Destroy()
+			stopBeams()
 			return
 		end
 		effect.TintColor = Color3.fromHSV((t * 0.5) % 1, 0.35, 1)
+		if ball and ball:IsA("BasePart") then
+			local spin = if still then 0 else t * 0.6
+			for i, target in targets do
+				local angle = spin + i * math.pi * 2 / #targets
+				target.Position = ball.Position + Vector3.new(math.cos(angle) * 18, -20, math.sin(angle) * 18)
+			end
+		end
 	end)
 end
 

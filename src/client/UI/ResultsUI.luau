@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
 local Kit = require(script.Parent.Kit)
+local Vfx = require(script.Parent.Parent.Vfx)
 
 local ResultsUI = {}
 
@@ -168,6 +169,17 @@ local function refresh()
 				row.Visible = true
 				TweenService:Create(scale, TweenInfo.new(0.45, Enum.EasingStyle.Back), { Scale = 1 }):Play()
 				Kit.playSound(if entry.place == 1 then "Winner" else "Podium")
+				Vfx.uiBurst(
+					row,
+					if entry.place == 1 then "Star" else "Sparkle",
+					if entry.place == 1 then 16 else 8
+				)
+				-- Your look (or the look you styled) won: confetti on your screen too.
+				local me = State.player.UserId
+				local styledIt = table.find(entry.stylistNames, State.player.DisplayName) ~= nil
+				if entry.place == 1 and (entry.wearerUserId == me or styledIt) then
+					Vfx.uiConfetti(3)
+				end
 			end
 		end)
 		local stylists = if #entry.stylistNames > 0 then table.concat(entry.stylistNames, " & ") else "?"

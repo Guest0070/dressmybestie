@@ -15,6 +15,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
 local Kit = require(script.Parent.Kit)
+local Vfx = require(script.Parent.Parent.Vfx)
 
 local HUD = {}
 
@@ -148,6 +149,62 @@ local function applyLayout(styling: boolean)
 	end
 end
 
+-- Pairing: the banner shuffles through the players for a moment, then lands on the person you
+-- style with a sparkle (the partner reveal). Reduced motion skips the shuffle.
+local shuffleToken = 0
+local function partnerReveal(round: Types.RoundState)
+	local target = State.myTarget()
+	if not target or target == State.player.UserId then
+		return
+	end
+	shuffleToken += 1
+	local token = shuffleToken
+	local final = bannerLabel.Text
+	local pool = {}
+	for _, name in round.names or {} do
+		table.insert(pool, name)
+	end
+	local function land()
+		bannerLabel.Text = final
+		Vfx.pop(bannerFrame)
+		Vfx.shimmer(bannerFrame)
+		Vfx.uiBurst(bannerFrame, "Sparkle", 14)
+	end
+	if Vfx.reducedMotion() or #pool < 2 then
+		land()
+		return
+	end
+	task.spawn(function()
+		for i = 1, 12 do
+			if token ~= shuffleToken or State.round.phase ~= "Pairing" then
+				return
+			end
+			bannerLabel.Text = `You're styling: {pool[(i % #pool) + 1]}`
+			task.wait(0.05 + i * 0.008)
+		end
+		if token == shuffleToken and State.round.phase == "Pairing" then
+			land()
+		end
+	end)
+end
+
+-- One-off effects when the phase changes: cover teleports, reveal the partner, mark time up.
+local function phaseEffects(round: Types.RoundState, from: Types.RoundPhase)
+	local playing = round.names ~= nil and round.names[tostring(State.player.UserId)] ~= nil
+	if
+		(from == "Lobby" and round.phase == "Pairing" and playing)
+		or (from == "Results" and round.phase == "Lobby")
+	then
+		Vfx.transition(0.3) -- you're being moved (to your booth / back to the lobby)
+	end
+	if round.phase == "Pairing" then
+		task.delay(0.6, partnerReveal, round)
+	end
+	if from == "Styling" and State.myTarget() ~= nil then
+		Vfx.edgePulse(Vfx.Colors.Cyan, 0.3) -- time's up: soft, once
+	end
+end
+
 local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPhase?)
 	local styling = (round.phase == "Styling" and State.myTarget() ~= nil) or State.dressingRoom
 	applyLayout(styling)
@@ -178,8 +235,15 @@ local function refreshRound(round: Types.RoundState, changedFrom: Types.RoundPha
 		local full = if round.chaos then UDim2.fromOffset(440, 150) else UDim2.fromOffset(440, 110)
 		revealFrame.Size = UDim2.fromOffset(200, 60)
 		TweenService:Create(revealFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), { Size = full }):Play()
+		task.delay(0.35, function()
+			if revealFrame.Visible then
+				Vfx.uiBurst(revealFrame, "Sparkle", 18)
+				Vfx.shimmer(revealFrame)
+			end
+		end)
 	end
 	if changedFrom then
+		phaseEffects(round, changedFrom)
 		Kit.playSound(if round.phase == "ThemeReveal" then "ThemeReveal" else "PhaseChange")
 	end
 end
@@ -259,6 +323,7 @@ local function showRewards(summary: Types.RewardSummary)
 	Kit.playSound(if summary.rankUp then "RankUp" else "Coins", 0.5)
 	if summary.rankUp then
 		celebrateRankUp(summary.rankUp)
+		Vfx.uiBurst(Vector2.new(root.AbsoluteSize.X / 2, root.AbsoluteSize.Y * 0.45), "Star", 20)
 	end
 	local lines = { `+{summary.coins} coins   +{summary.xp} XP` }
 	if summary.bonuses and #summary.bonuses > 0 then
@@ -446,6 +511,7 @@ function HUD.start()
 
 	-- Styling and voting: one warning sound when the timer reaches 10 seconds.
 	local timeWarnedFor: number? = nil
+	local pulsedSecond: number? = nil
 	local function timeWarning(remaining: number?)
 		local round = State.round
 		if round.phase ~= "Styling" and round.phase ~= "Voting" then
@@ -454,6 +520,13 @@ function HUD.start()
 		if remaining and remaining <= 10 and remaining > 9 and timeWarnedFor ~= round.endsAt then
 			timeWarnedFor = round.endsAt
 			Kit.playSound("TimeWarning", 0.5)
+		end
+		-- Last 10 seconds: a soft red glow at the screen edges once a second, a little stronger
+		-- each second (never a strobe; skipped entirely with reduced motion).
+		local second = if remaining then math.ceil(remaining) else nil
+		if second and second <= 10 and second > 0 and second ~= pulsedSecond and not Vfx.reducedMotion() then
+			pulsedSecond = second
+			Vfx.edgePulse(Color3.fromRGB(255, 90, 110), 0.12 + (10 - second) * 0.02)
 		end
 	end
 

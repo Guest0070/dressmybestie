@@ -10,9 +10,11 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Types = require(ReplicatedStorage.Shared.Types)
 local Audio = require(script.Parent.Audio)
 local State = require(script.Parent.State)
 local Kit = require(script.Parent.UI.Kit)
+local Vfx = require(script.Parent.Vfx)
 
 local Stage = {}
 
@@ -417,6 +419,169 @@ local function poseAtEnd(poseAnimationId: number)
 	pcall(humanoid.PlayEmoteAsync, humanoid, "Pose")
 end
 
+---------------------------------------------------------------------------------------------------
+-- Stage lighting: runway spotlights, walker sparkle, podium highlights (all local, all cleaned up
+-- when the phase moves on). Built from Vfx so budgets, quality and comfort settings apply.
+---------------------------------------------------------------------------------------------------
+
+local walkCleanup: { () -> () } = {}
+local podiumCleanup: { () -> () } = {}
+local discoUntil = 0
+
+local function clean(list: { () -> () })
+	for _, stop in list do
+		stop()
+	end
+	table.clear(list)
+end
+
+-- Moments: Disco Mode switches the runway spotlights to party colours while it lasts.
+function Stage.setDisco(seconds: number)
+	discoUntil = os.clock() + seconds
+end
+
+-- A new look starts its walk: spotlights sweep from the end of the runway onto the walker, who
+-- trails sparkles; VIPs get gold light and a chrome shimmer.
+local function runwayEntrance(userId: number, isVip: boolean)
+	clean(walkCleanup)
+	local root = rootOf(userId)
+	local startPart = mapPart({ "Runway", "Start" })
+	local endPart = mapPart({ "Runway", "End" })
+	if not root or not startPart or not endPart then
+		return
+	end
+	local color = if isVip then Vfx.Colors.Gold else Vfx.Colors.Cyan
+	local walk = endPart.Position - startPart.Position
+	local across = Vector3.new(walk.Z, 0, -walk.X).Unit
+	local target = Instance.new("Attachment")
+	target.Name = "VfxSpotTarget"
+	target.Position = Vector3.new(0, -1, 0)
+	target.Parent = root
+	local sweep = Instance.new("Attachment")
+	sweep.Position = endPart.Position -- Terrain sits at the origin, so Position is world space
+	sweep.Parent = Workspace.Terrain
+	table.insert(walkCleanup, function()
+		target:Destroy()
+		sweep:Destroy()
+	end)
+	local beams: { Beam } = {}
+	for _, side in { -1, 1 } do
+		local from = startPart.Position:Lerp(endPart.Position, 0.5)
+			+ across * side * 14
+			+ Vector3.new(0, 24, 0)
+		local beam, stop = Vfx.lightBeam(from, sweep, if side < 0 then color else Vfx.Colors.Chrome, 8)
+		table.insert(beams, beam)
+		table.insert(walkCleanup, stop)
+	end
+	-- Entrance sweep (0.7 s), then the beams follow the walker.
+	local function lockOn()
+		for _, beam in beams do
+			beam.Attachment1 = target
+		end
+	end
+	if Vfx.reducedMotion() then
+		lockOn()
+	else
+		local tween = TweenService:Create(
+			sweep,
+			TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ Position = root.Position }
+		)
+		tween.Completed:Once(lockOn)
+		tween:Play()
+	end
+	if not Vfx.isLowQuality() then
+		local pool = Instance.new("PointLight")
+		pool.Name = "VfxSpotPool"
+		pool.Color = color
+		pool.Brightness = 1.5
+		pool.Range = 12
+		pool.Parent = root
+		table.insert(walkCleanup, function()
+			pool:Destroy()
+		end)
+	end
+	table.insert(walkCleanup, Vfx.attach(root, "Sparkle", color, if isVip then 14 else 8))
+	table.insert(walkCleanup, Vfx.trail(root, color))
+	local character = root.Parent
+	if isVip and character then
+		table.insert(walkCleanup, Vfx.highlight(character, Vfx.Colors.Gold, nil, true))
+	end
+	-- Disco Mode: the two beams trade party colours every half second (no strobing).
+	if os.clock() < discoUntil then
+		task.spawn(function()
+			local party = { Vfx.Colors.Pink, Vfx.Colors.Cyan, Vfx.Colors.Violet, Vfx.Colors.Gold }
+			local step = 0
+			while os.clock() < discoUntil and beams[1].Parent ~= nil do
+				step += 1
+				for i, beam in beams do
+					beam.Color = ColorSequence.new(party[(step + i) % #party + 1])
+				end
+				task.wait(0.5)
+			end
+		end)
+	end
+end
+
+-- Results: the top three light up as ResultsUI reveals them (3rd, 2nd, then 1st), and the winner
+-- gets a light shaft, a star burst and a victory aura until the phase ends.
+local PLACE_COLORS = { Vfx.Colors.Gold, Vfx.Colors.Silver, Vfx.Colors.Bronze }
+local function podiumReveal(podium: { Types.PodiumEntry })
+	clean(podiumCleanup)
+	local active = true
+	table.insert(podiumCleanup, function()
+		active = false
+	end)
+	for _, entry in podium do
+		local place = entry.place
+		if place < 1 or place > 3 then
+			continue
+		end
+		-- Same timing as the ResultsUI rows.
+		task.delay(0.4 + (3 - place) * 0.9, function()
+			if not active then
+				return
+			end
+			local root = rootOf(entry.wearerUserId)
+			local character = if root then root.Parent else nil
+			if not root or not character then
+				return
+			end
+			table.insert(podiumCleanup, Vfx.highlight(character, PLACE_COLORS[place], nil, place == 1))
+			if place == 1 then
+				local aim = Instance.new("Attachment")
+				aim.Position = Vector3.new(0, -2.5, 0)
+				aim.Parent = root
+				local _, stopBeam =
+					Vfx.lightBeam(root.Position + Vector3.new(0, 28, 0), aim, Vfx.Colors.Gold, 6)
+				table.insert(podiumCleanup, stopBeam)
+				table.insert(podiumCleanup, function()
+					aim:Destroy()
+				end)
+				Vfx.burst(root.Position + Vector3.new(0, 2, 0), "Star", 30, Vfx.Colors.Gold)
+				Vfx.burst(root.Position, "Glow", 2, Vfx.Colors.Gold)
+				table.insert(podiumCleanup, Vfx.attach(root, "Star", Vfx.Colors.Gold, 6))
+			else
+				Vfx.burst(root.Position + Vector3.new(0, 2, 0), "Sparkle", 14, PLACE_COLORS[place])
+			end
+		end)
+	end
+end
+
+local lastPhase: string? = nil
+local function onStagePhase()
+	local round = State.round
+	if round.phase ~= "Runway" then
+		clean(walkCleanup)
+	end
+	if round.phase ~= "Results" then
+		clean(podiumCleanup)
+	elseif lastPhase ~= "Results" then
+		podiumReveal(round.podium or {})
+	end
+	lastPhase = round.phase
+end
+
 function Stage.start()
 	task.spawn(function()
 		local playerScripts = State.player:WaitForChild("PlayerScripts")
@@ -439,10 +604,12 @@ function Stage.start()
 	task.spawn(flashLoop)
 	RunService:BindToRenderStep("StyleMyBestieCamera", Enum.RenderPriority.Camera.Value + 1, updateCamera)
 	State.RoundChanged:Connect(onRoundChanged)
+	State.RoundChanged:Connect(onStagePhase)
 	State.DressingRoomChanged:Connect(onRoundChanged)
 	Remotes.Events.RunwayEffect.OnClientEvent:Connect(
 		function(userId: number, isVip: boolean, poseId: number?)
 			Kit.playSound(if isVip then "VipEntrance" else "RunwayEntrance", 0.5)
+			runwayEntrance(userId, isVip)
 			if isVip then
 				vipGlow()
 			end

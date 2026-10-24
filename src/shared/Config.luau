@@ -924,6 +924,50 @@ function Config.soundId(key: string): string?
 	return if type(id) == "string" then id else `rbxassetid://{id}`
 end
 
+-- Visual effects (src/client/Vfx.luau). Textures: uploaded image asset IDs for the particle
+-- textures in assets/vfx/processed (tools/vfx/vfx_pipeline.py); 0 = use the built-in fallback.
+Config.Vfx = {
+	Textures = {
+		Sparkle = 0,
+		Heart = 0,
+		Star = 0,
+		Confetti = 0,
+		Glow = 0,
+	} :: { [string]: number },
+	-- Built-in particle textures (checked loading in Studio) used until an upload ID is set.
+	Fallbacks = {
+		Sparkle = "rbxasset://textures/particles/sparkles_main.dds",
+		Heart = "rbxasset://textures/particles/sparkles_main.dds",
+		Star = "rbxasset://textures/particles/sparkles_main.dds",
+		Confetti = "rbxasset://textures/particles/sparkles_main.dds",
+		Glow = "rbxasset://textures/particles/forcefield_glow_main.dds",
+	} :: { [string]: string },
+	-- Electric cyan + chrome on the plum/pink UI (Theme.luau).
+	Colors = {
+		Cyan = Color3.fromRGB(98, 226, 255),
+		Chrome = Color3.fromRGB(230, 221, 245),
+		Pink = Color3.fromRGB(255, 79, 163),
+		Violet = Color3.fromRGB(155, 107, 255),
+		Gold = Color3.fromRGB(255, 201, 74),
+		Silver = Color3.fromRGB(220, 220, 235),
+		Bronze = Color3.fromRGB(225, 150, 90),
+	},
+	-- Budgets per client: effects past these are skipped, never queued.
+	MaxBursts = 10, -- 3D particle bursts alive at once
+	MaxUiParticles = 60, -- 2D sparkles/confetti on screen at once
+	MaxHighlights = 8, -- Roblox renders at most 31 Highlights per client
+	LowQualityScale = 0.45, -- particle counts on phones / low graphics quality
+}
+
+-- Particle texture for a Config.Vfx.Textures key: the uploaded image, or the built-in fallback.
+function Config.textureId(key: string): string
+	local id = Config.Vfx.Textures[key]
+	if id and id ~= 0 then
+		return `rbxassetid://{id}`
+	end
+	return Config.Vfx.Fallbacks[key] or Config.Vfx.Fallbacks.Sparkle
+end
+
 -- Quests. stat names: rounds, heartsGiven, gems, obby, heartsReceived, podiums.
 export type Quest = { id: string, text: string, stat: string, target: number, reward: number }
 -- Daily quests reset every day (UTC).

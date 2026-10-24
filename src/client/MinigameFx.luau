@@ -21,6 +21,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Audio = require(script.Parent.Audio)
 local State = require(script.Parent.State)
+local Vfx = require(script.Parent.Vfx)
 
 local MinigameFx = {}
 
@@ -97,36 +98,30 @@ local function play(id: string?, position: Vector3?, volume: number?, pitch: num
 	sound:Play()
 end
 
-local function emitter(color: Color3, props: { [string]: any }?): ParticleEmitter
-	local e = Instance.new("ParticleEmitter")
-	e.Enabled = false
-	e.Color = ColorSequence.new(color, Color3.new(1, 1, 1))
-	e.LightEmission = 0.8
-	e.Lifetime = NumberRange.new(0.6, 1.1)
-	e.Speed = NumberRange.new(18, 30)
-	e.SpreadAngle = Vector2.new(180, 180)
-	e.Acceleration = Vector3.new(0, -30, 0)
-	e.Drag = 2
-	e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.6), NumberSequenceKeypoint.new(1, 0) })
-	e.Transparency = NumberSequence.new(0, 1)
+-- The minigame burst look; any field can be overridden per call.
+local function burstProps(color: Color3, props: { [string]: any }?): { [string]: any }
+	local merged: { [string]: any } = {
+		Color = ColorSequence.new(color, Color3.new(1, 1, 1)),
+		LightEmission = 0.8,
+		Lifetime = NumberRange.new(0.6, 1.1),
+		Speed = NumberRange.new(18, 30),
+		SpreadAngle = Vector2.new(180, 180),
+		Acceleration = Vector3.new(0, -30, 0),
+		Drag = 2,
+		Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.6), NumberSequenceKeypoint.new(1, 0) }),
+		Transparency = NumberSequence.new(0, 1),
+	}
 	if props then
 		for key, value in props do
-			(e :: any)[key] = value
+			merged[key] = value
 		end
 	end
-	return e
+	return merged
 end
 
+-- Through Vfx.emit: shared budget, cleanup and lower counts on low-quality devices.
 local function burst(position: Vector3, color: Color3, count: number?, props: { [string]: any }?)
-	local attachment = Instance.new("Attachment")
-	attachment.WorldPosition = position
-	attachment.Parent = Workspace.Terrain
-	local e = emitter(color, props)
-	e.Parent = attachment
-	e:Emit(count or 40)
-	task.delay(3, function()
-		attachment:Destroy()
-	end)
+	Vfx.emit(position, burstProps(color, props), count or 40)
 end
 
 -- Winner fireworks: rockets up, bursts in party colours, confetti.

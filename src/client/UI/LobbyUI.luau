@@ -17,6 +17,7 @@
 -- the same thing as turning spectating off. Everything shown comes from State; nothing is faked.
 
 local Players = game:GetService("Players")
+local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SocialService = game:GetService("SocialService")
@@ -30,6 +31,7 @@ local State = require(script.Parent.Parent.State)
 local Components = require(script.Parent.Components)
 local Kit = require(script.Parent.Kit)
 local Theme = require(script.Parent.Theme)
+local Vfx = require(script.Parent.Parent.Vfx)
 
 local LobbyUI = {}
 
@@ -162,6 +164,12 @@ end
 
 local function coinPop(amount: number)
 	local pill = coinsPill.instance
+	-- Reward collection: coins fly from the middle of the screen into the coin counter.
+	local camera = workspace.CurrentCamera
+	if camera then
+		local target = pill.AbsolutePosition + pill.AbsoluteSize / 2 + GuiService:GetGuiInset()
+		Vfx.uiBurst(camera.ViewportSize / 2, "Coin", math.clamp(math.floor(amount / 10), 4, 12), target)
+	end
 	local pop = Components.text({
 		Text = `+{formatNumber(amount)}`,
 		AnchorPoint = Vector2.new(0.5, 0),

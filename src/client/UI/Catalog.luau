@@ -12,6 +12,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
 local Kit = require(script.Parent.Kit)
+local Vfx = require(script.Parent.Parent.Vfx)
 
 local Catalog = {}
 
@@ -489,6 +490,20 @@ function Catalog.start()
 		ready = not ready
 		if ready then
 			Kit.playSound("Ready")
+			-- Outfit complete: sparkles off the button and around the mannequin.
+			Vfx.uiBurst(readyButton, "Sparkle", 14)
+			local folder = workspace:FindFirstChild("Mannequins")
+			for _, model in if folder then folder:GetChildren() else {} do
+				if model:IsA("Model") and model:GetAttribute("TargetUserId") == State.myTarget() then
+					Vfx.burst(
+						model:GetPivot().Position + Vector3.new(0, 1, 0),
+						"Sparkle",
+						26,
+						Vfx.Colors.Cyan
+					)
+					break
+				end
+			end
 		end
 		Remotes.Events.StylingReady:FireServer(ready)
 		refreshReady()
