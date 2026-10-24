@@ -96,19 +96,25 @@ a `BoothPanel` attribute, detected on the client), Dressing Room, Hall of Fame, 
 environment and the `Minigames/` folder. Each minigame is its own module, coordinated by
 `Minigames/init.luau`, and runs in the plaza "Play Zone" or the imported arcade hall.
 
-**UI**: two toolkits coexist.
-- `UI/Kit.luau`: the older pink design-unit toolkit (a scaled 900x450 root). Most screens still use it.
-- `UI/Theme.luau` + `UI/Components.luau`: the newer charcoal/cyan design system, used by LobbyUI,
-  ShopUI and SettingsUI. These three are designable in Studio. `Components.designable(name, build,
-  wire)` uses a ScreenGui of that name from StarterGui when one exists and finds every piece by Name;
+**UI**: two toolkits, one look. `UI/Theme.luau` holds every colour, font and radius (deep plum
+panels, hot-pink actions, gold rewards), and both toolkits read it, so restyling means editing tokens.
+- `UI/Kit.luau`: the older toolkit. It draws into a "Root" frame in design units (about 900x450),
+  scaled to the screen by a UIScale. Most in-round screens use it (HUD, Catalog, Voting, Results...).
+- `UI/Components.luau`: the newer scale-plus-constraints components. LobbyUI, ShopUI, SettingsUI,
+  MinigameUI, ReactionsUI and WardrobeUI use them.
+- LobbyUI, ShopUI and SettingsUI are designable in Studio. `Components.designable(name, build, wire)`
+  uses a ScreenGui of that name from StarterGui when one exists and finds every piece by Name;
   otherwise it builds the default. `build` only creates instances and `wire` attaches all behaviour,
   so both paths share `wire`. Keep the names that `wire` looks up stable: Divyansh's Studio designs
   depend on them.
-- `Kit.playSound` routes through the SFX SoundGroup, which `Audio.luau` mutes from Settings.
+- `Kit.playSound` routes through the SFX SoundGroup. `Audio.luau` mutes it from Settings, and saves the
+  music, SFX and flashing-effects settings to the profile.
 
 ## Docs to keep in sync
 
 `README.md` covers player-facing features, Studio setup and test steps, the import and designable-UI
 workflows, and where Roblox differs from the brief. `LAUNCH_CHECKLIST.md` lists the manual steps
 Divyansh must do himself: product IDs, game settings, saving the place. Update both when a feature
-changes what he has to do in Studio.
+changes what he has to do in Studio. `reports/` holds research write-ups (e.g. the SFX/VFX/GFX guide),
+with their sources in `research_notes/`; check them before re-researching Roblox audio, effects,
+lighting or store-page rules.
