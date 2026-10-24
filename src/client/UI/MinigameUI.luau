@@ -175,7 +175,13 @@ end
 -- The banner while a Runway Dash run is on. Returns false when there's no run to show.
 local function showDash(): boolean
 	local d = dash
-	if not d or not State.canUseLobby() then
+	if not d then
+		return false
+	end
+	if not State.canUseLobby() then
+		-- The round took you out of the lobby (teleported to your booth): drop the run, or the
+		-- stopwatch card would stay on screen through styling.
+		dash = nil
 		return false
 	end
 	if d.phase == "done" and os.clock() - (d.doneAt or 0) > 6 then

@@ -235,7 +235,8 @@ local function buildTopBar(root: ScreenGui)
 	stats.BackgroundTransparency = 1
 	stats.Size = UDim2.new(1, -56, 1, 0) -- leave room for the settings button
 	stats.Parent = bar
-	Components.list(Enum.FillDirection.Horizontal, 8, Enum.HorizontalAlignment.Left).Parent = stats
+	-- Packed against the settings button, so the bar's right edge lines up with the right column.
+	Components.list(Enum.FillDirection.Horizontal, 8, Enum.HorizontalAlignment.Right).Parent = stats
 
 	local coins = Components.styleStatPill({
 		Name = "Coins",
@@ -395,15 +396,18 @@ local function sideColumn(content: Frame, name: string, anchorX: number): Frame
 	local column = Instance.new("Frame")
 	column.Name = name
 	column.BackgroundTransparency = 1
-	column.AnchorPoint = Vector2.new(anchorX, 0.5)
-	column.Position = UDim2.new(anchorX, if anchorX == 0 then 12 else -12, 0.56, 0)
+	-- Both columns start at the same height (just below Roblox's chat window), whatever number of
+	-- buttons each one shows.
+	column.AnchorPoint = Vector2.new(anchorX, 0)
+	column.Position = UDim2.new(anchorX, if anchorX == 0 then 12 else -12, 0.43, 0)
 	column.Size = UDim2.fromScale(0.1, 0.46)
 	column.Parent = content
 	Components.sizeLimit(Vector2.new(96, 0), Vector2.new(128, math.huge)).Parent = column
 	Components.list(
 		Enum.FillDirection.Vertical,
 		6,
-		if anchorX == 0 then Enum.HorizontalAlignment.Left else Enum.HorizontalAlignment.Right
+		if anchorX == 0 then Enum.HorizontalAlignment.Left else Enum.HorizontalAlignment.Right,
+		Enum.VerticalAlignment.Top
 	).Parent =
 		column
 	return column

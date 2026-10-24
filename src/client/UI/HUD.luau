@@ -460,11 +460,12 @@ function HUD.start()
 	})
 	Kit.corner(12).Parent = toastLabel
 
-	-- Event banner (Config.Events, e.g. DOUBLE COINS WEEKEND): in the lobby, under the top bar.
+	-- Event banner (Config.Events, e.g. DOUBLE COINS WEEKEND): in the lobby, under the top bar,
+	-- right edge in line with the round status (LobbyUI: 12 px margin + 56 px settings button).
 	local eventBanner = Kit.label({
 		Name = "Event",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.62, 0, 0, 58),
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -68, 0, 58),
 		Size = UDim2.fromOffset(330, 26),
 		BackgroundTransparency = 0.1,
 		BackgroundColor3 = Kit.Colors.Gold,
@@ -479,12 +480,19 @@ function HUD.start()
 		local event = Config.activeEvent(os.time())
 		local lobby = State.canUseLobby() and not State.dressingRoom
 		eventBanner.Visible = event ~= nil and lobby
+		-- The HUD root is scaled (Kit.screen); divide so the 68 px lands in real screen pixels.
+		local scale = root:FindFirstChildOfClass("UIScale")
+		eventBanner.Position = UDim2.new(1, -68 / (if scale then scale.Scale else 1), 0, 58)
 		if event then
 			eventBanner.Text = `🎉 {event.name}: x{event.coinMultiplier} round coins!`
 		end
 	end
 	State.RoundChanged:Connect(refreshEvent)
 	State.DressingRoomChanged:Connect(refreshEvent)
+	local rootScale = root:FindFirstChildOfClass("UIScale")
+	if rootScale then
+		rootScale:GetPropertyChangedSignal("Scale"):Connect(refreshEvent) -- window resized
+	end
 	task.spawn(function()
 		while true do
 			refreshEvent()

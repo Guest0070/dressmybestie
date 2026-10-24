@@ -199,6 +199,34 @@ function Audio.start()
 	end
 	startRunwayBeat()
 	startLobbyMusic()
+	-- Fetch every sound once in the background, so the first click/READY of a session isn't silent
+	-- while its audio downloads.
+	task.spawn(function()
+		local folder = Instance.new("Folder")
+		folder.Name = "SoundPreload"
+		for key in Config.Sounds do
+			local id = Config.soundId(key)
+			if id then
+				local sound = Instance.new("Sound")
+				sound.SoundId = id
+				sound.Volume = 0
+				sound.Parent = folder
+			end
+		end
+		folder.Parent = SoundService -- silent, never played; only here so the audio downloads
+		local deadline = os.clock() + 15
+		repeat
+			task.wait(0.5)
+			local pending = false
+			for _, sound in folder:GetChildren() do
+				if not (sound :: Sound).IsLoaded then
+					pending = true
+					break
+				end
+			end
+		until not pending or os.clock() > deadline
+		folder:Destroy()
+	end)
 end
 
 return Audio

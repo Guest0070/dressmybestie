@@ -58,8 +58,8 @@
       "sha256": "003bb1f8ca80f883334a4b6bdf975a150c39794b31ec93868df08d7201524ebe",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 131508489492449,
+      "upload_status": "uploaded"
     },
     {
       "id": "ui_phase_change",
@@ -106,8 +106,8 @@
       "sha256": "f65074763245f063f89a1a2555b1b5c25708917e42cc4eef7225e09374bf976c",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 77448258166079,
+      "upload_status": "uploaded"
     },
     {
       "id": "ui_alert",
@@ -154,8 +154,8 @@
       "sha256": "d1ffcdacef925f0d80171f2cede981909d804869419c6fd27c810eb683f655b8",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 88529220374112,
+      "upload_status": "uploaded"
     },
     {
       "id": "ui_time_warning",
@@ -202,8 +202,8 @@
       "sha256": "e0be7b0af42ce3cfe482ad59d607f5621d2346d8dbf3aaf814644137b25f520e",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 133289414917915,
+      "upload_status": "uploaded"
     },
     {
       "id": "ui_ready",
@@ -250,8 +250,8 @@
       "sha256": "a8715fe34a4b5c681df28d2d2dccdb87cfb67b896b6e418a49ed0d80156202a7",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 121427141643317,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_theme_reveal",
@@ -298,8 +298,8 @@
       "sha256": "bb9e27d534fd44fef0bf7f7c0b3b9525a9a792791b21c8fa69b5a96c4c612ad1",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 88339774412659,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_heart",
@@ -346,8 +346,8 @@
       "sha256": "53e65f5ae4f03ac72612ce2dff1e4df39fab93c2514a0f55623ea07f241c4097",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 129714686341787,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_pop",
@@ -397,8 +397,8 @@
       "sha256": "f2188fb415669a315aa21120428d79d5697db6440ccdaa9a9ebb6b64f6b33b23",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 124114581598914,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_tick",
@@ -445,8 +445,8 @@
       "sha256": "e5fa13b1a070850aa2b726fc2ad4030f92957584b569db54810e71a83d174da6",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 128347872083183,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_go",
@@ -493,8 +493,8 @@
       "sha256": "6bb5acc6e556489dc11c67ae92f86774eae78c494c5a23d65623744528b2bc62",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 91036462760299,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_drop",
@@ -541,8 +541,8 @@
       "sha256": "9d3ece086b561c17550a47d607096e06826a8367e22c1f464029dbf3d9de8a13",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 100068205129148,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_out",
@@ -589,8 +589,8 @@
       "sha256": "4507556a129fa7fe9d26b0eee85fe4243b4bf6b9dcea6b50c3cff9b06e996696",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 117076656058902,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_hit",
@@ -637,8 +637,8 @@
       "sha256": "550fd189930fba0f4eb591c0df1612ebfda2183d4db92b4559c79f6fed0b3af9",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 116128472916369,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_whoosh",
@@ -685,8 +685,8 @@
       "sha256": "d1498f3c6365637dcd0f9595a39d55c33cf613988a6a6851172b89961c6635b3",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 80971403058391,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_launch",
@@ -735,8 +735,8 @@
       "sha256": "532ff09a78977eefffcb33c83bd69635e9ecf8c9c58479366f8b00bc5112a5c4",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 116765805566170,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_switch",
@@ -783,8 +783,8 @@
       "sha256": "66015cdaf8f2dd8b0686f694c929f46714768cf0b6ecb75bc567c8c7cd701bc9",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 121493832887638,
+      "upload_status": "uploaded"
     },
     {
       "id": "gp_camera_flash",
@@ -831,8 +831,8 @@
       "sha256": "291dbd5e3fe154a0cc928073d1b9d1617901cc254d2029bb562f163c7c19cee7",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 104261552544774,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_entrance",
@@ -879,8 +879,8 @@
       "sha256": "a5e47b9b07bb63302e9ac93f434cc72532146631a41f816e9728254e16d99df4",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 120873232042145,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_vip_entrance",
@@ -927,8 +927,8 @@
       "sha256": "37b24ff01ab533568b1565c7b395dcab60256738ba3d96fe9d998d95827fd433",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 134004783316172,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_beat_kick",
@@ -975,8 +975,8 @@
       "sha256": "fb2f18dfcafd8442cd2917935b7d2f0f909c576e16f82ff1262a92ced800f692",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 99784812652776,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_beat_hihat",
@@ -1023,8 +1023,8 @@
       "sha256": "c149ff690ac2ba213347ba61bfcfc24dd76ff53e5af6149068a54f3c97bcdeca",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 88767712907908,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_beat_clap",
@@ -1071,8 +1071,8 @@
       "sha256": "d5e0d3234ecb98cbda1bb20f0bd8744652fc4ef3d1252cdd1dfa999e172975c0",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 137500928620466,
+      "upload_status": "uploaded"
     },
     {
       "id": "rs_podium",
@@ -1119,8 +1119,8 @@
       "sha256": "a25675c1ab831db9b6a05581d3118c0c5dfd585f95a0b552288af62b50457d04",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 135685106421815,
+      "upload_status": "uploaded"
     },
     {
       "id": "rs_winner",
@@ -1169,8 +1169,8 @@
       "sha256": "a21f3b8eab2d056d396f0bedca9a2da40e01112246ce9ee1f9c7cf76b9a6839d",
       "upload_priority": 2,
       "upload_priority_reason": "optional replacement for a working built-in sound (more distinct per event)",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 107107891099678,
+      "upload_status": "uploaded"
     },
     {
       "id": "rs_rank_up",
@@ -1217,8 +1217,8 @@
       "sha256": "5708ec24a9f7b1dcfab23caa60ab3f47f4ca693a4f44dc41bfb7a6956c140057",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 79406613537079,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_coins",
@@ -1265,8 +1265,8 @@
       "sha256": "97e6801f8e3a56d7a2a31a2831620b1c78f35ad9f2b51caa19eab788108b4f48",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 125360436051647,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_claim",
@@ -1315,8 +1315,8 @@
       "sha256": "6b9dcef55d3b733ce1745f7e0c2804775de66e36a9c7f54408d8ebbffe43c021",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 134137049562910,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_purchase",
@@ -1363,8 +1363,8 @@
       "sha256": "6790459708605ff98ddc7716458d42f6e7c645505b5eb2e3d62cda421231dae8",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 138016240777795,
+      "upload_status": "uploaded"
     },
     {
       "id": "rw_equip",
@@ -1413,8 +1413,8 @@
       "sha256": "60c58a83e355d396d8e6e1fe66c015cc2a330dab63a401a35723bd4683142ef6",
       "upload_priority": 1,
       "upload_priority_reason": "fills an event that is silent today",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 103223690715490,
+      "upload_status": "uploaded"
     },
     {
       "id": "mu_lobby_loop",
@@ -1465,8 +1465,8 @@
       "sha256": "b44853ca4d95b7ad7d24f858f9f152ca2284215d96d56608c84ef9e17da061f6",
       "upload_priority": 3,
       "upload_priority_reason": "fallback only: a verified Creator Store track already fills this",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 137007074201585,
+      "upload_status": "uploaded"
     },
     {
       "id": "mu_runway_loop",
@@ -1517,8 +1517,8 @@
       "sha256": "4383cdd71617cb3c32581e9682a2bafc01105ab1c2854a6c414698c8fed0cf3d",
       "upload_priority": 3,
       "upload_priority_reason": "fallback only: a verified Creator Store track already fills this",
-      "roblox_asset_id": null,
-      "upload_status": "pending_manual_upload"
+      "roblox_asset_id": 122286048293863,
+      "upload_status": "uploaded"
     }
   ],
   "store_audio": [

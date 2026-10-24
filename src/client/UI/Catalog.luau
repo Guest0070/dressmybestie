@@ -414,6 +414,20 @@ function Catalog.start()
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
 	})
+	-- Square cells that fill the row exactly (about 78 px each), so there's no empty strip on the
+	-- right whatever the panel width.
+	local gridLayout = grid:FindFirstChildOfClass("UIGridLayout") :: UIGridLayout
+	local function fitCells()
+		local width = grid.AbsoluteSize.X - grid.ScrollBarThickness - 2
+		if width <= 0 then
+			return
+		end
+		local columns = math.max(3, math.floor((width + 6) / (78 + 6)))
+		local cell = math.floor((width - (columns - 1) * 6) / columns)
+		gridLayout.CellSize = UDim2.fromOffset(cell, cell)
+	end
+	grid:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitCells)
+	fitCells()
 	moreButton = Kit.button({
 		Text = "More",
 		LayoutOrder = 1e6,
