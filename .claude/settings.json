@@ -1,0 +1,23 @@
+{
+  "enabledPlugins": {
+    "video-content-strategist@claude-code-skills": true,
+    "roast@claude-code-skills": true,
+    "statistical-analyst@claude-code-skills": true,
+    "demo-video@claude-code-skills": true,
+    "landing@claude-code-skills": true,
+    "caveman@claude-code-skills": true,
+    "karpathy-coder@claude-code-skills": true,
+    "zero-hallucination-coder@claude-code-skills": true,
+    "grill-me@claude-code-skills": true,
+    "security-guidance@claude-code-skills": true,
+    "marketing-skills@claude-code-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-code-skills": {
+      "source": {
+        "source": "github",
+        "repo": "alirezarezvani/claude-skills"
+      }
+    }
+  }
+}
