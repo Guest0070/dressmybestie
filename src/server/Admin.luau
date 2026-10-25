@@ -11,6 +11,7 @@ local PlayerData = require(script.Parent.Data.PlayerData)
 local Passes = require(script.Parent.Monetization.Passes)
 local Receipts = require(script.Parent.Monetization.Receipts)
 local RoundManager = require(script.Parent.Round.RoundManager)
+local RateLimit = require(script.Parent.RateLimit)
 
 local Admin = {}
 
@@ -55,6 +56,9 @@ local commands: { [string]: (Player, any) -> string } = {
 }
 
 local function onCommand(player: Player, command: any, arg: any)
+	if not RateLimit.allow(player, "AdminCommand", 0.25) then
+		return
+	end
 	if not Permissions.isAdmin(player) then
 		return -- silently ignore: not an admin
 	end

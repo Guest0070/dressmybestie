@@ -27,6 +27,7 @@ local CoverStar = require(script.CoverStar)
 local FreezeFrame = require(script.FreezeFrame)
 local RunwayDash = require(script.RunwayDash)
 local SpinSweep = require(script.SpinSweep)
+local RateLimit = require(script.Parent.Parent.RateLimit)
 
 local Minigames = {}
 
@@ -217,6 +218,9 @@ end
 
 -- Take a player to a game (from the Games panel).
 local function go(player: Player, gameId: any)
+	if not RateLimit.allow(player, "MinigameGo", 0.5) then
+		return
+	end
 	local g = if type(gameId) == "string" then games[gameId] else nil
 	if not g or not Arena.eligible(player) then
 		return

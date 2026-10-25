@@ -16,6 +16,7 @@ local Minigames = require(script.Lobby.Minigames)
 local PassGrants = require(script.Monetization.PassGrants)
 local Passes = require(script.Monetization.Passes)
 local Quests = require(script.Quests)
+local RateLimit = require(script.RateLimit)
 local PlayerData = require(script.Data.PlayerData)
 local Reactions = require(script.Round.Reactions)
 local Receipts = require(script.Monetization.Receipts)
@@ -27,6 +28,7 @@ local Voting = require(script.Voting.Voting)
 -- it doesn't fall apart. Must run before Map.ensure (it adds the map markers).
 BlendImport.autoSetup()
 Map.ensure()
+RateLimit.start()
 Passes.start()
 Analytics.start() -- before PlayerData so it sees every Loaded event
 PassGrants.start() -- same: Starter Pack coins for players already in the server

@@ -11,6 +11,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Analytics = require(script.Parent.Analytics)
 local PlayerData = require(script.Parent.Data.PlayerData)
+local RateLimit = require(script.Parent.RateLimit)
 
 local Quests = {}
 
@@ -72,6 +73,9 @@ local function claim(player: Player, kind: any, id: any)
 		return
 	end
 	local q = quest :: Config.Quest
+	if not RateLimit.allow(player, `ClaimQuest:{q.id}`, 0.5) then
+		return
+	end
 	local paid = false
 	PlayerData.update(player, function(data)
 		if kind == "daily" then

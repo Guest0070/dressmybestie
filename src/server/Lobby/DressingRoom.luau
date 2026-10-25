@@ -19,6 +19,7 @@ local PlayerData = require(script.Parent.Parent.Data.PlayerData)
 local Appearance = require(script.Parent.Appearance)
 local Badges = require(script.Parent.Parent.Badges)
 local Quests = require(script.Parent.Parent.Quests)
+local RateLimit = require(script.Parent.Parent.RateLimit)
 
 local DressingRoom = {}
 
@@ -105,6 +106,9 @@ function DressingRoom.start()
 	end)
 	-- Wardrobe.
 	Remotes.Events.SaveOutfit.OnServerEvent:Connect(function(player, slot: any)
+		if not RateLimit.allow(player, "SaveOutfit", 0.5) then
+			return
+		end
 		local look = current[player]
 		if
 			type(slot) ~= "number"
@@ -126,6 +130,9 @@ function DressingRoom.start()
 		Remotes.Events.Toast:FireClient(player, `Saved to Wardrobe slot {slot}!`)
 	end)
 	Remotes.Events.WearOutfit.OnServerEvent:Connect(function(player, slot: any)
+		if not RateLimit.allow(player, "WearOutfit", 0.5) then
+			return
+		end
 		local data = PlayerData.get(player)
 		local saved = if data and type(slot) == "number" then data.savedOutfits[tostring(slot)] else nil
 		if not saved or RoundManager.isInRound(player) then
@@ -138,6 +145,9 @@ function DressingRoom.start()
 		end
 	end)
 	Remotes.Events.DeleteOutfit.OnServerEvent:Connect(function(player, slot: any)
+		if not RateLimit.allow(player, "DeleteOutfit", 0.5) then
+			return
+		end
 		if type(slot) == "number" then
 			PlayerData.update(player, function(data)
 				data.savedOutfits[tostring(slot)] = nil
@@ -145,6 +155,9 @@ function DressingRoom.start()
 		end
 	end)
 	Remotes.Events.ResetOwnLook.OnServerEvent:Connect(function(player)
+		if not RateLimit.allow(player, "ResetOwnLook", 1) then
+			return
+		end
 		if RoundManager.isInRound(player) then
 			return
 		end
