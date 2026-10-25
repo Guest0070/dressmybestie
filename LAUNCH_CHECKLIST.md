@@ -31,6 +31,15 @@ Rojo syncs it into Studio, then **File > Save to Roblox**.
       items from other creators, and those sales are where your commission comes from.
 - [ ] Save.
 
+## 2b. Lighting (Studio: Explorer > Lighting, then the Properties window)
+
+- [ ] **LightingStyle = Realistic** and **PrioritizeLightingQuality = ON**. (These replaced the old
+      "Technology" setting; scripts can't change them, so set them here.)
+- [ ] Look at the children of **Lighting**. If there's a **ColorGradingEffect** set to **Retro**, delete
+      it: it fades colours and is the likely cause of the washed-out booths.
+- [ ] If neon glows too hard, select the **BloomEffect** and raise **Threshold** to about 1.
+- [ ] **File > Save to Roblox.**
+
 ## 3. Game passes (Creator Dashboard > your game > Monetization > Passes)
 
 For each one: **Create a Pass**, upload any square image, name it, then set it **On Sale** at the
@@ -143,9 +152,18 @@ Use Studio's **Test** tab.
 
 ## 9. Store page and publishing (Creator Dashboard)
 
-- [ ] **Maturity & Compliance questionnaire** (required before the game can be public).
-- [ ] **Icon** (512x512) and **thumbnails** (1920x1080; screenshots of the runway, the Play Zone at
-      dusk and the Dressing Room work well. The in-game **Photo** button helps).
+- [ ] **Maturity & Compliance questionnaire** (required before the game can be public). Building
+      outfits isn't "free-form creation"; avoid romance wording, it pushes the rating to 17+.
+- [ ] **Thumbnails: at least one custom one is required.** Since 19 Oct 2026 a game with only the
+      default thumbnail gets no Home page recommendations at all. Upload 2-5 at 1920x1080 (16:9,
+      under 3 MB): Configurations > Places > start place > Thumbnails. Show real gameplay: styling in
+      the booth, the runway walk, the star reveal. With 2+ active, **Thumbnail Personalization**
+      tests them for you. Studio freecam for clean shots: Shift + P in a solo playtest.
+- [ ] **Icon** (512x512, square). Same look and colours as the thumbnails.
+- [ ] **Who can find the game.** New games are shown only to age-checked players 16+ by default.
+      To reach all ages you need: account verification, 2-step verification, and either 2 months of
+      Premium or a 1,000 Robux fee (refunded after 60 days if the game keeps 25 engaged players).
+      Details: create.roblox.com/docs/production/publishing/publish-games-and-places
 - [ ] **Description**: what the game is in one line, then the features (style your bestie blind,
       walk the runway, minigames, Wardrobe, weekend double coins).
 - [ ] **Genre** and **max players per server** (8-12 works well for pairing).
