@@ -17,7 +17,7 @@ local recent: { [Player]: { number } } = {}
 
 local function allowed(player: Player): boolean
 	local now = os.clock()
-	local list = recent[player] or {}
+	local list: { number } = recent[player] or {}
 	local kept = {}
 	for _, t in list do
 		if now - t < 1 then

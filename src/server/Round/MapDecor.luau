@@ -115,13 +115,13 @@ local CHAMPAGNE = Color3.fromRGB(214, 190, 150)
 local LED_WARM = Color3.fromRGB(255, 214, 160)
 local FOLIAGE = Color3.fromRGB(60, 140, 80)
 
-local function material(p: BasePart, mat: Enum.Material): BasePart
+local function material<T>(p: T & BasePart, mat: Enum.Material): T
 	p.Material = mat
 	return p
 end
 
 -- Decorative part players walk over (inlays, trims, LED lines).
-local function flat(p: BasePart): BasePart
+local function flat<T>(p: T & BasePart): T
 	p.CanCollide = false
 	p.CanQuery = false
 	return p
@@ -327,18 +327,23 @@ function MapDecor.buildLobby(lobby: Instance, hasOwnFloor: boolean)
 		)
 	end
 	-- Medallion around the fountain.
-	for _, spec in { { 27, CHAMPAGNE, 0.04 }, { 26, MARBLE_BLACK, 0.05 } } do
+	type Disc = { size: number, color: Color3, y: number, mat: Enum.Material }
+	local discs: { Disc } = {
+		{ size = 27, color = CHAMPAGNE, y = 0.04, mat = Enum.Material.Metal },
+		{ size = 26, color = MARBLE_BLACK, y = 0.05, mat = Enum.Material.Marble },
+	}
+	for _, spec in discs do
 		local disc = flat(
 			part(
 				decor,
 				"Medallion",
-				Vector3.new(0.1, spec[1], spec[1]),
-				CFrame.new(0, spec[3], 8) * CFrame.Angles(0, 0, math.pi / 2),
-				spec[2]
+				Vector3.new(0.1, spec.size, spec.size),
+				CFrame.new(0, spec.y, 8) * CFrame.Angles(0, 0, math.pi / 2),
+				spec.color
 			)
 		)
 		disc.Shape = Enum.PartType.Cylinder
-		disc.Material = if spec[2] == CHAMPAGNE then Enum.Material.Metal else Enum.Material.Marble
+		disc.Material = spec.mat
 	end
 	fountain(decor, Vector3.new(0, 0, 8))
 

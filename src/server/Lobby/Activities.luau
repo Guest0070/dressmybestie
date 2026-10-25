@@ -309,7 +309,7 @@ local function buildObby(parent: Instance)
 					obbyStartedAt[player] = nil
 					obbyCheckpoint[player] = nil
 				elseif root and root:IsA("BasePart") and root.Position.Y < 3.2 and root.Position.X < -68 then
-					character:PivotTo(obbyCheckpoint[player] or OBBY_START_SPOT)
+					(character :: Model):PivotTo(obbyCheckpoint[player] or OBBY_START_SPOT)
 					toast(
 						player,
 						if obbyCheckpoint[player]

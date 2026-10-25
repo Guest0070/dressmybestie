@@ -410,16 +410,18 @@ function Arena.reward(player: Player, gameName: string)
 	winsThisServer[player.UserId] = row
 	Arena.ChampionsChanged:Fire()
 
-	local streak = streaks[player]
-	if streak and streak.game == gameName then
-		streak.count += 1
+	local previous = streaks[player]
+	local streak: { game: string, count: number }
+	if previous and previous.game == gameName then
+		previous.count += 1
+		streak = previous
 	else
 		streak = { game = gameName, count = 1 }
 		streaks[player] = streak
 	end
 	local streakText = if streak.count >= 2 then ` {streak.count} in a row!` else ""
 
-	local times = rewardTimes[player] or {}
+	local times: { number } = rewardTimes[player] or {}
 	local cutoff = os.clock() - 3600
 	local recent = {}
 	for _, t in times do

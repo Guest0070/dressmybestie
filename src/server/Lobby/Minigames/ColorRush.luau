@@ -115,16 +115,15 @@ function ColorRush.build(parent: Instance, arcade: boolean?): Arena.Game
 	-- Frame: four pillars, a truss and a four-sided screen hanging over the middle. (In the arcade
 	-- the screen hangs from the hall's ceiling instead.)
 	local pillarHeight = if flat then 19.4 else top + 16
-	for _, corner in
-		if flat
-			then {}
-			else {
-				Vector3.new(1, 0, 1),
-				Vector3.new(-1, 0, 1),
-				Vector3.new(1, 0, -1),
-				Vector3.new(-1, 0, -1),
-			}
-	do
+	local corners: { Vector3 } = if flat
+		then {}
+		else {
+			Vector3.new(1, 0, 1),
+			Vector3.new(-1, 0, 1),
+			Vector3.new(1, 0, -1),
+			Vector3.new(-1, 0, -1),
+		}
+	for _, corner in corners do
 		local base = center + corner * (half + 2.5)
 		Arena.pillar(model, base, pillarHeight)
 		-- Spotlight on each pillar, aimed at the middle of the field.
@@ -143,17 +142,16 @@ function ColorRush.build(parent: Instance, arcade: boolean?): Arena.Game
 		spot.Color = C.Warm
 		spot.Parent = lamp
 	end
-	for _, spec in
-		if flat
-			then {}
-			else {
-				{ Vector3.new(half * 2 + 7, 1.4, 1.4), Vector3.new(0, pillarHeight, half + 2.5) },
-				{ Vector3.new(half * 2 + 7, 1.4, 1.4), Vector3.new(0, pillarHeight, -half - 2.5) },
-				{ Vector3.new(1.4, 1.4, half * 2 + 7), Vector3.new(half + 2.5, pillarHeight, 0) },
-				{ Vector3.new(1.4, 1.4, half * 2 + 7), Vector3.new(-half - 2.5, pillarHeight, 0) },
-				{ Vector3.new(half * 2 + 5, 1, 1), Vector3.new(0, pillarHeight, 0) },
-			}
-	do
+	local trussBeams: { { Vector3 } } = if flat
+		then {}
+		else {
+			{ Vector3.new(half * 2 + 7, 1.4, 1.4), Vector3.new(0, pillarHeight, half + 2.5) },
+			{ Vector3.new(half * 2 + 7, 1.4, 1.4), Vector3.new(0, pillarHeight, -half - 2.5) },
+			{ Vector3.new(1.4, 1.4, half * 2 + 7), Vector3.new(half + 2.5, pillarHeight, 0) },
+			{ Vector3.new(1.4, 1.4, half * 2 + 7), Vector3.new(-half - 2.5, pillarHeight, 0) },
+			{ Vector3.new(half * 2 + 5, 1, 1), Vector3.new(0, pillarHeight, 0) },
+		}
+	for _, spec in trussBeams do
 		Arena.part(model, "Truss", spec[1], CFrame.new(center + spec[2]), C.Black, Enum.Material.Marble)
 	end
 	local screenY = if flat then 13 else pillarHeight - 5

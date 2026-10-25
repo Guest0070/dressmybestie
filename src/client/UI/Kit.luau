@@ -251,9 +251,13 @@ end
 
 -- Roblox's chat window (top-left) draws over our big panels. Each screen that needs the space hides
 -- it under its own reason; chat comes back when no reason is left.
-local chatHiddenBy: { [string]: boolean } = {}
+local chatHiddenBy: { [string]: true } = {}
 function Kit.hideChat(reason: string, hidden: boolean)
-	chatHiddenBy[reason] = if hidden then true else nil
+	if hidden then
+		chatHiddenBy[reason] = true
+	else
+		chatHiddenBy[reason] = nil
+	end
 	pcall(StarterGui.SetCoreGuiEnabled, StarterGui, Enum.CoreGuiType.Chat, next(chatHiddenBy) == nil)
 end
 

@@ -566,7 +566,7 @@ function RunwayDash.build(parent: Instance): Arena.Game
 			task.spawn(function()
 				pcall(function()
 					(store :: OrderedDataStore):UpdateAsync(tostring(player.UserId), function(old)
-						return if type(old) == "number" and old <= ms then nil else ms
+						return (if type(old) == "number" and old <= ms then nil else ms) :: any -- nil keeps the old best
 					end)
 				end)
 				refreshGlobalBoard()

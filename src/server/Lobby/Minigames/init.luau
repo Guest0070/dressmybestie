@@ -250,7 +250,10 @@ function Minigames.start()
 	games.ColorRush = ColorRush.build(folder, arcade)
 	games.FreezeFrame = FreezeFrame.build(folder, arcade)
 	games.SpinSweep = SpinSweep.build(folder, arcade)
-	games.CoverStar = if arcade then CoverStar.build(folder) else nil
+	local coverStar = if arcade then CoverStar.build(folder) else nil
+	if coverStar then
+		games.CoverStar = coverStar
+	end
 	games.RunwayDash = RunwayDash.build(folder)
 	-- The Sky Obby lives in Lobby/Activities; listed here so the Games panel can take you there.
 	games.Obby = {
