@@ -268,9 +268,9 @@ The server re-checks every command, so a hacked client can't use it.
 3. **Friends "queue together".** There's no party/queue screen (that would need our own friend system, which the brief says to avoid). Instead, friends in the same server are paired automatically when possible.
 4. **Shoes are bundles** in the catalog (left and right shoe), so they're picked and sold as one bundle.
 5. **Walks.** During your runway walk the server swaps the Animate script's walk/idle animations, then puts the originals back. Walk IDs in `Config.Cosmetics` are Roblox animation-pack IDs.
+6. **Not built yet (post-launch in the brief):** rewarded video ads.
 7. **Stars instead of hearts.** The brief asked for hearts only; voting now uses 1-5 stars per look (requested later). `Config.VotingMode = "Hearts"` switches back. Either way nobody sees who voted what and there's no last place.
 8. **Lighting.Technology is deprecated.** Roblox replaced it with `LightingStyle` + `PrioritizeLightingQuality`, which scripts can't set; LAUNCH_CHECKLIST step 2b sets them in Studio.
-6. **Not built yet (post-launch in the brief):** rewarded video ads.
 
 ## Monetization rules (kept)
 
