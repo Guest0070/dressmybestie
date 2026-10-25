@@ -7,3 +7,6 @@
 *.rbxlx.lock
 sourcemap.json
 __pycache__/
+
+# Blender export bundle (source FBX/.blend; the game imports assets/models/*.glb)
+/Style_My_Bestie_Roblox_Export/
