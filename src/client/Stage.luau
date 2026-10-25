@@ -330,7 +330,7 @@ end
 local function flashLoop()
 	while true do
 		task.wait(0.12 + math.random() * 0.25)
-		if State.round.phase ~= "Runway" or not State.round.runwayWearer or not Audio.flashesOn then
+		if State.round.phase ~= "Runway" or not State.round.runwayWearer or not Audio.canFlash() then
 			continue
 		end
 		local startPart = mapPart({ "Runway", "Start" })

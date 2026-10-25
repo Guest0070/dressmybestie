@@ -8,6 +8,7 @@
 --   * Settings (music, sound effects, flashing effects) are saved to the player's profile, so
 --     they follow them to every server.
 
+local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
@@ -48,6 +49,28 @@ Audio.sfxOn = true
 Audio.flashesOn = true
 -- Fires when settings change (including when the saved ones first arrive).
 Audio.Changed = Signal.new() :: Signal.Signal<>
+
+-- Photosensitivity guard shared by every flash in the game (runway paparazzi, minigame camera
+-- flashes, screen flashes). WCAG 2.3.1: no more than 3 flashes in any one second, so all sources
+-- together get at most MAX_FLASHES_PER_SECOND. Off entirely when the player switched flashing off in
+-- Settings or turned on Roblox's own Reduced Motion setting.
+local MAX_FLASHES_PER_SECOND = 3
+local recentFlashes: { number } = {}
+
+function Audio.canFlash(): boolean
+	if not Audio.flashesOn or GuiService.ReducedMotionEnabled then
+		return false
+	end
+	local now = os.clock()
+	while recentFlashes[1] and now - recentFlashes[1] >= 1 do
+		table.remove(recentFlashes, 1)
+	end
+	if #recentFlashes >= MAX_FLASHES_PER_SECOND then
+		return false
+	end
+	table.insert(recentFlashes, now)
+	return true
+end
 
 local saveQueued = false
 local function save()
