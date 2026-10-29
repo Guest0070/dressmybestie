@@ -328,7 +328,7 @@ local function cosmeticCard(cosmetic: Config.Cosmetic, data: Types.PublicData)
 		}))
 	elseif cosmetic.tip then
 		card(with({
-			description = "Thank-you for tipping the game",
+			description = "Thank you for supporting the game!",
 			buttonText = "TIP",
 			onClick = function()
 				ShopUI.open("Passes")

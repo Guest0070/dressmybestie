@@ -264,7 +264,9 @@ local function showRewards(summary: Types.RewardSummary)
 		table.insert(lines, `Bonus: {table.concat(summary.bonuses, ", ")}`)
 	end
 	if summary.heartsForYourStyling > 0 then
-		table.insert(lines, `Your styling got {summary.heartsForYourStyling} heart(s)!`)
+		local unit = if Config.VotingMode == "Stars" then "star" else "heart"
+		local count = summary.heartsForYourStyling
+		table.insert(lines, `Your styling got {count} {unit}{if count == 1 then "" else "s"}!`)
 	end
 	if summary.rankUp then
 		table.insert(lines, `RANK UP! You're now a {Config.RankNames[summary.rankUp] or "legend"}!`)

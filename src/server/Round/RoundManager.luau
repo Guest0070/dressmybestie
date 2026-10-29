@@ -429,6 +429,7 @@ local function onPlayerRemoving(player: Player)
 			p.mannequin:Destroy()
 		end
 		Voting.removeCandidate(p.userId)
+		Voting.removeRatable(p.userId)
 		-- Whoever was styling them now has no one to style.
 		for stylist, target in assignments do
 			if target == player and stylist ~= player then

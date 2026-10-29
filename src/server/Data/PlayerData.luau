@@ -215,16 +215,6 @@ function PlayerData.update(player: Player, mutator: (PlayerData) -> ()): boolean
 	return true
 end
 
-function PlayerData.spendCoins(player: Player, amount: number): boolean
-	local data = PlayerData.get(player)
-	if not data or amount < 0 or data.coins < amount then
-		return false
-	end
-	return PlayerData.update(player, function(d)
-		d.coins -= amount
-	end)
-end
-
 function PlayerData.hasPurchase(player: Player, purchaseId: string): boolean
 	local data = PlayerData.get(player)
 	return data ~= nil and table.find(data.processedPurchases, purchaseId) ~= nil

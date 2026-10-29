@@ -68,7 +68,10 @@ local function refresh()
 	local visible = canRate()
 	panel.Visible = visible
 	if visible and wearer then
-		titleLabel.Text = `Rate {State.nameOf(wearer)}'s look!`
+		local chaos = State.round.chaos
+		titleLabel.Text = if chaos and chaos.reverseVoting
+			then `How gloriously TERRIBLE is {State.nameOf(wearer)}'s look?`
+			else `Rate {State.nameOf(wearer)}'s look!`
 	end
 end
 

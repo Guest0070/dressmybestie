@@ -6,6 +6,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Types = require(ReplicatedStorage.Shared.Types)
 local State = require(script.Parent.Parent.State)
 local Kit = require(script.Parent.Kit)
@@ -147,7 +148,9 @@ local function refresh()
 	local podium: { Types.PodiumEntry } = round.podium or {}
 	if #podium == 0 then
 		Kit.label({
-			Text = "No hearts this round. Everyone's a star!",
+			Text = if Config.VotingMode == "Stars"
+				then "No ratings this round. Everyone's a star!"
+				else "No hearts this round. Everyone's a star!",
 			Size = UDim2.new(1, 0, 0, 36),
 			Parent = podiumList,
 		})

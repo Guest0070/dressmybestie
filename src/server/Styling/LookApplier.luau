@@ -76,10 +76,6 @@ function LookApplier.saveOriginal(player: Player): HumanoidDescription?
 	return nil
 end
 
-function LookApplier.getOriginal(player: Player): HumanoidDescription?
-	return originals[player]
-end
-
 -- Put the player's own outfit back. Safe to call if they respawned or left.
 function LookApplier.restore(player: Player)
 	local original = originals[player]
