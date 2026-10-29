@@ -1,12 +1,12 @@
 # Style My Bestie
 
-A round-based Roblox fashion game. Players pair up, style each other's mannequin without the partner seeing it, walk the runway, then vote with hearts.
+A round-based Roblox fashion game. Players pair up, style each other's mannequin without the partner seeing it, walk the runway, then rate the looks.
 
 ## What's built
 
 | System | Files | What it does |
 |---|---|---|
-| Config | `src/shared/Config.luau` | Every number and every list: timings, limits, rewards, ranks, 35 themes, weekly featured theme, chaos modifiers, shop items, pass/product IDs |
+| Config | `src/shared/Config.luau` | Every number and every list: timings, limits, rewards, ranks, 55 themes, weekly featured theme, chaos modifiers, shop items, pass/product IDs |
 | Remotes | `src/shared/Remotes.luau` | All RemoteEvents/Functions, created by the server. A typo in a remote name errors loudly |
 | Data | `src/server/Data/PlayerData.luau` | ProfileStore wrapper (session-locked): coins, XP, rank, unlocks, daily reward, purchase history |
 | Round | `src/server/Round/RoundManager.luau` | Lobby → Pairing → Theme → Styling → Runway → Voting → Results. Handles players leaving or respawning at any point |
@@ -25,8 +25,8 @@ The server makes every decision. Clients only send requests, and the server chec
 ## Everything in the game
 
 **The round:** lobby → pairing (friends paired together, trio for odd numbers) → theme reveal → up to 4 minutes of
-styling in a private booth (everyone taps READY to finish early) → runway (follow camera, camera flashes, name tags, entrance effects) → hearts-only
-voting → results (podium reveal 3rd→1st, confetti, 1st/2nd/3rd tags, "Buy this look"). Chaos rounds: Worst
+styling in a private booth (everyone taps READY to finish early) → runway (follow camera, camera flashes, name tags, entrance effects, 1-5 star ratings while each look walks; hearts-only with `Config.VotingMode = "Hearts"`)
+→ results (podium reveal 3rd→1st, confetti, 1st/2nd/3rd tags, "Buy this look"). Chaos rounds: Worst
 Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme. AFK players sit out.
 
 **Lobby (things to do between rounds):**
