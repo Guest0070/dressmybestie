@@ -97,11 +97,11 @@ Config.Events = {
 
 -- Badges (Creator Dashboard -> your game -> Badges). Paste each badge's ID; 0 = not awarded yet.
 Config.Badges = {
-	Welcome = 0, -- joined the game
-	FirstRound = 0, -- finished a round
-	FirstPodium = 0, -- styled a look that reached the podium
-	MinigameWin = 0, -- won a lobby minigame
-	DashGold = 0, -- Runway Dash under the gold time
+	Welcome = 1707655202994649, -- joined the game
+	FirstRound = 2731463029588734, -- finished a round
+	FirstPodium = 1727205873498786, -- styled a look that reached the podium
+	MinigameWin = 1533803695889331, -- won a lobby minigame
+	DashGold = 1148876402511958, -- Runway Dash under the gold time
 	Rank5 = 0, -- reached style rank 5
 	Wardrobe = 0, -- saved an outfit
 } :: { [string]: number }
@@ -341,10 +341,10 @@ Config.ChaosModifiers = {
 -- Monetization. id = 0 means "not created yet in Creator Dashboard"; those buttons hide themselves.
 -- price is for display only; Roblox always charges the price set on the dashboard.
 Config.GamePasses = {
-	VIP = { id = 0, price = 399, displayName = "VIP" },
-	PosePack = { id = 0, price = 149, displayName = "Pose Pack" },
-	DoubleCoins = { id = 0, price = 299, displayName = "2x Coins" },
-	StarterPack = { id = 0, price = 99, displayName = "Starter Pack" },
+	VIP = { id = 2071333007, price = 399, displayName = "VIP" },
+	PosePack = { id = 2071069040, price = 149, displayName = "Pose Pack" },
+	DoubleCoins = { id = 2071200986, price = 299, displayName = "2x Coins" },
+	StarterPack = { id = 2069996506, price = 99, displayName = "Starter Pack" },
 } :: { [string]: { id: number, price: number, displayName: string } }
 
 -- What the passes above give (shown in the shop exactly like this).
@@ -374,9 +374,9 @@ export type DevProduct = {
 }
 Config.DevProducts = {
 	-- Coin packs. Bigger packs give more coins per Robux (shown on the card).
-	Coins_Small = { id = 0, price = 49, displayName = "Pile of Coins", kind = "Coins", coins = 500 },
+	Coins_Small = { id = 3728545169, price = 49, displayName = "Pile of Coins", kind = "Coins", coins = 500 },
 	Coins_Medium = {
-		id = 0,
+		id = 3728545276,
 		price = 99,
 		displayName = "Bag of Coins",
 		kind = "Coins",
@@ -384,7 +384,7 @@ Config.DevProducts = {
 		bonus = "+20% BONUS",
 	},
 	Coins_Large = {
-		id = 0,
+		id = 3728545391,
 		price = 199,
 		displayName = "Chest of Coins",
 		kind = "Coins",
@@ -392,7 +392,7 @@ Config.DevProducts = {
 		bonus = "+40% BONUS",
 	},
 	Coins_Huge = {
-		id = 0,
+		id = 3728545416,
 		price = 449,
 		displayName = "Vault of Coins",
 		kind = "Coins",
@@ -401,52 +401,64 @@ Config.DevProducts = {
 	},
 	-- Tips: nothing to win, just a thank-you title.
 	Tip_Small = {
-		id = 0,
+		id = 3728545450,
 		price = 25,
 		displayName = "Small Tip",
 		kind = "Tip",
 		cosmeticId = "TitleSupporter",
 	},
 	Tip_Big = {
-		id = 0,
+		id = 3728545651,
 		price = 100,
 		displayName = "Big Tip",
 		kind = "Tip",
 		cosmeticId = "TitleSupporter",
 	},
-	MomentHearts = { id = 0, price = 49, displayName = "Heart Rain", kind = "Moment", moment = "Hearts" },
-	MomentSnow = { id = 0, price = 49, displayName = "Snow Day", kind = "Moment", moment = "Snow" },
+	MomentHearts = {
+		id = 3728545700,
+		price = 49,
+		displayName = "Heart Rain",
+		kind = "Moment",
+		moment = "Hearts",
+	},
+	MomentSnow = { id = 3728545739, price = 49, displayName = "Snow Day", kind = "Moment", moment = "Snow" },
 	MomentCoinShower = {
-		id = 0,
+		id = 3728545779,
 		price = 99,
 		displayName = "Coin Shower",
 		kind = "Moment",
 		moment = "CoinShower",
 	},
 	MomentConfetti = {
-		id = 0,
+		id = 3728546004,
 		price = 49,
 		displayName = "Confetti Rain",
 		kind = "Moment",
 		moment = "Confetti",
 	},
-	MomentDisco = { id = 0, price = 49, displayName = "Disco Mode", kind = "Moment", moment = "Disco" },
+	MomentDisco = {
+		id = 3728546050,
+		price = 49,
+		displayName = "Disco Mode",
+		kind = "Moment",
+		moment = "Disco",
+	},
 	EntranceSparkles = {
-		id = 0,
+		id = 3728546086,
 		price = 99,
 		displayName = "Sparkles Entrance",
 		kind = "Unlock",
 		cosmeticId = "Sparkles",
 	},
 	EntranceConfetti = {
-		id = 0,
+		id = 3728546114,
 		price = 99,
 		displayName = "Confetti Entrance",
 		kind = "Unlock",
 		cosmeticId = "Confetti",
 	},
 	EntranceSpotlight = {
-		id = 0,
+		id = 3728546159,
 		price = 99,
 		displayName = "Spotlight Entrance",
 		kind = "Unlock",
@@ -477,23 +489,23 @@ local UNLOCK_PRODUCTS: { [string]: { any } } = {
 }
 -- Paste developer product IDs here after creating them in Creator Dashboard (0 = shows "Soon").
 Config.ProductIds = {
-	Walk_Stylish = 0,
-	Walk_Superhero = 0,
-	Walk_Ninja = 0,
-	Walk_Levitation = 0,
-	Walk_Toy = 0,
-	Walk_Robot = 0,
-	Walk_Elder = 0,
-	Walk_Zombie = 0,
-	Pose_Groove = 0,
-	Pose_Spin = 0,
-	Pose_Showstopper = 0,
-	Aura_Angel = 0,
-	Aura_Hearts = 0,
-	Aura_Galaxy = 0,
-	Aura_Flame = 0,
-	Aura_Electric = 0,
-	Aura_Bubbles = 0,
+	Walk_Stylish = 3728546428,
+	Walk_Superhero = 3728546471,
+	Walk_Ninja = 3728546495,
+	Walk_Levitation = 3728546526,
+	Walk_Toy = 3728546555,
+	Walk_Robot = 3728546588,
+	Walk_Elder = 3728546629,
+	Walk_Zombie = 3728546663,
+	Pose_Groove = 3728546924,
+	Pose_Spin = 3728546955,
+	Pose_Showstopper = 3728546986,
+	Aura_Angel = 3728547015,
+	Aura_Hearts = 3728547045,
+	Aura_Galaxy = 3728547080,
+	Aura_Flame = 3728547119,
+	Aura_Electric = 3728547153,
+	Aura_Bubbles = 3728547185,
 } :: { [string]: number }
 for key, spec in UNLOCK_PRODUCTS do
 	Config.DevProducts[key] = {
