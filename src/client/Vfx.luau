@@ -266,12 +266,13 @@ function Vfx.highlight(adornee: Instance, color: Color3, seconds: number?, shimm
 	local tween: Tween? = nil
 	if shimmer and not Vfx.reducedMotion() then
 		-- Slow breathing fill (2 s period): a shimmer, never a flash.
-		tween = TweenService:Create(
+		local breathing = TweenService:Create(
 			h,
 			TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
 			{ FillTransparency = 0.6 }
 		)
-		tween:Play()
+		breathing:Play()
+		tween = breathing
 	end
 	local done = false
 	local function stop()

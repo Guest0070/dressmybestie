@@ -161,7 +161,8 @@ local function partnerReveal(round: Types.RoundState)
 	local token = shuffleToken
 	local final = bannerLabel.Text
 	local pool = {}
-	for _, name in round.names or {} do
+	local names: { [string]: string } = round.names or {}
+	for _, name in names do
 		table.insert(pool, name)
 	end
 	local function land()
