@@ -23,6 +23,9 @@ local State = require(script.State)
 local VotingUI = require(script.UI.VotingUI)
 local WardrobeUI = require(script.UI.WardrobeUI)
 
+print(
+	`[StyleMyBestie] Client started - BUILD {require(game:GetService("ReplicatedStorage").Shared.Config).Build}`
+)
 State.start()
 Audio.start()
 HUD.start()

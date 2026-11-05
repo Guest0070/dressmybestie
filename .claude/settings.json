@@ -1,0 +1,15 @@
+{
+  "enabledPlugins": {
+    "video-content-strategist@claude-code-skills": true,
+    "statistical-analyst@claude-code-skills": true,
+    "caveman@claude-code-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-code-skills": {
+      "source": {
+        "source": "github",
+        "repo": "alirezarezvani/claude-skills"
+      }
+    }
+  }
+}

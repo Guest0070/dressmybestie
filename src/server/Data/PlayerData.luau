@@ -16,6 +16,7 @@ local Permissions = require(script.Parent.Permissions)
 
 -- ProfileStore ships without strict types we can rely on, so treat it as `any`.
 local ProfileStore = require(ServerScriptService.ServerPackages.ProfileStore) :: any
+local RateLimit = require(script.Parent.Parent.RateLimit)
 
 type PlayerData = Types.PlayerData
 type PublicData = Types.PublicData
@@ -214,16 +215,6 @@ function PlayerData.update(player: Player, mutator: (PlayerData) -> ()): boolean
 	return true
 end
 
-function PlayerData.spendCoins(player: Player, amount: number): boolean
-	local data = PlayerData.get(player)
-	if not data or amount < 0 or data.coins < amount then
-		return false
-	end
-	return PlayerData.update(player, function(d)
-		d.coins -= amount
-	end)
-end
-
 function PlayerData.hasPurchase(player: Player, purchaseId: string): boolean
 	local data = PlayerData.get(player)
 	return data ~= nil and table.find(data.processedPurchases, purchaseId) ~= nil
@@ -280,6 +271,9 @@ function PlayerData.resetToTemplate(player: Player): boolean
 end
 
 local function claimDaily(player: Player)
+	if not RateLimit.allow(player, "ClaimDaily", 1) then
+		return
+	end
 	local current = PlayerData.get(player)
 	if not current or current.lastDailyRewardDay >= currentDay() then
 		return -- not loaded, or already claimed; silently ignore spam
@@ -352,6 +346,9 @@ function PlayerData.start()
 	Remotes.Events.ClaimDailyReward.OnServerEvent:Connect(claimDaily)
 	-- Settings follow the player to every server. Only the three known on/off switches are kept.
 	Remotes.Events.SaveSettings.OnServerEvent:Connect(function(player, settings: any)
+		if not RateLimit.allow(player, "SaveSettings", 0.5) then
+			return
+		end
 		if type(settings) ~= "table" then
 			return
 		end

@@ -1,19 +1,19 @@
 # Style My Bestie
 
-A round-based Roblox fashion game. Players pair up, style each other's mannequin without the partner seeing it, walk the runway, then vote with hearts.
+A round-based Roblox fashion game. Players pair up, style each other's mannequin without the partner seeing it, walk the runway, then rate the looks.
 
 ## What's built
 
 | System | Files | What it does |
 |---|---|---|
-| Config | `src/shared/Config.luau` | Every number and every list: timings, limits, rewards, ranks, 35 themes, weekly featured theme, chaos modifiers, shop items, pass/product IDs |
+| Config | `src/shared/Config.luau` | Every number and every list: timings, limits, rewards, ranks, 55 themes, weekly featured theme, chaos modifiers, shop items, pass/product IDs |
 | Remotes | `src/shared/Remotes.luau` | All RemoteEvents/Functions, created by the server. A typo in a remote name errors loudly |
 | Data | `src/server/Data/PlayerData.luau` | ProfileStore wrapper (session-locked): coins, XP, rank, unlocks, daily reward, purchase history |
 | Round | `src/server/Round/RoundManager.luau` | Lobby → Pairing → Theme → Styling → Runway → Voting → Results. Handles players leaving or respawning at any point |
 | Pairing | `src/server/Round/Pairing.luau` | Pairs, trio for an odd count, friends paired together, swap logic for the chaos round |
 | Map | `src/server/Round/Map.luau` | Finds the map spots (or builds placeholders), plus private booths |
 | Styling | `src/server/Styling/*` | Checks every catalog ID on the server (cached), builds HumanoidDescriptions, restores outfits |
-| Voting | `src/server/Voting/Voting.luau` | Hearts only, up to 3, no voting for yourself or your own styling, never reveals who voted |
+| Voting | `src/server/Voting/Voting.luau` | 1-5 stars per look while it walks (or hearts, up to 3, with `Config.VotingMode = "Hearts"`); no voting for yourself or your own styling, never reveals who voted |
 | Rewards | `src/server/Round/Rewards.luau` | Fixed coins and XP; hearts credit the stylist, podium bonus |
 | Shop | `src/server/Monetization/*` | Game passes (cached), idempotent ProcessReceipt, coin shop, equip, lobby moments |
 | Analytics | `src/server/Analytics.luau` | Funnel: joined → 1st round started → 1st finished → 2nd finished; purchase + coin events |
@@ -25,8 +25,8 @@ The server makes every decision. Clients only send requests, and the server chec
 ## Everything in the game
 
 **The round:** lobby → pairing (friends paired together, trio for odd numbers) → theme reveal → up to 4 minutes of
-styling in a private booth (everyone taps READY to finish early) → runway (follow camera, camera flashes, name tags, entrance effects) → hearts-only
-voting → results (podium reveal 3rd→1st, confetti, 1st/2nd/3rd tags, "Buy this look"). Chaos rounds: Worst
+styling in a private booth (everyone taps READY to finish early) → runway (follow camera, camera flashes, name tags, entrance effects, 1-5 star ratings while each look walks; hearts-only with `Config.VotingMode = "Hearts"`)
+→ results (podium reveal 3rd→1st, confetti, 1st/2nd/3rd tags, "Buy this look"). Chaos rounds: Worst
 Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme. AFK players sit out.
 
 **Lobby (things to do between rounds):**
@@ -142,6 +142,7 @@ mobile-first UI.
 
 1. `rojo serve` in the project folder.
 2. Studio → **Plugins → Rojo → Connect**.
+3. Press Play and look in **Output** for `[StyleMyBestie] Server started - BUILD …`. The text after BUILD must match `Config.Build` in `src/shared/Config.luau`. If the line is missing or the build is older, Studio is not running the latest code: reconnect Rojo (only one connection at a time) and accept the "connect?" prompt.
 
 ## How to test (Studio)
 
@@ -289,8 +290,10 @@ The server re-checks every command, so a hacked client can't use it.
 2. **"One Color Only" can't be fully enforced.** The catalog API doesn't expose an item's colour, so the server can't check it. What's built: the chosen colour (e.g. "Red") is added to every catalog search that round. The rest is up to the players, which is part of the joke. If you'd rather drop this modifier, delete it from `Config.ChaosModifiers`.
 3. **Friends "queue together".** There's no party/queue screen (that would need our own friend system, which the brief says to avoid). Instead, friends in the same server are paired automatically when possible.
 4. **Shoes are bundles** in the catalog (left and right shoe), so they're picked and sold as one bundle.
-5. **Walks.** Runway walks swap the `WalkAnimation` on the HumanoidDescription, so they must be catalog animation IDs (see step 2 above).
+5. **Walks.** During your runway walk the server swaps the Animate script's walk/idle animations, then puts the originals back. Walk IDs in `Config.Cosmetics` are Roblox animation-pack IDs.
 6. **Not built yet (post-launch in the brief):** rewarded video ads.
+7. **Stars instead of hearts.** The brief asked for hearts only; voting now uses 1-5 stars per look (requested later). `Config.VotingMode = "Hearts"` switches back. Either way nobody sees who voted what and there's no last place.
+8. **Lighting.Technology is deprecated.** Roblox replaced it with `LightingStyle` + `PrioritizeLightingQuality`, which scripts can't set; LAUNCH_CHECKLIST step 2b sets them in Studio.
 
 ## Monetization rules (kept)
 
@@ -326,7 +329,8 @@ so friend groups can play together, and **Sponsored ads** once the game retains 
 ## Safety (kept)
 
 - No free text anywhere, not even a catalog search box. Themes come from `Config`.
-- Hearts only. Nobody can see who voted for whom, and there's no last place (only looks with hearts reach the podium).
+- Stars (or hearts) only, no text. Nobody can see who voted for whom, and there's no last place (only the top 3 reach the podium).
+- Flashing effects: at most 3 per second in total, off with Settings > Flashing effects or Roblox's Reduced Motion setting.
 - A look can never change body parts, skin or head: only clothing, accessories, face and emote asset types are accepted (`Config.AssetRules`).
 
 ## Lint / format

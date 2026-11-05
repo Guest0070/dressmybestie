@@ -16,6 +16,7 @@ local Minigames = require(script.Lobby.Minigames)
 local PassGrants = require(script.Monetization.PassGrants)
 local Passes = require(script.Monetization.Passes)
 local Quests = require(script.Quests)
+local RateLimit = require(script.RateLimit)
 local PlayerData = require(script.Data.PlayerData)
 local Reactions = require(script.Round.Reactions)
 local Receipts = require(script.Monetization.Receipts)
@@ -25,8 +26,12 @@ local Voting = require(script.Voting.Voting)
 
 -- Imported Blender building (assets/models) that was never set up in Studio: set it up now so
 -- it doesn't fall apart. Must run before Map.ensure (it adds the map markers).
+print(
+	`[StyleMyBestie] Server started - BUILD {require(game:GetService("ReplicatedStorage").Shared.Config).Build}`
+)
 BlendImport.autoSetup()
 Map.ensure()
+RateLimit.start()
 Passes.start()
 Analytics.start() -- before PlayerData so it sees every Loaded event
 PassGrants.start() -- same: Starter Pack coins for players already in the server

@@ -16,6 +16,7 @@ local Types = require(ReplicatedStorage.Shared.Types)
 local PlayerData = require(script.Parent.Parent.Data.PlayerData)
 local LookApplier = require(script.Parent.Parent.Styling.LookApplier)
 local RoundManager = require(script.Parent.Parent.Round.RoundManager)
+local RateLimit = require(script.Parent.Parent.RateLimit)
 
 local Appearance = {}
 
@@ -118,6 +119,9 @@ local function refresh(player: Player, clearOutfit: boolean)
 end
 
 local function onSetSkinTone(player: Player, index: any)
+	if not RateLimit.allow(player, "SetSkinTone", 0.5) then
+		return
+	end
 	if type(index) ~= "number" or index % 1 ~= 0 or index < 0 or index > #Config.SkinTones then
 		return
 	end
@@ -131,6 +135,9 @@ local function onSetSkinTone(player: Player, index: any)
 end
 
 local function onSetBodyType(player: Player, id: any)
+	if not RateLimit.allow(player, "SetBodyType", 0.5) then
+		return
+	end
 	if type(id) ~= "string" or (id ~= "" and not findBodyType(id)) then
 		return
 	end

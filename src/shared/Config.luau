@@ -39,6 +39,10 @@ Config.RunwayWalkSpeed = 12
 --   "Stars":  while each look walks the runway, the audience rates it 1-5 stars (average wins).
 --   "Hearts": after the runway, everyone gives hearts to up to 3 favourite looks (no low scores).
 -- Either way nobody sees who voted what, and there is never a "last place".
+-- Printed in Output when the server and each client start. If the line in Output doesn't match
+-- this, Studio isn't running the latest code from disk (Rojo not connected or not synced).
+Config.Build = "2026-11-05a"
+
 Config.VotingMode = "Stars" :: "Stars" | "Hearts"
 
 -- Look limits. The server enforces these; the client uses them only for friendlier UI.
@@ -311,7 +315,10 @@ Config.ChaosModifiers = {
 	{
 		id = "WorstOutfitWins",
 		displayName = "Worst Outfit Wins",
-		description = "Give hearts to the most gloriously terrible look!",
+		-- Config.VotingMode is set above, so the wording can follow it.
+		description = if Config.VotingMode == "Stars"
+			then "5 stars = most gloriously terrible!"
+			else "Give hearts to the most gloriously terrible look!",
 		minPlayers = 2,
 		reverseVoting = true,
 	},
@@ -1025,14 +1032,18 @@ Config.Achievements = {
 	{ id = "Rounds50", text = "Play 50 rounds", stat = "rounds", target = 50, reward = 800 },
 	{
 		id = "Hearts25",
-		text = "Get 25 hearts for your styling",
+		text = if Config.VotingMode == "Stars"
+			then "Earn 25 stars for your styling"
+			else "Get 25 hearts for your styling",
 		stat = "heartsReceived",
 		target = 25,
 		reward = 300,
 	},
 	{
 		id = "Hearts100",
-		text = "Get 100 hearts for your styling",
+		text = if Config.VotingMode == "Stars"
+			then "Earn 100 stars for your styling"
+			else "Get 100 hearts for your styling",
 		stat = "heartsReceived",
 		target = 100,
 		reward = 1000,

@@ -147,8 +147,8 @@ local function celebrate(position: Vector3, color: Color3)
 end
 
 local function screenFlash(color: Color3, strength: number)
-	if not Audio.flashesOn then
-		return -- Settings > Flashing effects
+	if not Audio.canFlash() then
+		return -- Settings > Flashing effects, Reduced Motion, or the 3-per-second limit
 	end
 	flashOverlay.BackgroundColor3 = color
 	flashOverlay.BackgroundTransparency = 1 - strength
@@ -159,9 +159,11 @@ end
 
 -- Paparazzi: every camera flash near the point fires, with the bulb sound.
 local function paparazzi(position: Vector3, quiet: boolean?)
+	-- One burst counts as one flash against the shared limit; without it, the shutter sound only.
+	local flashing = Audio.canFlash()
 	for _, flash in CollectionService:GetTagged("PapFlash") do
-		if not Audio.flashesOn then
-			break -- Settings > Flashing effects: the shutter sound only
+		if not flashing then
+			break
 		end
 		if
 			flash:IsA("BasePart")

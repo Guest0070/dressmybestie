@@ -59,7 +59,7 @@ local mannequinFolder: Folder
 -- AFK tracking: stylists who picked something this round, and idle rounds in a row.
 local activeStylists: { [Player]: boolean } = {}
 -- Stylists who tapped READY: when every stylist is ready, styling ends early.
-local readyStylists: { [Player]: boolean } = {}
+local readyStylists: { [Player]: true } = {}
 local idleRounds: { [Player]: number } = {}
 
 -- Admin controls (see Admin.luau).
@@ -452,6 +452,7 @@ local function onPlayerRemoving(player: Player)
 			p.mannequin:Destroy()
 		end
 		Voting.removeCandidate(p.userId)
+		Voting.removeRatable(p.userId)
 		-- Whoever was styling them now has no one to style.
 		for stylist, target in assignments do
 			if target == player and stylist ~= player then
@@ -1134,7 +1135,11 @@ local function onReady(player: Player, ready: any)
 	if state.phase ~= "Styling" or not assignments[player] or type(ready) ~= "boolean" then
 		return
 	end
-	readyStylists[player] = if ready then true else nil
+	if ready then
+		readyStylists[player] = true
+	else
+		readyStylists[player] = nil
+	end
 end
 
 function RoundManager.start()

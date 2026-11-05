@@ -91,17 +91,16 @@ function FreezeFrame.build(parent: Instance, arcade: boolean?): Arena.Game
 		Arena.pillar(model, center + Vector3.new(math.cos(angle), 0, math.sin(angle)) * reach, rigHeight)
 	end
 	local side = reach * math.sqrt(2)
-	for _, spec in
-		if inArcade
-			then {}
-			else {
-				{ Vector3.new(side, 1, 1), Vector3.new(0, rigHeight, reach / math.sqrt(2)) },
-				{ Vector3.new(side, 1, 1), Vector3.new(0, rigHeight, -reach / math.sqrt(2)) },
-				{ Vector3.new(1, 1, side), Vector3.new(reach / math.sqrt(2), rigHeight, 0) },
-				{ Vector3.new(1, 1, side), Vector3.new(-reach / math.sqrt(2), rigHeight, 0) },
-				{ Vector3.new(side, 0.6, 0.6), Vector3.new(0, rigHeight, 0) },
-			}
-	do
+	local rigBeams: { { Vector3 } } = if inArcade
+		then {}
+		else {
+			{ Vector3.new(side, 1, 1), Vector3.new(0, rigHeight, reach / math.sqrt(2)) },
+			{ Vector3.new(side, 1, 1), Vector3.new(0, rigHeight, -reach / math.sqrt(2)) },
+			{ Vector3.new(1, 1, side), Vector3.new(reach / math.sqrt(2), rigHeight, 0) },
+			{ Vector3.new(1, 1, side), Vector3.new(-reach / math.sqrt(2), rigHeight, 0) },
+			{ Vector3.new(side, 0.6, 0.6), Vector3.new(0, rigHeight, 0) },
+		}
+	for _, spec in rigBeams do
 		Arena.part(model, "Truss", spec[1], CFrame.new(center + spec[2]), C.Black, Enum.Material.Marble)
 	end
 	local ball = Arena.part(
@@ -186,7 +185,8 @@ function FreezeFrame.build(parent: Instance, arcade: boolean?): Arena.Game
 	-- Cover Star is its own game there.)
 	local coverCFrame = CFrame.new(center + Vector3.new(0, 9, -radius - 7))
 	local coverName: { TextLabel } = {}
-	for _, face in if inArcade then {} else { Enum.NormalId.Back, Enum.NormalId.Front } do
+	local coverFaces: { Enum.NormalId } = if inArcade then {} else { Enum.NormalId.Back, Enum.NormalId.Front }
+	for _, face in coverFaces do
 		local cover = model:FindFirstChild("Cover") :: Part?
 		if not cover then
 			Arena.part(

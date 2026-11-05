@@ -8,9 +8,11 @@
 --   * Settings (music, sound effects, flashing effects) are saved to the player's profile, so
 --     they follow them to every server.
 
+local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -28,6 +30,9 @@ local BEAT = { -- Config.Sounds; nil = that part of the beat is silent
 	Clap = Config.soundId("BeatClap"),
 }
 local BPM = 118
+-- Music tracks fade in and out instead of cutting, so phase changes don't jolt.
+local TRACK_VOLUME = 0.5 -- Sound.Volume of a music track; the Music SoundGroup scales on top
+local MUSIC_FADE = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 
 local function group(name: string, volume: number): SoundGroup
 	local existing = SoundService:FindFirstChild(name)
@@ -48,6 +53,28 @@ Audio.sfxOn = true
 Audio.flashesOn = true
 -- Fires when settings change (including when the saved ones first arrive).
 Audio.Changed = Signal.new() :: Signal.Signal<>
+
+-- Photosensitivity guard shared by every flash in the game (runway paparazzi, minigame camera
+-- flashes, screen flashes). WCAG 2.3.1: no more than 3 flashes in any one second, so all sources
+-- together get at most MAX_FLASHES_PER_SECOND. Off entirely when the player switched flashing off in
+-- Settings or turned on Roblox's own Reduced Motion setting.
+local MAX_FLASHES_PER_SECOND = 3
+local recentFlashes: { number } = {}
+
+function Audio.canFlash(): boolean
+	if not Audio.flashesOn or GuiService.ReducedMotionEnabled then
+		return false
+	end
+	local now = os.clock()
+	while recentFlashes[1] and now - recentFlashes[1] >= 1 do
+		table.remove(recentFlashes, 1)
+	end
+	if #recentFlashes >= MAX_FLASHES_PER_SECOND then
+		return false
+	end
+	table.insert(recentFlashes, now)
+	return true
+end
 
 local saveQueued = false
 local function save()
@@ -91,6 +118,30 @@ function Audio.setFlashes(on: boolean)
 	Audio.Changed:Fire()
 end
 
+-- Fade a music track in or out. Only acts when `wanted` changes, so it is safe to call every frame.
+local fadeWanted: { [Sound]: boolean } = {}
+local function fadeMusic(sound: Sound, wanted: boolean)
+	if fadeWanted[sound] == wanted then
+		return
+	end
+	fadeWanted[sound] = wanted
+	if wanted then
+		if not sound.IsPlaying then
+			sound.Volume = 0
+			sound:Play()
+		end
+		TweenService:Create(sound, MUSIC_FADE, { Volume = TRACK_VOLUME }):Play()
+	else
+		local tween = TweenService:Create(sound, MUSIC_FADE, { Volume = 0 })
+		tween.Completed:Once(function(state)
+			if state == Enum.PlaybackState.Completed and fadeWanted[sound] == false then
+				sound:Stop()
+			end
+		end)
+		tween:Play()
+	end
+end
+
 local function hit(id: string?, volume: number, pitch: number)
 	if not id then
 		return
@@ -127,11 +178,7 @@ local function startRunwayBeat()
 		local phase = State.round.phase
 		local showing = phase == "Runway" or phase == "Voting"
 		if track then
-			if showing and not track.IsPlaying then
-				track:Play()
-			elseif not showing and track.IsPlaying then
-				track:Stop()
-			end
+			fadeMusic(track, showing)
 			return
 		end
 		if not showing or not Audio.musicOn then
@@ -166,14 +213,9 @@ local function startLobbyMusic()
 	music.Looped = true
 	music.SoundGroup = Audio.music
 	music.Parent = SoundService
-	-- Lobby music only in the lobby, so it doesn't fight the runway.
+	-- Lobby music only in the lobby, so it doesn't fight the runway (fades across the change).
 	local function refresh()
-		local wanted = State.round.phase == "Lobby"
-		if wanted and not music.IsPlaying then
-			music:Play()
-		elseif not wanted and music.IsPlaying then
-			music:Stop()
-		end
+		fadeMusic(music, State.round.phase == "Lobby")
 	end
 	State.RoundChanged:Connect(refresh)
 	refresh()

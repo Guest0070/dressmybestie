@@ -27,8 +27,8 @@ local GAMES = {
 		id = "ColorRush",
 		name = "Color Rush",
 		icon = "🟪",
-		blurb = "A colour is called. Every other tile vanishes. Don't fall!",
-		hint = "Stand on the tile of the colour that's called",
+		blurb = "A color is called. Every other tile vanishes. Don't fall!",
+		hint = "Stand on the tile of the color that's called",
 	},
 	{
 		id = "FreezeFrame",
@@ -48,7 +48,7 @@ local GAMES = {
 		id = "CoverStar",
 		name = "Cover Star",
 		icon = "📸",
-		blurb = "Face the colour the photographer calls before the flash!",
+		blurb = "Face the way the photographer calls before the flash!",
 		hint = "Turn to face the edge that's called (or jump!)",
 	},
 	{
