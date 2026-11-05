@@ -39,6 +39,10 @@ Config.RunwayWalkSpeed = 12
 --   "Stars":  while each look walks the runway, the audience rates it 1-5 stars (average wins).
 --   "Hearts": after the runway, everyone gives hearts to up to 3 favourite looks (no low scores).
 -- Either way nobody sees who voted what, and there is never a "last place".
+-- Printed in Output when the server and each client start. If the line in Output doesn't match
+-- this, Studio isn't running the latest code from disk (Rojo not connected or not synced).
+Config.Build = "2026-11-05a"
+
 Config.VotingMode = "Stars" :: "Stars" | "Hearts"
 
 -- Look limits. The server enforces these; the client uses them only for friendlier UI.
@@ -873,7 +877,7 @@ Config.Sounds = {
 	Podium = "rbxasset://sounds/victory.wav",
 	LobbyMoment = "rbxasset://sounds/Launching rocket.wav",
 	Reaction = "rbxasset://sounds/snap.mp3",
-	Alert = "rbxasset://sounds/switch.wav",
+	Alert = "rbxasset://sounds/electronicpingshort.wav", -- "round starts soon": distinct from PhaseChange
 } :: { [string]: number | string }
 
 -- Quests. stat names: rounds, heartsGiven, gems, obby, heartsReceived, podiums.

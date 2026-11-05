@@ -12,6 +12,7 @@ local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -29,6 +30,9 @@ local BEAT = {
 	Clap = "rbxasset://sounds/snap.mp3",
 }
 local BPM = 118
+-- Music tracks fade in and out instead of cutting, so phase changes don't jolt.
+local TRACK_VOLUME = 0.5 -- Sound.Volume of a music track; the Music SoundGroup scales on top
+local MUSIC_FADE = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 
 local function group(name: string, volume: number): SoundGroup
 	local existing = SoundService:FindFirstChild(name)
@@ -114,6 +118,30 @@ function Audio.setFlashes(on: boolean)
 	Audio.Changed:Fire()
 end
 
+-- Fade a music track in or out. Only acts when `wanted` changes, so it is safe to call every frame.
+local fadeWanted: { [Sound]: boolean } = {}
+local function fadeMusic(sound: Sound, wanted: boolean)
+	if fadeWanted[sound] == wanted then
+		return
+	end
+	fadeWanted[sound] = wanted
+	if wanted then
+		if not sound.IsPlaying then
+			sound.Volume = 0
+			sound:Play()
+		end
+		TweenService:Create(sound, MUSIC_FADE, { Volume = TRACK_VOLUME }):Play()
+	else
+		local tween = TweenService:Create(sound, MUSIC_FADE, { Volume = 0 })
+		tween.Completed:Once(function(state)
+			if state == Enum.PlaybackState.Completed and fadeWanted[sound] == false then
+				sound:Stop()
+			end
+		end)
+		tween:Play()
+	end
+end
+
 local function hit(id: string, volume: number, pitch: number)
 	local sound = Instance.new("Sound")
 	sound.SoundId = id
@@ -147,11 +175,7 @@ local function startRunwayBeat()
 		local phase = State.round.phase
 		local showing = phase == "Runway" or phase == "Voting"
 		if track then
-			if showing and not track.IsPlaying then
-				track:Play()
-			elseif not showing and track.IsPlaying then
-				track:Stop()
-			end
+			fadeMusic(track, showing)
 			return
 		end
 		if not showing or not Audio.musicOn then
@@ -186,14 +210,9 @@ local function startLobbyMusic()
 	music.Looped = true
 	music.SoundGroup = Audio.music
 	music.Parent = SoundService
-	-- Lobby music only in the lobby, so it doesn't fight the runway.
+	-- Lobby music only in the lobby, so it doesn't fight the runway (fades across the change).
 	local function refresh()
-		local wanted = State.round.phase == "Lobby"
-		if wanted and not music.IsPlaying then
-			music:Play()
-		elseif not wanted and music.IsPlaying then
-			music:Stop()
-		end
+		fadeMusic(music, State.round.phase == "Lobby")
 	end
 	State.RoundChanged:Connect(refresh)
 	refresh()

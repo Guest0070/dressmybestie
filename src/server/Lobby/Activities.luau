@@ -442,9 +442,12 @@ local function buildGlobalBoard(parent: Instance)
 			table.insert(globalLines, label)
 		end
 	end
-	pcall(function()
+	local ok, err = pcall(function()
 		xpStore = DataStoreService:GetOrderedDataStore("StyleXP_v1")
 	end)
+	if not ok then
+		warn(`[Activities] Style XP leaderboard unavailable (turn on API access in Game Settings): {err}`)
+	end
 end
 
 local function saveXp(player: Player)
@@ -452,9 +455,12 @@ local function saveXp(player: Player)
 	local store = xpStore
 	if data and store and data.styleXp > 0 then
 		local xp = math.floor(data.styleXp)
-		pcall(function()
+		local ok, err = pcall(function()
 			store:SetAsync(tostring(player.UserId), xp)
 		end)
+		if not ok then
+			warn(`[Activities] Style XP leaderboard save failed: {err}`)
+		end
 	end
 end
 

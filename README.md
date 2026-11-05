@@ -142,6 +142,7 @@ mobile-first UI.
 
 1. `rojo serve` in the project folder.
 2. Studio → **Plugins → Rojo → Connect**.
+3. Press Play and look in **Output** for `[StyleMyBestie] Server started - BUILD …`. The text after BUILD must match `Config.Build` in `src/shared/Config.luau`. If the line is missing or the build is older, Studio is not running the latest code: reconnect Rojo (only one connection at a time) and accept the "connect?" prompt.
 
 ## How to test (Studio)
 

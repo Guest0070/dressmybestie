@@ -26,6 +26,9 @@ local Voting = require(script.Voting.Voting)
 
 -- Imported Blender building (assets/models) that was never set up in Studio: set it up now so
 -- it doesn't fall apart. Must run before Map.ensure (it adds the map markers).
+print(
+	`[StyleMyBestie] Server started - BUILD {require(game:GetService("ReplicatedStorage").Shared.Config).Build}`
+)
 BlendImport.autoSetup()
 Map.ensure()
 RateLimit.start()

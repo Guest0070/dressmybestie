@@ -148,6 +148,8 @@ Use Studio's **Test** tab.
 - [ ] **Phone:** Test > Device > pick a phone in landscape, Play. Every button should be easy to tap
       and nothing should overlap. Repeat with a tablet.
 - [ ] **Saving:** Stop and Play again: coins, outfits and settings should still be there.
+- [ ] Output shows `[StyleMyBestie] Server started - BUILD` with the same build as `Config.Build`
+      (if not, Studio is running old code: reconnect Rojo).
 - [ ] Look at the Output window for red errors and send them to me if you see any.
 
 ## 9. Store page and publishing (Creator Dashboard)

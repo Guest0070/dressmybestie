@@ -390,9 +390,12 @@ function RunwayDash.build(parent: Instance): Arena.Game
 	local besideStart = CFrame.lookAt(at(-4, 3.5, 0), at(10, 3.5, 0))
 
 	local store: OrderedDataStore? = nil
-	pcall(function()
+	local storeOk, storeErr = pcall(function()
 		store = DataStoreService:GetOrderedDataStore("RunwayDashBest_v1")
 	end)
+	if not storeOk then
+		warn(`[RunwayDash] Best-times board unavailable (turn on API access in Game Settings): {storeErr}`)
+	end
 	local names: { [number]: string } = {}
 
 	local g: Arena.Game
@@ -564,11 +567,14 @@ function RunwayDash.build(parent: Instance): Arena.Game
 		refreshServerBoard()
 		if personalBest and store then
 			task.spawn(function()
-				pcall(function()
+				local ok, err = pcall(function()
 					(store :: OrderedDataStore):UpdateAsync(tostring(player.UserId), function(old)
 						return (if type(old) == "number" and old <= ms then nil else ms) :: any -- nil keeps the old best
 					end)
 				end)
+				if not ok then
+					warn(`[RunwayDash] Best time save failed: {err}`)
+				end
 				refreshGlobalBoard()
 			end)
 		end
