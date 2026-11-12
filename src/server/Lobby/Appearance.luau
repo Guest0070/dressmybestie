@@ -100,21 +100,38 @@ end
 
 -- Re-apply the saved choices to the current character. clearOutfit: remove accessories and
 -- clothing first (used for body swaps when Config.BodySwapClearsOutfit is on).
+-- Applying takes a moment. A choice made meanwhile is queued (never dropped), so what you see
+-- always ends up matching the last thing you picked.
+local queued: { [Player]: boolean } = {} -- value = clearOutfit for the queued run
 local function refresh(player: Player, clearOutfit: boolean)
-	local humanoid = getHumanoid(player)
-	local data = PlayerData.get(player)
-	if not humanoid or not data or busy[player] then
+	if busy[player] then
+		queued[player] = queued[player] == true or clearOutfit
 		return
 	end
 	busy[player] = true
-	local ok, current = pcall(humanoid.GetAppliedDescription, humanoid)
-	if ok and current then
-		local desc = Appearance.applyTo(player, current, data)
-		if clearOutfit then
-			desc = LookApplier.blankFrom(desc)
+	local clear = clearOutfit
+	while true do
+		local humanoid = getHumanoid(player)
+		local data = PlayerData.get(player)
+		if not humanoid or not data then
+			break
 		end
-		LookApplier.apply(humanoid, desc)
+		local ok, current = pcall(humanoid.GetAppliedDescription, humanoid)
+		if ok and current then
+			local desc = Appearance.applyTo(player, current, data)
+			if clear then
+				desc = LookApplier.blankFrom(desc)
+			end
+			LookApplier.apply(humanoid, desc)
+		end
+		local again = queued[player]
+		if again == nil then
+			break
+		end
+		queued[player] = nil
+		clear = again
 	end
+	queued[player] = nil
 	busy[player] = nil
 end
 
@@ -255,6 +272,7 @@ function Appearance.start()
 	Players.PlayerRemoving:Connect(function(player)
 		realAvatars[player] = nil
 		busy[player] = nil
+		queued[player] = nil
 	end)
 end
 

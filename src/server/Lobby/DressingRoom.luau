@@ -161,6 +161,7 @@ function DressingRoom.start()
 		if RoundManager.isInRound(player) then
 			return
 		end
+		current[player] = nil -- nothing to save to the Wardrobe after a reset
 		local base = getBase(player)
 		local humanoid = getHumanoid(player)
 		if base and humanoid then

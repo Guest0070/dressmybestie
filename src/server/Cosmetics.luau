@@ -62,19 +62,23 @@ local function applyNametag(player: Player, character: Model)
 	if humanoid then
 		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None -- ours replaces it
 	end
-	local existing = head:FindFirstChild("Nametag")
-	if existing then
-		existing:Destroy()
-	end
-
 	local titleId = data.equipped.Title
 	local title = if titleId and PlayerData.ownsCosmetic(player, titleId)
 		then Config.getCosmetic(titleId)
 		else nil
 	local rank = PlayerData.getRank(data.styleXp)
+	-- Only rebuild when what it shows changes, so the tag doesn't blink on every coin update.
+	local shown = `{if title then title.id else ""}|{player.DisplayName}|{rank}`
+	local existing = head:FindFirstChild("Nametag")
+	if existing and existing:GetAttribute("Shown") == shown then
+		return
+	elseif existing then
+		existing:Destroy()
+	end
 
 	local tag = Instance.new("BillboardGui")
 	tag.Name = "Nametag"
+	tag:SetAttribute("Shown", shown)
 	tag.Size = UDim2.fromOffset(220, 72)
 	tag.StudsOffset = Vector3.new(0, 2.6, 0)
 	tag.MaxDistance = 80
