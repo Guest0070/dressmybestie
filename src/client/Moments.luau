@@ -148,7 +148,10 @@ local function disco(duration: number)
 			stopBeams()
 			return
 		end
-		effect.TintColor = Color3.fromHSV((t * 0.5) % 1, 0.35, 1)
+		-- The whole-screen colour wash is skipped with flashing effects off (the beams still dance).
+		if Vfx.flashesAllowed() then
+			effect.TintColor = Color3.fromHSV((t * 0.5) % 1, 0.35, 1)
+		end
 		if ball and ball:IsA("BasePart") then
 			local spin = if still then 0 else t * 0.6
 			for i, target in targets do

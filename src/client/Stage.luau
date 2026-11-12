@@ -120,7 +120,11 @@ local function cinematicShot(t: number, pos: Vector3, dir: Vector3): (CFrame, nu
 		CAMERA_LERP
 end
 
-local function updateCamera()
+-- dt-corrected smoothing: the camera eases at the same speed at 30, 60 or 240 FPS.
+local function updateCamera(dt: number)
+	local function smooth(perFrameAt60: number): number
+		return 1 - (1 - math.clamp(perFrameAt60, 0, 1)) ^ (dt * 60)
+	end
 	local camera = Workspace.CurrentCamera
 	if not camera then
 		return
@@ -155,7 +159,7 @@ local function updateCamera()
 		local aspect = viewport.X / math.max(viewport.Y, 1)
 		local halfFov = math.rad(camera.FieldOfView) / 2
 		local yaw = math.atan(0.4 * math.tan(halfFov) * aspect) -- centre of the left 60% (catalog is 40%)
-		camera.CFrame = camera.CFrame:Lerp(level * CFrame.Angles(0, -yaw, 0), CAMERA_LERP * 2)
+		camera.CFrame = camera.CFrame:Lerp(level * CFrame.Angles(0, -yaw, 0), smooth(CAMERA_LERP * 2))
 		return
 	end
 
@@ -177,7 +181,7 @@ local function updateCamera()
 			local halfFov = math.rad(camera.FieldOfView) / 2
 			local yaw = math.atan(0.4 * math.tan(halfFov) * aspect) -- centre of the left 60% (catalog is 40%)
 			local desired = level * CFrame.Angles(0, -yaw, 0)
-			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP * 2)
+			camera.CFrame = camera.CFrame:Lerp(desired, smooth(CAMERA_LERP * 2))
 			-- Roblox's camera scripts reset character transparency every frame, so re-apply it.
 			setCharacterHidden(true)
 			return
@@ -196,8 +200,8 @@ local function updateCamera()
 			local along = endPart.Position - startPart.Position
 			local dir = Vector3.new(along.X, 0, along.Z).Unit
 			local desired, fov, speed = cinematicShot(os.clock() - shotStart, root.Position, dir)
-			camera.CFrame = camera.CFrame:Lerp(desired, speed)
-			camera.FieldOfView += (fov - camera.FieldOfView) * speed
+			camera.CFrame = camera.CFrame:Lerp(desired, smooth(speed))
+			camera.FieldOfView += (fov - camera.FieldOfView) * smooth(speed)
 			return
 		end
 	end
@@ -214,7 +218,7 @@ local function updateCamera()
 			-- Aim above the winner so they sit below the theme banner at the top of the screen.
 			local focus = first.Position + Vector3.new(0, 2, 0) + first.CFrame.RightVector * -4
 			local desired = CFrame.lookAt(first.Position + facing * 16 + Vector3.new(0, 3, 0), focus)
-			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP)
+			camera.CFrame = camera.CFrame:Lerp(desired, smooth(CAMERA_LERP))
 			return
 		end
 	end
@@ -224,7 +228,7 @@ local function updateCamera()
 		if cameraPart and focus then
 			camera.CameraType = Enum.CameraType.Scriptable
 			local desired = CFrame.lookAt(cameraPart.Position, focus + Vector3.new(0, 1, 0))
-			camera.CFrame = camera.CFrame:Lerp(desired, CAMERA_LERP)
+			camera.CFrame = camera.CFrame:Lerp(desired, smooth(CAMERA_LERP))
 			return
 		end
 	end
