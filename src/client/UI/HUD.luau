@@ -554,9 +554,11 @@ function HUD.start()
 		roundAlert(remaining)
 		timeWarning(remaining)
 		timerLabel.Text = if remaining then Kit.formatTime(remaining) else "--"
-		-- Last 10 seconds: the timer flashes red/white so nobody misses the deadline.
+		-- Last 10 seconds: the timer blinks red/white (once a second) so nobody misses the deadline.
+		-- With flashing effects off or Reduced Motion on it stays red instead of blinking.
 		local urgent = remaining ~= nil and remaining <= 10 and remaining > 0
-		timerLabel.TextColor3 = if urgent and math.floor((remaining :: number) * 2) % 2 == 0
+		local steady = not Vfx.flashesAllowed() or Vfx.reducedMotion()
+		timerLabel.TextColor3 = if urgent and (steady or math.floor((remaining :: number) * 2) % 2 == 0)
 			then Color3.fromRGB(255, 90, 90)
 			else Kit.Colors.Text
 	end)

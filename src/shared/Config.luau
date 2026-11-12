@@ -41,7 +41,7 @@ Config.RunwayWalkSpeed = 12
 -- Either way nobody sees who voted what, and there is never a "last place".
 -- Printed in Output when the server and each client start. If the line in Output doesn't match
 -- this, Studio isn't running the latest code from disk (Rojo not connected or not synced).
-Config.Build = "2026-11-05a"
+Config.Build = "2026-11-12a"
 
 Config.VotingMode = "Stars" :: "Stars" | "Hearts"
 

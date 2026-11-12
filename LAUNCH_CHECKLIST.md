@@ -42,6 +42,9 @@ Rojo syncs it into Studio, then **File > Save to Roblox**.
 
 ## 3. Game passes (Creator Dashboard > your game > Monetization > Passes)
 
+**Done (5 Nov 2026):** all 4 passes exist, are on sale, and their IDs are in `Config.GamePasses`.
+The steps below are only for adding a new pass later.
+
 For each one: **Create a Pass**, upload any square image, name it, then set it **On Sale** at the
 price. Copy its ID (the number in the pass's URL) and paste it into `Config.GamePasses` in place of
 the `0`.
@@ -56,6 +59,9 @@ the `0`.
 Example: `VIP = { id = 123456789, price = 399, displayName = "VIP" },`
 
 ## 4. Developer products (Monetization > Developer Products)
+
+**Done (5 Nov 2026):** all 31 products exist at the Config prices (Managed Pricing off) and their
+IDs are in `Config.DevProducts` / `Config.ProductIds`. The steps below are only for adding more.
 
 For each one: **Create a Developer Product**, set the name and price, then copy its ID.
 
@@ -108,6 +114,10 @@ Notes:
 - Optional: change prices any time on the dashboard; no code change needed.
 
 ## 5. Badges (Creator Dashboard > your game > Associated Items > Badges)
+
+**5 of 7 done.** Still to create: **Rank5** ("Icon Status") and **Wardrobe** ("Closet Goals").
+Their icons are in `assets/icons/`. Roblox gives 5 free badges per game per day, so these two are
+free now. Paste their IDs into `Config.Badges`.
 
 Create each badge (name, description, image), copy its ID and paste it into `Config.Badges`.
 Badges left at `0` are simply not awarded. Note: Roblox may charge a small fee per badge after the
