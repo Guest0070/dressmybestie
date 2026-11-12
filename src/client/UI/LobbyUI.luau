@@ -155,10 +155,12 @@ local function refreshStatus()
 		setText(bigValue, if remaining then Kit.formatTime(remaining) else "--:--")
 	end
 	-- Last 10 seconds of a countdown flash red.
+	-- Last 10 seconds: blinks red once a second, or stays red with flashing off / Reduced Motion.
+	local steady = not Vfx.flashesAllowed() or Vfx.reducedMotion()
 	local urgent = remaining ~= nil
 		and remaining <= 10
 		and remaining > 0
-		and math.floor(remaining * 2) % 2 == 0
+		and (steady or math.floor(remaining * 2) % 2 == 0)
 	bigValue.TextColor3 = if urgent then Theme.Colors.Danger else valueColor
 end
 

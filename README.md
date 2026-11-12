@@ -64,7 +64,7 @@ Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme
   All sounds are Roblox's built-in ones (no uploads).
 - **The world:** paved ground with boulevards, street lamps and trees, a neon city skyline, dusk
   lighting (`Config.Environment`).
-- Top Stylists board, Hall of Fame statues of last round's top 3 (walk up → "Buy this look").
+- Top Stylists board, Hall of Fame statues of last round's top 3 (walk up → "Buy this look"). With the imported building they stand on the Winners Podium in its Hall of Fame room.
 
 **Social + extras:**
 - **Runway reactions:** while a look walks, everyone else gets ❤️🔥😍😂👑 buttons; reactions float

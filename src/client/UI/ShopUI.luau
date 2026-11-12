@@ -88,15 +88,29 @@ local function productsOfKind(kind: string): { Config.DevProduct }
 end
 -- A symbol for each entrance effect's preview card.
 local EFFECT_ICONS: { [string]: string } = {
-	Smoke = "~",
-	Bubbles = "o O o",
-	Stars = "* * *",
-	Petals = "~ ~ ~",
-	Fire = "^ ^ ^",
-	Hearts = "<3",
-	Sparkles = "+ + +",
-	Confetti = ". : .",
-	Spotlight = "( O )",
+	Smoke = "💨",
+	Bubbles = "🧼",
+	Stars = "⭐",
+	Petals = "🌸",
+	Fire = "🔥",
+	Hearts = "💖",
+	Sparkles = "✨",
+	Confetti = "🎉",
+	Spotlight = "🔦",
+}
+-- Big picture on each pass / lobby moment card (the name is printed under it).
+local PASS_ICONS: { [string]: string } = {
+	StarterPack = "🌟",
+	VIP = "👑",
+	DoubleCoins = "💰",
+	PosePack = "💃",
+}
+local MOMENT_ICONS: { [string]: string } = {
+	CoinShower = "💰",
+	Confetti = "🎉",
+	Disco = "🕺",
+	Hearts = "💕",
+	Snow = "❄️",
 }
 
 local gui: ScreenGui
@@ -186,7 +200,7 @@ local function textPreview(text: string, color: Color3, background: Color3?): (F
 			Position = UDim2.fromOffset(6, 6),
 			FontFace = Theme.Fonts.Heading,
 			TextColor3 = color,
-			MaxTextSize = 32,
+			MaxTextSize = if (utf8.len(text) or #text) <= 2 then 48 else 32, -- icons go big
 			Parent = frame,
 		})
 	end
@@ -274,7 +288,7 @@ local function previewFor(cosmetic: Config.Cosmetic): (Frame) -> ()
 	elseif cosmetic.slot == "Title" then
 		return textPreview(cosmetic.displayName, cosmetic.color or Theme.Colors.Text)
 	elseif cosmetic.slot == "Entrance" then
-		return textPreview(EFFECT_ICONS[cosmetic.id] or "*", Theme.Colors.Primary, Theme.Colors.PanelRaised)
+		return textPreview(EFFECT_ICONS[cosmetic.id] or "✨", Theme.Colors.Primary, Theme.Colors.PanelRaised)
 	end
 	return textPreview(cosmetic.displayName, Theme.Colors.Primary)
 end
@@ -405,7 +419,8 @@ local function passesTab(data: Types.PublicData)
 	for _, key in ordered(Config.GamePasses, PASS_ORDER) do
 		local pass = Config.GamePasses[key]
 		local owned = data.ownedPasses[key] == true
-		local preview = textPreview(pass.displayName, Theme.Colors.Gold, Theme.Colors.PanelRaised)
+		local preview =
+			textPreview(PASS_ICONS[key] or pass.displayName, Theme.Colors.Gold, Theme.Colors.PanelRaised)
 		local description = PASS_DESCRIPTIONS[key] or ""
 		if owned then
 			card({
@@ -449,7 +464,11 @@ local function passesTab(data: Types.PublicData)
 		productCard(
 			product,
 			description,
-			textPreview(product.displayName, Theme.Colors.Primary, Theme.Colors.PanelRaised)
+			textPreview(
+				MOMENT_ICONS[product.moment or ""] or product.displayName,
+				Theme.Colors.Primary,
+				Theme.Colors.PanelRaised
+			)
 		)
 	end
 	-- Roblox Premium: Roblox pays the game for time Premium members spend in it.
@@ -458,7 +477,7 @@ local function passesTab(data: Types.PublicData)
 			name = "Roblox Premium",
 			description = `+{math.floor(Config.Rewards.PremiumCoinBonus * 100)}% coins from every round here`,
 			buttonText = "GET PREMIUM",
-			preview = textPreview("Premium", Theme.Colors.Text, Theme.Colors.PanelRaised),
+			preview = textPreview("💎", Theme.Colors.Text, Theme.Colors.PanelRaised),
 			onClick = function()
 				pcall(MarketplaceService.PromptPremiumPurchase, MarketplaceService, State.player)
 			end,
@@ -469,7 +488,7 @@ local function passesTab(data: Types.PublicData)
 		productCard(
 			product,
 			if supporter then "Thank you for supporting us!" else "Support the game + Supporter title",
-			textPreview("<3", Theme.Colors.Primary, Theme.Colors.PanelRaised)
+			textPreview("💖", Theme.Colors.Primary, Theme.Colors.PanelRaised)
 		)
 	end
 end
@@ -488,7 +507,7 @@ local function coinsTab()
 			name = pass.displayName,
 			description = PASS_DESCRIPTIONS.DoubleCoins,
 			buttonText = `R$ {pass.price}`,
-			preview = textPreview("2x", Theme.Colors.Gold, Theme.Colors.PanelRaised),
+			preview = textPreview("💰", Theme.Colors.Gold, Theme.Colors.PanelRaised),
 			onClick = function()
 				MarketplaceService:PromptGamePassPurchase(State.player, pass.id)
 			end,
@@ -513,7 +532,8 @@ local function rebuild()
 	if not data then
 		return
 	end
-	coinsLabel.Text = `{data.coins} COINS`
+	coinsLabel.Text =
+		`{(tostring(data.coins):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", ""))} COINS`
 	if currentTab == "Passes" then
 		passesTab(data)
 		return
@@ -560,14 +580,14 @@ local function buildCardTemplate(parent: Instance)
 	local template = Components.panel({
 		Name = "CardTemplate",
 		Raised = true,
-		Size = UDim2.fromOffset(150, 190),
+		Size = UDim2.fromOffset(150, 210),
 		Visible = false,
 		Parent = parent,
 	})
 	Kit.new("Frame", {
 		Name = "Preview",
 		Position = UDim2.fromOffset(6, 6),
-		Size = UDim2.new(1, -12, 0.46, 0),
+		Size = UDim2.new(1, -12, 0.4, 0),
 		BackgroundColor3 = Theme.Colors.Background,
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
@@ -586,19 +606,21 @@ local function buildCardTemplate(parent: Instance)
 	})
 	Components.text({
 		Name = "ItemName",
-		Position = UDim2.new(0, 8, 0.5, 0),
-		Size = UDim2.new(1, -16, 0.12, 0),
+		Position = UDim2.new(0, 8, 0.44, 0),
+		Size = UDim2.new(1, -16, 0.11, 0),
 		FontFace = Theme.Fonts.Heading,
 		MaxTextSize = 16,
 		Parent = template,
 	})
 	Components.text({
 		Name = "Description",
-		Position = UDim2.new(0, 8, 0.63, 0),
-		Size = UDim2.new(1, -16, 0.1, 0),
+		-- Two or three readable lines: pass perks don't fit on one.
+		Position = UDim2.new(0, 8, 0.56, 0),
+		Size = UDim2.new(1, -16, 0.21, 0),
 		TextColor3 = Theme.Colors.Muted,
-		MaxTextSize = 12,
-		MinTextSize = 8,
+		TextWrapped = true,
+		MaxTextSize = 13,
+		MinTextSize = 10,
 		Parent = template,
 	})
 	Components.styleButton({
@@ -607,7 +629,7 @@ local function buildCardTemplate(parent: Instance)
 		Variant = "Primary",
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -6),
-		Size = UDim2.new(1, -12, 0.2, 0),
+		Size = UDim2.new(1, -12, 0.19, 0),
 		MaxTextSize = 14,
 		Parent = template,
 	})
@@ -698,7 +720,7 @@ local function build(): ScreenGui
 		Parent = window,
 	}, {
 		Kit.new("UIGridLayout", {
-			CellSize = UDim2.fromOffset(150, 190),
+			CellSize = UDim2.fromOffset(150, 210),
 			CellPadding = UDim2.fromOffset(8, 8),
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),

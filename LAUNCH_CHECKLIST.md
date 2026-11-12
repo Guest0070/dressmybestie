@@ -135,7 +135,7 @@ free ones each day.
 
 ## 6. Admins (optional)
 
-- [ ] You (the game owner) are already an admin. To add friends, put their user IDs (the number in
+- [ ] You (the game owner, or the owner of the group that owns the game) are already an admin. To add friends, put their user IDs (the number in
       their profile URL) in `Config.AdminUserIds`, e.g. `{ 12345678, 87654321 }`.
 
 ## 7. Sounds and music

@@ -133,11 +133,15 @@ local function wire(root: ScreenGui): { string }
 	if #missing > 0 then
 		return missing
 	end
+	-- Optional in a Studio-designed Settings screen (older designs have no Flashes row).
 	local flashes = root:FindFirstChild("Flashes", true)
-	local _, setFlashes =
-		if flashes then Components.attachToggle(flashes, Audio.flashesOn, Audio.setFlashes) else false,
-		function(_: boolean) end
-	-- Saved settings arrive after the window is built: move the switches to match.
+	local setFlashes = function(_: boolean) end
+	if flashes then
+		local flashesOk, setter = Components.attachToggle(flashes, Audio.flashesOn, Audio.setFlashes)
+		if flashesOk then
+			setFlashes = setter
+		end
+	end
 	Audio.Changed:Connect(function()
 		setMusic(Audio.musicOn)
 		setSfx(Audio.sfxOn)

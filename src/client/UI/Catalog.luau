@@ -166,7 +166,7 @@ local function makeItemButton(item: CatalogItem, order: number)
 	button:SetAttribute("ItemType", item.ItemType)
 	Kit.label({
 		Name = "Check",
-		Text = "ON",
+		Text = "✓",
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.new(1, -4, 0, 4),
 		Size = UDim2.fromOffset(34, 22),

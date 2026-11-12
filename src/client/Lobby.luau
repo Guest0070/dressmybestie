@@ -9,6 +9,7 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local State = require(script.Parent.State)
+local Vfx = require(script.Parent.Vfx)
 
 local Lobby = {}
 
@@ -57,6 +58,10 @@ local function danceLoop()
 	local step = 0
 	while true do
 		task.wait(0.45)
+		-- Colour-cycling floor: holds still with flashing effects off or Reduced Motion on.
+		if not Vfx.flashesAllowed() or Vfx.reducedMotion() then
+			continue
+		end
 		step += 1
 		for index, tile in CollectionService:GetTagged("DanceTile") do
 			if tile:IsA("BasePart") then
