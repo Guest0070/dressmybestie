@@ -6,12 +6,17 @@ local Config = {}
 
 -- Round timings, in seconds.
 Config.Timings = {
-	Lobby = 30,
+	Lobby = 20,
 	Pairing = 3,
 	ThemeReveal = 5,
-	Styling = 240, -- the most styling can take; it ends early once every stylist taps READY
+	Styling = 120, -- the most styling can take; it ends early once every stylist taps READY
 	StylingMin = 20, -- READY can't end styling before this
-	SwapAt = 120, -- "Swap Mid-Round" chaos: seconds into styling when stylists swap
+	-- Once this share of the stylists is READY, everyone else gets
+	-- StylingHurry seconds to finish, so one slow player can't hold the whole server.
+	StylingHurryAt = 0.5,
+	StylingHurry = 20,
+	StylingHurryAfter = 45, -- ...but never before this many seconds, so nobody is rushed at the start
+	SwapAt = 55, -- "Swap Mid-Round" chaos: seconds into styling when stylists swap
 	RunwayPerPlayer = 9,
 	Voting = 30,
 	Results = 15,
@@ -29,8 +34,10 @@ Config.AfkIdleRounds = 2
 Config.StudioMinPlayers = 1
 
 -- Every Nth round is eligible for chaos; a coin flip decides whether it actually happens.
-Config.ChaosEveryRounds = 4
-Config.ChaosChance = 0.6
+Config.ChaosEveryRounds = 2
+Config.ChaosChance = 0.7
+-- A server's first rounds are always plain, so new players learn the normal game first.
+Config.ChaosFirstRound = 2
 
 Config.DefaultWalkSpeed = 16
 Config.RunwayWalkSpeed = 12
@@ -41,7 +48,7 @@ Config.RunwayWalkSpeed = 12
 -- Either way nobody sees who voted what, and there is never a "last place".
 -- Printed in Output when the server and each client start. If the line in Output doesn't match
 -- this, Studio isn't running the latest code from disk (Rojo not connected or not synced).
-Config.Build = "2026-11-12c"
+Config.Build = "2026-11-13a"
 
 Config.VotingMode = "Stars" :: "Stars" | "Hearts"
 
@@ -63,7 +70,6 @@ Config.Limits = {
 	-- Layered clothing pieces in total (jackets, sweaters, pants, dresses, shoes...).
 	MaxLayeredClothing = 6,
 	VipBonusLayered = 2,
-	MaxEmotes = 1,
 	-- Hard cap on IDs in one request, checked before any network lookups (anti-spam).
 	MaxIdsPerLook = 24,
 	-- Seconds between look updates a client may send. Extra updates are merged, not dropped.
@@ -72,7 +78,13 @@ Config.Limits = {
 
 -- Rewards for playing. (Coins can also be bought: Config.DevProducts kind "Coins".)
 Config.Rewards = {
-	CoinsPerRoundPlayed = 10,
+	WelcomeCoins = 150, -- a brand-new player starts with this (enough for the cheapest shop items)
+	CoinsPerRoundPlayed = 25,
+	CoinsPerLookRated = 2, -- for the audience: rating a look on the runway
+	-- Podium ranking uses a smoothed average, (stars + RatingPrior * 3) / (votes + RatingPrior),
+	-- so a single 5-star vote can't beat a look many people rated highly. The score shown to
+	-- players is still the plain average.
+	RatingPrior = 2,
 	CoinsPerHeartReceived = 2,
 	CoinsPerStar = 1, -- Stars mode: per star your styling receives
 	XpPerStar = 2,
@@ -80,13 +92,12 @@ Config.Rewards = {
 	XpPerRoundPlayed = 20,
 	XpPerHeartReceived = 5,
 	PodiumXp = { 40, 25, 15 },
-	DailyRewardCoins = 50,
 	-- Login streak: day 1..7 in a row, then it starts again. Missing a day resets to day 1.
 	DailyStreak = { 50, 60, 75, 90, 110, 130, 200 },
 	-- Roblox Premium members get this much extra on round coins (fixed, disclosed).
 	PremiumCoinBonus = 0.1,
 	-- Playing a round with a Roblox friend in it: this much extra on round coins (fixed, disclosed).
-	FriendCoinBonus = 0.1,
+	FriendCoinBonus = 0.25, -- the "Bestie bonus"
 }
 
 -- Scheduled events (UTC). While one is on, round coins are multiplied and the lobby shows a banner.
@@ -269,6 +280,22 @@ Config.Themes = {
 	{ name = "Garden Party Glam", stageLook = "GARDEN" },
 	{ name = "Zombie Prom", vip = true },
 	{ name = "Galaxy Queen", vip = true, stageLook = "GALAXY" },
+	-- Extra-silly pack: the stranger the brief, the funnier the runway.
+	{ name = "Dressed in the Dark" },
+	{ name = "My Mom Picked This" },
+	{ name = "Lost a Bet" },
+	{ name = "Fancy Potato" },
+	{ name = "Clown With a Mortgage" },
+	{ name = "Late for Everything" },
+	{ name = "Dog Show Contestant (You're the Dog)" },
+	{ name = "Vampire at the Beach" },
+	{ name = "Substitute Teacher Energy" },
+	{ name = "Everything I Own at Once" },
+	{ name = "Dinosaur Goes to Prom" },
+	{ name = "Undercover as a Lamp" },
+	{ name = "Royal Family Reject" },
+	{ name = "Rich Aunt Who Travels", stageLook = "VIP" },
+	{ name = "Alien's First Day on Earth", stageLook = "GALAXY" },
 } :: { Theme }
 -- Don't repeat any of the last N themes.
 Config.ThemeNoRepeat = 8
@@ -310,6 +337,7 @@ export type ChaosModifier = {
 	reverseVoting: boolean?, -- hearts go to the "worst" look (still just hearts; wording changes)
 	swapMidRound: boolean?,
 	oneColor: boolean?,
+	stylingSeconds: number?, -- overrides Config.Timings.Styling for the round
 }
 Config.ChaosModifiers = {
 	{
@@ -335,6 +363,13 @@ Config.ChaosModifiers = {
 		description = "Style using only one color!",
 		minPlayers = 2,
 		oneColor = true,
+	},
+	{
+		id = "SpeedRound",
+		displayName = "Speed Round",
+		description = "Only 45 seconds to style. GO GO GO!",
+		minPlayers = 2,
+		stylingSeconds = 45,
 	},
 } :: { ChaosModifier }
 
@@ -1162,7 +1197,7 @@ Config.BodySwapClearsOutfit = false
 Config.Lobby = {
 	GemCoins = 2, -- per gem
 	GemRespawnSeconds = 45,
-	GemCoinCapPerVisit = 120, -- max gem coins per player per server visit
+	GemCoinCapPerDay = 120, -- max gem coins per player per day (saved, so rejoining doesn't reset it)
 	ObbyReward = 40,
 	ObbyCooldownSeconds = 600, -- one obby reward per 10 minutes
 	BounceVelocity = 110,
@@ -1173,7 +1208,7 @@ Config.Lobby = {
 -- games for the wait between rounds. Centres are plaza coordinates (the path runs down x = 0).
 Config.Minigames = {
 	WinCoins = 15, -- per win (round games)
-	MaxRewardedWinsPerHour = 6, -- wins after this still count for quests, just no coins
+	CoinCapPerDay = 300, -- minigame win coins per day (saved); wins after this still count for quests
 	CountdownSeconds = 8, -- after the first player steps on, before the game starts
 	ResultSeconds = 6, -- winner celebration before the next game can start
 	CelebrateRadius = 160, -- players this close see a win's fireworks and get the "X won!" toast
@@ -1261,6 +1296,9 @@ Config.Data = {
 	StoreName = "PlayerData_v1",
 	-- How many processed purchase IDs to remember per player (for receipt idempotency).
 	MaxRememberedPurchases = 100,
+	-- Save format version. Raise it and add a step to MIGRATIONS in PlayerData.luau whenever a
+	-- saved field is renamed or changes meaning (new fields need no migration).
+	Version = 1,
 	-- Seconds ProcessReceipt waits for a confirmed save before asking Roblox to retry later.
 	ReceiptSaveTimeout = 15,
 }

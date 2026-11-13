@@ -6,6 +6,7 @@
 -- Your choice is re-applied when you respawn and is exactly what walks the runway: rounds take
 -- a snapshot of your current avatar (LookApplier.saveOriginal) and keep its body.
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -191,6 +192,7 @@ local function booth(parent: Instance, position: Vector3, title: string, panel: 
 	local zone = cylinder("Zone", 0.4, 5, 0.2, { Color = color, Material = Enum.Material.Neon })
 	zone:SetAttribute("BoothPanel", panel)
 	zone:SetAttribute("Radius", 5)
+	CollectionService:AddTag(zone, "BoothZone") -- the client finds zones by this tag
 	cylinder("Tube", 10, 5, 5.2, {
 		Color = color,
 		Material = Enum.Material.Glass,
@@ -230,6 +232,7 @@ local function capsuleZone(parent: Instance, spot: BasePart, panel: string)
 	zone.CFrame = spot.CFrame
 	zone:SetAttribute("BoothPanel", panel)
 	zone:SetAttribute("Radius", 3.4)
+	CollectionService:AddTag(zone, "BoothZone")
 	zone.Parent = parent
 end
 

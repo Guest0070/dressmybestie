@@ -79,4 +79,4 @@ Moments.onAnnounce = function(text)
 	HUD.toast(text, 6)
 end
 
-print("[StyleMyBestie] Client started")
+print("[StyleMyBestie] Client ready")

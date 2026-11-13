@@ -33,7 +33,7 @@ Hall of Fame statues of the last winners, two leaderboards.
 | Phase | Length | What happens |
 |---|---|---|
 | Lobby | 30 s countdown | Waits for enough non-spectating players. |
-| Pairing | 3 s | Everyone is secretly given someone to style. Friends are paired apart when possible. Odd counts make a trio. |
+| Pairing | 3 s | Everyone is secretly given someone to style. Roblox friends are paired with each other when possible. Odd counts make a trio. |
 | Theme reveal | 5 s | One of 55 themes (4 VIP-only). Every 4th round has a 60% chance of a chaos twist: Worst Outfit Wins, Swap Mid-Round, One Color Only. |
 | Styling | up to 240 s, at least 20 s | You are teleported to a private booth and dress a mannequin of your partner from the live Roblox catalog (9 tabs). Ends early when every stylist taps READY. |
 | Runway | 9 s per player | Each player walks wearing what their stylist picked. The audience rates 1–5 stars and taps emoji reactions. |

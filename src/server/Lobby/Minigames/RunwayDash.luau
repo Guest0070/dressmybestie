@@ -379,7 +379,6 @@ function RunwayDash.build(parent: Instance): Arena.Game
 	---------------------------------------------------------------------------------------------
 
 	local runs: { [Player]: Run } = {}
-	local lastReward: { [Player]: number } = {}
 	local lastReset: { [Player]: number } = {}
 	local serverBest: { BoardRow } = {}
 	local checkpoints = {
@@ -588,9 +587,8 @@ function RunwayDash.build(parent: Instance): Arena.Game
 			if medal == "Gold" then
 				Badges.award(player, "DashGold")
 			end
-			local waitLeft = (lastReward[player] or 0) + rd.CooldownSeconds - os.clock()
+			local waitLeft = PlayerData.tryCooldown(player, "RunwayDash", rd.CooldownSeconds)
 			if waitLeft <= 0 then
-				lastReward[player] = os.clock()
 				local coins = rd.MedalCoins[medal]
 				PlayerData.update(player, function(data)
 					data.coins += coins
@@ -677,7 +675,6 @@ function RunwayDash.build(parent: Instance): Arena.Game
 
 	Players.PlayerRemoving:Connect(function(player)
 		runs[player] = nil
-		lastReward[player] = nil
 		lastReset[player] = nil
 	end)
 	task.defer(function()

@@ -598,7 +598,7 @@ local function buildCardTemplate(parent: Instance)
 		Text = "TRY",
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.fromOffset(144, 10),
-		Size = UDim2.fromOffset(52, 28),
+		Size = UDim2.fromOffset(56, 36),
 		MaxTextSize = 12,
 		ZIndex = 3,
 		Visible = false,

@@ -413,7 +413,6 @@ end
 -- Rewards
 ---------------------------------------------------------------------------------------------------
 
-local rewardTimes: { [Player]: { number } } = {}
 local streaks: { [Player]: { game: string, count: number } } = {}
 local winsThisServer: { [number]: { name: string, wins: number } } = {}
 Arena.ChampionsChanged = Instance.new("BindableEvent")
@@ -449,25 +448,14 @@ function Arena.reward(player: Player, gameName: string)
 	end
 	local streakText = if streak.count >= 2 then ` {streak.count} in a row!` else ""
 
-	local times: { number } = rewardTimes[player] or {}
-	local cutoff = os.clock() - 3600
-	local recent = {}
-	for _, t in times do
-		if t > cutoff then
-			table.insert(recent, t)
-		end
-	end
-	rewardTimes[player] = recent
-	if #recent >= SETTINGS.MaxRewardedWinsPerHour then
-		Arena.toast(player, `You won {gameName}!{streakText} (Coin limit reached for this hour.)`)
+	-- Daily cap, saved with the player (rejoining doesn't refill it).
+	local granted = PlayerData.earnDaily(player, "Minigames", SETTINGS.WinCoins, SETTINGS.CoinCapPerDay)
+	if granted <= 0 then
+		Arena.toast(player, `You won {gameName}!{streakText} (Minigame coin limit reached for today.)`)
 		return
 	end
-	table.insert(recent, os.clock())
-	PlayerData.update(player, function(data)
-		data.coins += SETTINGS.WinCoins
-	end)
-	Analytics.coins(player, SETTINGS.WinCoins, true, `Minigame_{gameName}`)
-	Arena.toast(player, `You won {gameName}! +{SETTINGS.WinCoins} coins{streakText}`)
+	Analytics.coins(player, granted, true, `Minigame_{gameName}`)
+	Arena.toast(player, `You won {gameName}! +{granted} coins{streakText}`)
 end
 
 -- Players who took part but didn't win lose their streak.
@@ -479,7 +467,6 @@ function Arena.breakStreak(player: Player, gameName: string)
 end
 
 Players.PlayerRemoving:Connect(function(player)
-	rewardTimes[player] = nil
 	streaks[player] = nil
 end)
 

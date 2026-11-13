@@ -22,6 +22,10 @@ local typeCache: { [number]: string | false } = {}
 -- bundleId -> list of asset IDs inside it, or false if invalid.
 local bundleCache: { [number]: { number } | false } = {}
 local inFlight: { [string]: boolean } = {}
+-- IDs whose lookup just failed (bad ID or a web error): not asked again for FAILED_RETRY_SECONDS,
+-- so resending the same junk IDs costs no web calls.
+local FAILED_RETRY_SECONDS = 30
+local failedAt: { [number]: number } = {}
 
 local function waitForInFlight(key: string)
 	while inFlight[key] do
@@ -31,12 +35,18 @@ end
 
 -- Returns the Enum.AssetType name for a catalog asset, or nil if unknown/invalid.
 -- A nil caused by a web error is not cached, so it is retried on the next request.
-function AssetInfo.getAssetType(assetId: number): string?
+-- mayFetch (optional): called before a NEW web lookup; return false to refuse it (the caller's
+-- per-player budget). Cached answers never call it.
+function AssetInfo.getAssetType(assetId: number, mayFetch: (() -> boolean)?): string?
 	local cached = typeCache[assetId]
 	if cached == false then
 		return nil
 	elseif cached ~= nil then
 		return cached :: string
+	end
+	local failed = failedAt[assetId]
+	if failed and os.clock() - failed < FAILED_RETRY_SECONDS then
+		return nil
 	end
 	local key = `a{assetId}`
 	if inFlight[key] then
@@ -45,11 +55,15 @@ function AssetInfo.getAssetType(assetId: number): string?
 		return if type(after) == "string" then after else nil
 	end
 
+	if mayFetch and not mayFetch() then
+		return nil
+	end
 	inFlight[key] = true
 	local ok, info =
 		pcall(MarketplaceService.GetProductInfoAsync, MarketplaceService, assetId, Enum.InfoType.Asset)
 	inFlight[key] = nil
 	if not ok then
+		failedAt[assetId] = os.clock()
 		if IS_STUDIO then
 			warn(`[AssetInfo] GetProductInfoAsync({assetId}) failed: {info}`)
 		end

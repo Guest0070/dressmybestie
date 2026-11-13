@@ -12,20 +12,17 @@ local Kit = require(script.Parent.Kit)
 local HowToPlay = {}
 
 local STEPS = {
-	{ "1. Get paired", "You're secretly paired with someone. Style THEIR mannequin. They can't see it!" },
-	{
-		"2. Match the theme",
-		"Pick hair, clothes, shoes and more. Done early? Tap READY.",
-	},
-	{ "3. Walk the runway", "Now you wear what YOUR stylist picked for you. Surprise!" },
+	{ "👗 Dress your bestie", "You style THEM. They can't see it!" },
+	{ "⏱️ Match the theme", "Tap clothes, then tap READY." },
+	{ "😱 Walk the runway", "You wear what THEY picked for you. Surprise!" },
 	if Config.VotingMode == "Stars"
 		then {
-			"4. Rate the looks",
-			"Give each look 1-5 stars as it walks. Stars earn the stylist coins and XP.",
+			"⭐ Rate the looks",
+			"Tap stars as each look walks. You earn coins too!",
 		}
 		else {
-			"4. Give hearts",
-			"Tap hearts on your 3 favorite looks. Hearts earn the stylist coins and XP.",
+			"💖 Give hearts",
+			"Tap hearts on your 3 favorite looks.",
 		},
 }
 

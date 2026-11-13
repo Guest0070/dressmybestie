@@ -54,6 +54,26 @@ local readyButton: TextButton
 local hideButton: TextButton
 local ready = false
 local collapsed = false
+local hintLabel: TextLabel
+
+-- First round ever: one line that says what to do, until they've put something on the mannequin.
+local function refreshHint()
+	if not hintLabel then
+		return
+	end
+	local target = State.myTarget()
+	local data = State.data
+	local firstRound = data ~= nil and data.roundsPlayed == 0
+	local empty = #look.assetIds == 0 and look.shoeBundleId == nil
+	hintLabel.Visible = firstRound
+		and empty
+		and not selfMode
+		and State.round.phase == "Styling"
+		and target ~= nil
+	if hintLabel.Visible and target then
+		hintLabel.Text = `👆 Tap clothes to dress {State.nameOf(target)}, then tap READY!`
+	end
+end
 
 -- READY button text: "READY" / "READY ✓ 1/2" (how many stylists are done).
 local function refreshReady()
@@ -91,6 +111,7 @@ local function refreshSelection()
 	end
 	local count = #look.assetIds + (if look.shoeBundleId then 1 else 0)
 	wornLabel.Text = `Wearing {count}`
+	refreshHint()
 end
 
 local function sendLook()
@@ -322,6 +343,7 @@ local function refreshVisibility()
 	if visible and not searchCache[cacheKey(currentCategory)] then
 		selectCategory(currentCategory)
 	end
+	refreshHint()
 end
 
 local function onLookSync(targetUserId: number, synced: Look, syncSeq: number?)
@@ -445,6 +467,20 @@ function Catalog.start()
 		Visible = false,
 		Parent = panel,
 	})
+
+	hintLabel = Kit.label({
+		Name = "FirstRoundHint",
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.new(0, 8, 1, -8 - 44 - 8),
+		Size = UDim2.new(0.6, -24, 0, 40),
+		BackgroundTransparency = 0.1,
+		BackgroundColor3 = Kit.Colors.Gold,
+		TextColor3 = Kit.Colors.Panel,
+		MaxTextSize = 22,
+		Visible = false,
+		Parent = root,
+	})
+	Kit.corner(12).Parent = hintLabel
 
 	-- Bottom row: undo / clear / count
 	local bottom = Kit.new("Frame", {

@@ -92,7 +92,7 @@ local function rebuild()
 			Text = if saved then "SAVE OVER" else "SAVE HERE",
 			Variant = if saved then "Secondary" else "Special",
 			Position = UDim2.fromOffset(8, if saved then 140 else 112),
-			Size = UDim2.new(1, if saved then -44 else -16, 0, if saved then 36 else 40),
+			Size = UDim2.new(1, if saved then -56 else -16, 0, if saved then 36 else 40),
 			MaxTextSize = 12,
 			onClick = function()
 				Kit.playSound("OutfitSaved")
@@ -103,8 +103,8 @@ local function rebuild()
 		if saved then
 			Components.button({
 				Text = "X",
-				Position = UDim2.new(1, -34, 0, 140),
-				Size = UDim2.fromOffset(26, 36),
+				Position = UDim2.new(1, -44, 0, 140),
+				Size = UDim2.fromOffset(36, 36),
 				MaxTextSize = 12,
 				onClick = function()
 					Remotes.Events.DeleteOutfit:FireServer(slot)

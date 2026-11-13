@@ -22,7 +22,8 @@ type PlayerData = Types.PlayerData
 type PublicData = Types.PublicData
 
 local TEMPLATE: PlayerData = {
-	coins = 0,
+	version = Config.Data.Version,
+	coins = Config.Rewards.WelcomeCoins,
 	styleXp = 0,
 	roundsPlayed = 0,
 	heartsReceived = 0,
@@ -42,17 +43,40 @@ local TEMPLATE: PlayerData = {
 	passGrants = {},
 	savedOutfits = {},
 	settings = { music = true, sfx = true, flashes = true },
+	dailyEarned = { day = 0, amounts = {} },
+	cooldowns = {},
 }
+
+-- Save format upgrades. MIGRATIONS[n] turns a version-n save into version n + 1; they run in order
+-- when a profile loads. Only needed when a field is renamed or changes meaning: brand-new fields
+-- are filled in from TEMPLATE by Reconcile.
+local MIGRATIONS: { [number]: (data: any) -> () } = {}
+
+local function migrate(data: any)
+	local version = if type(data.version) == "number" then data.version else 1
+	while version < Config.Data.Version do
+		local step = MIGRATIONS[version]
+		if step then
+			step(data)
+		end
+		version += 1
+	end
+	data.version = version
+end
 
 local store = ProfileStore.New(Config.Data.StoreName, TEMPLATE)
 local profiles: { [Player]: any } = {}
 
 local PlayerData = {}
+local pushQueued: { [Player]: boolean } = {}
 
 -- Fires (player) once their profile is loaded and ready.
 PlayerData.Loaded = Signal.new() :: Signal.Signal<Player>
 -- Fires (player) after their data changes (coins, equipped items, ...).
 PlayerData.Changed = Signal.new() :: Signal.Signal<Player>
+-- Fires (player) as they leave, while PlayerData.get still returns their data (last chance to
+-- read it, e.g. for leaderboards). Listeners must read what they need before yielding.
+PlayerData.Leaving = Signal.new() :: Signal.Signal<Player>
 
 local function currentDay(): number
 	return os.time() // 86400
@@ -211,8 +235,57 @@ function PlayerData.update(player: Player, mutator: (PlayerData) -> ()): boolean
 		return false
 	end
 	mutator(profile.Data)
-	task.spawn(PlayerData.pushToClient, player) -- Passes.owns may yield; don't block the caller
+	-- One sync per player per frame however many changes were made (a round end makes several),
+	-- and never blocking the caller (Passes.owns may yield).
+	if not pushQueued[player] then
+		pushQueued[player] = true
+		task.defer(function()
+			pushQueued[player] = nil
+			PlayerData.pushToClient(player)
+		end)
+	end
 	return true
+end
+
+-- Coins from a capped source (gems, minigame wins...). The amount earned today is saved, so
+-- rejoining or switching servers doesn't reset the cap. Returns the coins actually given.
+function PlayerData.earnDaily(player: Player, source: string, amount: number, dailyCap: number): number
+	local current = PlayerData.get(player)
+	if not current then
+		return 0
+	end
+	local today = currentDay()
+	local earned = if current.dailyEarned.day == today then current.dailyEarned.amounts[source] or 0 else 0
+	local granted = math.clamp(dailyCap - earned, 0, amount)
+	if granted <= 0 then
+		return 0
+	end
+	PlayerData.update(player, function(data)
+		if data.dailyEarned.day ~= today then
+			data.dailyEarned = { day = today, amounts = {} }
+		end
+		data.dailyEarned.amounts[source] = earned + granted
+		data.coins += granted
+	end)
+	return granted
+end
+
+-- A saved cooldown (obby reward, Runway Dash reward). Returns 0 and starts the cooldown if it was
+-- free, otherwise the seconds still left. Uses real time, so it holds across servers.
+function PlayerData.tryCooldown(player: Player, key: string, seconds: number): number
+	local current = PlayerData.get(player)
+	if not current then
+		return seconds
+	end
+	local now = os.time()
+	local left = (current.cooldowns[key] or 0) + seconds - now
+	if left > 0 then
+		return left
+	end
+	PlayerData.update(player, function(data)
+		data.cooldowns[key] = now
+	end)
+	return 0
 end
 
 function PlayerData.hasPurchase(player: Player, purchaseId: string): boolean
@@ -319,8 +392,12 @@ local function onPlayerAdded(player: Player)
 	end
 
 	profile:AddUserId(player.UserId) -- GDPR compliance
+	if profile.Data.version == nil then
+		profile.Data.version = 1 -- saved before versions existed
+	end
 	profile:Reconcile() -- fill in fields added to TEMPLATE since this player's last visit
 
+	migrate(profile.Data)
 	profile.OnSessionEnd:Connect(function()
 		profiles[player] = nil
 		if player.Parent == Players then
@@ -352,15 +429,13 @@ function PlayerData.start()
 		if type(settings) ~= "table" then
 			return
 		end
-		local data = PlayerData.get(player)
-		if not data then
-			return
-		end
-		for _, key in { "music", "sfx", "flashes" } do
-			if type(settings[key]) == "boolean" then
-				(data.settings :: any)[key] = settings[key]
+		PlayerData.update(player, function(data)
+			for _, key in { "music", "sfx", "flashes" } do
+				if type(settings[key]) == "boolean" then
+					(data.settings :: any)[key] = settings[key]
+				end
 			end
-		end
+		end)
 	end)
 	Passes.Changed:Connect(PlayerData.pushToClient)
 
@@ -372,8 +447,10 @@ function PlayerData.start()
 	Players.PlayerRemoving:Connect(function(player)
 		local profile = profiles[player]
 		if profile then
+			PlayerData.Leaving:Fire(player)
 			profile:EndSession()
 		end
+		pushQueued[player] = nil
 	end)
 end
 

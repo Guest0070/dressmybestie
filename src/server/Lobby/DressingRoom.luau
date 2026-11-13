@@ -75,7 +75,7 @@ local function process(player: Player)
 		if RoundManager.isInRound(player) then
 			break
 		end
-		local validated = LookValidator.validate(raw, Passes.owns(player, "VIP"))
+		local validated = LookValidator.validate(raw, Passes.owns(player, "VIP"), player)
 		local base = getBase(player)
 		local humanoid = getHumanoid(player)
 		if base and humanoid and not RoundManager.isInRound(player) then

@@ -30,8 +30,6 @@ local OBBY_COLORS = {
 	Color3.fromRGB(180, 120, 255),
 }
 
-local gemCoinsThisVisit: { [Player]: number } = {}
-local lastObbyReward: { [Player]: number } = {}
 local obbyStartedAt: { [Player]: number } = {}
 local OBBY_MIN_SECONDS = 8 -- 16 jumps; nobody legit climbs it faster
 local OBBY_CHECKPOINTS = { 6, 11 } -- steps that save your progress
@@ -130,21 +128,20 @@ local function makeGem(parent: Instance, position: Vector3)
 		if not player then
 			return
 		end
-		local earned = gemCoinsThisVisit[player] or 0
-		if earned >= Config.Lobby.GemCoinCapPerVisit then
+		-- The daily cap is saved with the player, so rejoining doesn't refill it.
+		local cap = Config.Lobby.GemCoinCapPerDay
+		local granted = PlayerData.earnDaily(player, "Gems", Config.Lobby.GemCoins, cap)
+		if granted <= 0 then
 			return -- capped: gems stay for others to grab
 		end
 		gem:SetAttribute("Active", false)
 		gem.Transparency = 1
 		light.Enabled = false
-		gemCoinsThisVisit[player] = earned + Config.Lobby.GemCoins
-		PlayerData.update(player, function(data)
-			data.coins += Config.Lobby.GemCoins
-		end)
-		Analytics.coins(player, Config.Lobby.GemCoins, true, "Gem")
+		Analytics.coins(player, granted, true, "Gem")
 		Quests.bump(player, "gems", 1)
-		if gemCoinsThisVisit[player] >= Config.Lobby.GemCoinCapPerVisit then
-			toast(player, "Gem bag full for this visit! Play rounds for more coins.")
+		local data = PlayerData.get(player)
+		if data and (data.dailyEarned.amounts.Gems or 0) >= cap then
+			toast(player, "Gem bag full for today! Play rounds for more coins.")
 		end
 		task.delay(Config.Lobby.GemRespawnSeconds, function()
 			gem:SetAttribute("Active", true)
@@ -277,10 +274,8 @@ local function buildObby(parent: Instance)
 			return
 		end
 		Quests.bump(player, "obby", 1)
-		local now = os.time()
-		local waitLeft = (lastObbyReward[player] or 0) + Config.Lobby.ObbyCooldownSeconds - now
+		local waitLeft = PlayerData.tryCooldown(player, "Obby", Config.Lobby.ObbyCooldownSeconds)
 		if waitLeft <= 0 then
-			lastObbyReward[player] = now
 			PlayerData.update(player, function(data)
 				data.coins += Config.Lobby.ObbyReward
 			end)
@@ -551,8 +546,6 @@ function Activities.start()
 	folder.Parent = lobby
 
 	Players.PlayerRemoving:Connect(function(player)
-		gemCoinsThisVisit[player] = nil
-		lastObbyReward[player] = nil
 		obbyStartedAt[player] = nil
 		obbyCheckpoint[player] = nil
 		touchDebounce[player] = nil
@@ -564,7 +557,8 @@ function Activities.start()
 		end
 	end)
 	-- All-time board: everyone's XP is saved every few minutes and when they leave.
-	Players.PlayerRemoving:Connect(saveXp)
+	-- PlayerData.Leaving, not PlayerRemoving: by then the profile is already closed.
+	PlayerData.Leaving:Connect(saveXp)
 	task.spawn(function()
 		task.wait(15) -- let everyone's data load first
 		while true do

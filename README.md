@@ -24,10 +24,10 @@ The server makes every decision. Clients only send requests, and the server chec
 
 ## Everything in the game
 
-**The round:** lobby → pairing (friends paired together, trio for odd numbers) → theme reveal → up to 4 minutes of
+**The round:** lobby → pairing (friends paired together, trio for odd numbers) → theme reveal → up to 2 minutes of
 styling in a private booth (everyone taps READY to finish early) → runway (follow camera, camera flashes, name tags, entrance effects, 1-5 star ratings while each look walks; hearts-only with `Config.VotingMode = "Hearts"`)
-→ results (podium reveal 3rd→1st, confetti, 1st/2nd/3rd tags, "Buy this look"). Chaos rounds: Worst
-Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme. AFK players sit out.
+→ results (podium reveal 3rd→1st, confetti, 1st/2nd/3rd tags, "Buy this look"). Once half the stylists are READY the rest get 20 seconds. Chaos rounds (about every other round, never the first): Worst
+Outfit Wins, Swap Mid-Round, One Color Only, Speed Round. 70 themes + a weekly featured theme. AFK players sit out.
 
 **Lobby (things to do between rounds):**
 - Dressing Room kiosk: dress your own avatar from the catalog, then "Buy these".
@@ -55,7 +55,7 @@ Outfit Wins, Swap Mid-Round, One Color Only. 55 themes + a weekly featured theme
     an all-time global top 10 (OrderedDataStore `RunwayDashBest_v1`).
   - *Sky Obby* (west): 16 jumps into the sky with two checkpoints (fall = back to your checkpoint),
     +40 coins once per 10 min.
-  - Dance floor with disco ball, bounce pads, 13 collectible gems (+2 each, capped per visit).
+  - Dance floor with disco ball, bounce pads, 13 collectible gems (+2 each, capped per day).
   Round games (Color Rush, Freeze Frame, Spin Sweep): step on to join; a countdown (3-2-1-GO on
   screen) starts it for everyone on it. Winners get fireworks, a shout-out to everyone nearby, +15
   coins (max 6 paid wins an hour, `Config.Minigames`), win streaks, quest progress and a spot on
@@ -147,7 +147,7 @@ mobile-first UI.
 ## How to test (Studio)
 
 **Solo, the fastest check.** Click **Play** (F5). In Studio a round starts with just 1 player, and you style your own mannequin.
-1. Wait out the 30s lobby (the timer is at the top).
+1. Wait out the 20s lobby (the timer is at the top).
 2. The theme card appears, then you're put in a pink booth. The catalog is on the right. Tap tabs and items and watch the mannequin change. Try **Undo**, **Clear**, and the **< >** rotate buttons.
 3. Runway: the camera moves to the catwalk and you walk wearing the look. Voting is skipped quickly (there's nothing to vote on), then Results.
 4. You go back to the lobby in your **own** outfit, with +coins and XP. Tap **Buy looks**: purchase prompts in Studio are test prompts and cost no Robux.

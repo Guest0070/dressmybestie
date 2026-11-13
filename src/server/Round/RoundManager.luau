@@ -84,6 +84,9 @@ end
 local function teleport(player: Player, cframe: CFrame)
 	local character = player.Character
 	if character and isHere(player) then
+		-- With streaming on, ask Roblox to start loading the destination (booths and the runway
+		-- are far from the lobby). Not waited for: the move must stay instant for the round timing.
+		task.spawn(pcall, player.RequestStreamAroundAsync, player, cframe.Position, 3)
 		character:PivotTo(cframe)
 	end
 end
@@ -204,6 +207,7 @@ local function setPhase(phase: Phase, duration: number?, fields: { [string]: any
 	state.assignments = if next(assignments) then assignmentPayload() else nil
 	state.runwayWearer = nil
 	state.runwayStylists = nil
+	state.runwayStylistIds = nil
 	state.candidates = nil
 	state.podium = nil
 	state.shopLooks = nil
@@ -277,7 +281,11 @@ local function pickStageLook(themeName: string): string
 end
 
 local function randomChaos(roundNumber: number, playerCount: number): ChaosModifier?
-	if roundNumber % Config.ChaosEveryRounds ~= 0 or math.random() > Config.ChaosChance then
+	if
+		roundNumber < Config.ChaosFirstRound
+		or roundNumber % Config.ChaosEveryRounds ~= 0
+		or math.random() > Config.ChaosChance
+	then
 		return nil
 	end
 	local options = {}
@@ -377,7 +385,8 @@ local function processLooks(target: Player)
 		end
 		pendingLooks[target] = nil
 
-		local validated = LookValidator.validate(pending.raw, Passes.owns(pending.stylist, "VIP"))
+		local validated =
+			LookValidator.validate(pending.raw, Passes.owns(pending.stylist, "VIP"), pending.stylist)
 		-- Re-check after yielding: the round may have moved on, or the stylist swapped away.
 		if
 			participants[target] ~= p
@@ -597,16 +606,20 @@ local function styling()
 	end
 
 	-- Phase must be "Styling" before mannequins are built (createMannequin checks it).
-	setPhase("Styling", Config.Timings.Styling)
+	local modifier = chaos
+	local duration = if modifier and modifier.stylingSeconds
+		then modifier.stylingSeconds
+		else Config.Timings.Styling
+	setPhase("Styling", duration)
 	for _, p in participantList() do
 		task.spawn(createMannequin, p)
 	end
 	local startedAt = os.clock()
 	local swapped = false
-	local modifier = chaos
 	readyStylists = {}
 	local lastReady = -1
-	waitFor(Config.Timings.Styling, function()
+	local hurryEndsAt: number? = nil -- os.clock() when the "hurry up" countdown runs out
+	waitFor(duration, function()
 		-- Everyone ready? Finish early (after a short minimum so nobody skips by accident).
 		local total, ready = 0, 0
 		for stylist in assignments do
@@ -623,7 +636,28 @@ local function styling()
 			state.readyTotal = total
 			broadcast()
 		end
-		if total > 0 and ready >= total and os.clock() - startedAt >= Config.Timings.StylingMin then
+		local elapsed = os.clock() - startedAt
+		if total > 0 and ready >= total and elapsed >= Config.Timings.StylingMin then
+			return true
+		end
+		-- Enough stylists are done: the rest get a short countdown instead of the full timer.
+		if
+			not hurryEndsAt
+			and total > 1
+			and ready / total >= Config.Timings.StylingHurryAt
+			and elapsed >= Config.Timings.StylingHurryAfter
+			and duration - elapsed > Config.Timings.StylingHurry
+		then
+			hurryEndsAt = os.clock() + Config.Timings.StylingHurry
+			state.endsAt = Workspace:GetServerTimeNow() + Config.Timings.StylingHurry
+			broadcast()
+			for stylist in assignments do
+				if not readyStylists[stylist] then
+					toast(stylist, `Hurry! {Config.Timings.StylingHurry} seconds left to finish the look!`)
+				end
+			end
+		end
+		if hurryEndsAt and os.clock() >= hurryEndsAt then
 			return true
 		end
 		if
@@ -770,8 +804,10 @@ local function runway()
 			else nil
 
 		local stylistNames = {}
+		local stylistIds = {}
 		for _, stylist in p.stylists do
 			table.insert(stylistNames, stylist.DisplayName)
+			table.insert(stylistIds, stylist.UserId)
 		end
 		teleport(player, Map.runwayStart())
 		local head = if player.Character then player.Character:FindFirstChild("Head") else nil
@@ -800,6 +836,7 @@ local function runway()
 		setPhase("Runway", Config.Timings.RunwayPerPlayer, {
 			runwayWearer = p.userId,
 			runwayStylists = stylistNames,
+			runwayStylistIds = stylistIds,
 			rating = Config.VotingMode == "Stars",
 		})
 
@@ -887,8 +924,13 @@ local function voting(): { [number]: number }
 end
 
 -- hearts: userId -> points (hearts, or total stars in Stars mode).
--- averages (Stars mode only): userId -> average stars; ranking uses the average.
-local function results(hearts: { [number]: number }, averages: { [number]: number }?)
+-- averages (Stars mode only): userId -> average stars, shown to players.
+-- rankScores (Stars mode only): userId -> smoothed average, used for the ranking.
+local function results(
+	hearts: { [number]: number },
+	averages: { [number]: number }?,
+	rankScores: { [number]: number }?
+)
 	local ranked: { Participant } = {}
 	local tiebreak: { [Participant]: number } = {}
 	for _, p in participantList() do
@@ -900,8 +942,9 @@ local function results(hearts: { [number]: number }, averages: { [number]: numbe
 	-- Best first (average stars, or most hearts); ties broken randomly (never alphabetically,
 	-- never by join order).
 	table.sort(ranked, function(a, b)
-		if averages then
-			local aa, ab = averages[a.userId] or 0, averages[b.userId] or 0
+		local scores = rankScores or averages
+		if scores then
+			local aa, ab = scores[a.userId] or 0, scores[b.userId] or 0
 			if aa ~= ab then
 				return aa > ab
 			end
@@ -1082,15 +1125,26 @@ local function playRound()
 		for voter, count in given do
 			if voter.Parent == Players then
 				Quests.bump(voter, "heartsGiven", count)
+				-- The audience is paid a little for rating: it keeps people watching the runway.
+				local coins = count * Config.Rewards.CoinsPerLookRated
+				if PlayerData.update(voter, function(data)
+					data.coins += coins
+				end) then
+					Analytics.coins(voter, coins, true, "RatedLooks")
+					toast(voter, `+{coins} coins for rating {count} look{if count == 1 then "" else "s"}!`)
+				end
 			end
 		end
 		local sums: { [number]: number } = {}
 		local averages: { [number]: number } = {}
+		local rankScores: { [number]: number } = {}
+		local prior = Config.Rewards.RatingPrior
 		for userId, rating in ratings do
 			sums[userId] = rating.sum
 			averages[userId] = rating.average
+			rankScores[userId] = (rating.sum + prior * 3) / (rating.count + prior)
 		end
-		results(sums, averages)
+		results(sums, averages, rankScores)
 	else
 		results(voting())
 	end

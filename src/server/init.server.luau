@@ -90,4 +90,4 @@ for _, player in game:GetService("Players"):GetPlayers() do
 	player.CharacterAdded:Connect(noPlayerCollisions)
 end
 
-print("[StyleMyBestie] Server started")
+print("[StyleMyBestie] Server ready")

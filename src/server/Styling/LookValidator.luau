@@ -26,6 +26,32 @@ export type ValidatedLook = {
 
 local LookValidator = {}
 
+-- New catalog lookups one player may cause per window. Normal styling needs about one per tap
+-- (everything already seen is cached); a hacked client sending made-up IDs runs out at once.
+local LOOKUP_WINDOW_SECONDS = 10
+local LOOKUPS_PER_WINDOW = 40
+local lookups: { [Player]: { startedAt: number, count: number } } = setmetatable({}, { __mode = "k" }) :: any
+
+local function budgetFor(player: Player?): (() -> boolean)?
+	if not player then
+		return nil
+	end
+	local who: Player = player
+	return function(): boolean
+		local now = os.clock()
+		local existing = lookups[who]
+		local window = if existing and now - existing.startedAt < LOOKUP_WINDOW_SECONDS
+			then existing
+			else { startedAt = now, count = 0 }
+		lookups[who] = window
+		if window.count >= LOOKUPS_PER_WINDOW then
+			return false
+		end
+		window.count += 1
+		return true
+	end
+end
+
 -- In Studio, say why an item was dropped (live servers stay silent).
 local function reject(id: number, reason: string)
 	if RunService:IsStudio() then
@@ -42,8 +68,10 @@ function LookValidator.empty(): ValidatedLook
 end
 
 -- May yield (catalog lookups). isVip gives the extra slots from the VIP pass.
-function LookValidator.validate(raw: any, isVip: boolean): ValidatedLook
+-- sender: the player who sent the look; their new catalog lookups are rate limited.
+function LookValidator.validate(raw: any, isVip: boolean, sender: Player?): ValidatedLook
 	local result = LookValidator.empty()
+	local mayFetch = budgetFor(sender)
 	if type(raw) ~= "table" then
 		return result
 	end
@@ -67,7 +95,7 @@ function LookValidator.validate(raw: any, isVip: boolean): ValidatedLook
 		end
 		seen[id] = true
 
-		local typeName = AssetInfo.getAssetType(id)
+		local typeName = AssetInfo.getAssetType(id, mayFetch)
 		local rule = if typeName then Config.AssetRules[typeName] else nil
 		if not rule then
 			reject(id, if typeName then `asset type {typeName} not allowed` else "couldn't read asset type")
@@ -135,7 +163,7 @@ function LookValidator.validate(raw: any, isVip: boolean): ValidatedLook
 		local shoes: { AccessorySpec } = {}
 		if shoeIds then
 			for _, shoeId in shoeIds do
-				local typeName = AssetInfo.getAssetType(shoeId)
+				local typeName = AssetInfo.getAssetType(shoeId, mayFetch)
 				if typeName == "LeftShoeAccessory" or typeName == "RightShoeAccessory" then
 					local rule = Config.AssetRules[typeName]
 					table.insert(shoes, {

@@ -3,8 +3,8 @@
 -- attribute. While my character stands inside a zone, its panel is open; walking out closes it.
 -- Picks are sent to the server, which checks, saves and applies them.
 
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -185,10 +185,11 @@ function BoothsUI.start()
 	local _, root = Kit.screen("Booths", 4)
 	buildSkinPanel(root)
 	buildBodyPanel(root)
-	for _, descendant in Workspace:GetDescendants() do
-		trackZone(descendant)
+	-- Zones carry the "BoothZone" tag (Lobby/Appearance), so nothing has to watch the whole world.
+	for _, zone in CollectionService:GetTagged("BoothZone") do
+		trackZone(zone)
 	end
-	Workspace.DescendantAdded:Connect(trackZone)
+	CollectionService:GetInstanceAddedSignal("BoothZone"):Connect(trackZone)
 	State.DataChanged:Connect(highlight)
 	task.spawn(function()
 		while true do

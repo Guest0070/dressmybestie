@@ -50,13 +50,9 @@ local function canRate(): boolean
 	if wearer == State.player.UserId or State.myTarget() == wearer then
 		return false
 	end
-	local stylists: { string } = round.runwayStylists or {}
-	for _, name in stylists do
-		if name == State.player.DisplayName then
-			return false -- you styled this look
-		end
-	end
-	return true
+	-- You styled this look (checked by user ID: display names can repeat).
+	local stylistIds: { number } = round.runwayStylistIds or {}
+	return table.find(stylistIds, State.player.UserId) == nil
 end
 
 local function refresh()

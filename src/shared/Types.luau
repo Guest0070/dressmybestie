@@ -53,6 +53,7 @@ export type RoundState = {
 	-- Runway: who is walking now, and who styled them
 	runwayWearer: number?,
 	runwayStylists: { string }?,
+	runwayStylistIds: { number }?, -- same stylists, as user IDs (names can repeat)
 	-- Stars mode: true while the audience can rate the current runway walker
 	rating: boolean?,
 	-- Styling: how many stylists tapped READY (styling ends early when all are)
@@ -69,6 +70,9 @@ export type RoundState = {
 -- Saved per player by ProfileStore. Add new fields with defaults in the template;
 -- Reconcile() fills them in for existing players automatically.
 export type PlayerData = {
+	version: number, -- save format version (Config.Data.Version)
+	dailyEarned: { day: number, amounts: { [string]: number } }, -- capped coin sources, per day
+	cooldowns: { [string]: number }, -- key -> os.time() the reward was last given
 	coins: number,
 	styleXp: number,
 	roundsPlayed: number,

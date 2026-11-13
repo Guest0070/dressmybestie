@@ -139,6 +139,10 @@ When the Roblox Studio MCP is connected and Rojo is serving, edits sync live int
 
 ## Docs to keep in sync
 
+`AUDIT.md` (state of the code, 13 Nov 2026), `REDESIGN.md` (design decisions and why), `PLAN.md`
+(what is done, next, and deliberately deferred) and `CHANGELOG.md` (every change with its Studio test).
+Add a CHANGELOG entry and bump `Config.Build` with each batch of changes.
+
 `README.md` covers player-facing features, Studio setup and test steps, the import and designable-UI
 workflows, and where Roblox differs from the brief. `LAUNCH_CHECKLIST.md` lists the manual steps
 Divyansh must do himself: product IDs, game settings, saving the place. Update both when a feature
